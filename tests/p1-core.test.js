@@ -161,7 +161,7 @@ test('granice: brak NaN, kontrola 0-100, kwas >= 0, mrówki w mapie i poza muram
         if (!isFinite(x) || !isFinite(y) || !isFinite(sim.hp[i])) { bad = 'NaN w mrówce ' + i; break; }
         if (x < 0 || y < 0 || x > sim.W || y > sim.H) { bad = 'mrówka poza mapą'; break; }
         const g = sim.grid[((y / 16) | 0) * sim.COLS + ((x / 16) | 0)];
-        if (g === 1 || g === 3) { bad = 'mrówka w murze, tick ' + k; break; }
+        if ([1, 3, 4, 5].includes(g)) { bad = 'mrówka w przeszkodzie, tick ' + k; break; }
       }
       for (const c of sim.comps) {
         if (!(c.control >= 0 && c.control <= 100)) bad = 'kontrola poza zakresem: ' + c.name;
@@ -186,13 +186,13 @@ test('geometria plugu: nieśmiertelny zamknięty plug nie przepuszcza nikogo prz
   const out = [];
   for (const w of [64, 128, 256]) {
     const sim = make(1, w, (d) => { d.units.odzwierny.hp = 1e7; d.params.supply.acidStart = 0; });
-    const plug = sim.comps.find((c) => c.role === 'plug'); let leak = 0, maxPressure = 0;
+    const plug = sim.comps.find((c) => c.role === 'plug'), gp = sim.defs.world.gap; let leak = 0, maxPressure = 0;
     const depth = Math.ceil(plug.initial / plug.fcols) * plug.spacing / 2;
     for (let k = 0; k < 20 * 90 && !sim.result; k++) {
       sim.step();
       if (k % 20 === 10) {
         let press = 0;
-        for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === 0) { if (sim.x[i] > 800 + depth + 12) leak++; else if (sim.x[i] > 740 && Math.abs(sim.y[i] - 480) < w / 2 + 40) press++; }
+        for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === 0) { if (sim.x[i] > gp[0] + depth + 12) leak++; else if (sim.x[i] > gp[0] - 60 && Math.abs(sim.y[i] - gp[1]) < w / 2 + 40) press++; }
         if (press > maxPressure) maxPressure = press;
       }
     }

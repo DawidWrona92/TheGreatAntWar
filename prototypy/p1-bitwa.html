@@ -90,7 +90,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
       <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość głównego przesmyku</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
@@ -105,14 +105,33 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
 <script type="application/json" id="defs">
 {
-  "world": { "w": 1600, "h": 960, "passage": 192, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
+  "world": {
+    "w": 2000, "h": 1200, "passage": 192, "timeLimit": 900, "gap": [1000, 600], "nest": [1800, 600], "nestR": 64, "retreatWK": [110, 600],
+    "map": {
+      "comment": "Dno lasu: pień z głównym przesmykiem (szerokość = passage) i wąską bocznicą, kilka głazów, korzeni i kłód. Typy: wood, stone, root. Współrzędne to jednostki świata; gapTop i gapBottom to brzegi głównego przesmyku.",
+      "obstacles": [
+        { "type": "wood", "r": 24, "line": [[1010, 0], [1000, 140]] },
+        { "type": "wood", "r": 24, "line": [[1000, 205], [985, 300], [1015, 420], "gapTop"] },
+        { "type": "wood", "r": 24, "line": ["gapBottom", [1020, 820], [985, 1000], [1005, 1200]] },
+        { "type": "stone", "r": 62, "at": [520, 330] },
+        { "type": "root", "r": 72, "at": [570, 880] },
+        { "type": "wood", "r": 14, "line": [[640, 520], [705, 700]] },
+        { "type": "stone", "r": 55, "at": [560, 1090] },
+        { "type": "stone", "r": 66, "at": [1350, 320] },
+        { "type": "stone", "r": 72, "at": [1390, 900] },
+        { "type": "wood", "r": 14, "line": [[1500, 470], [1570, 740]] },
+        { "type": "root", "r": 60, "at": [1650, 200] }
+      ],
+      "coverRandom": 14
+    }
+  },
   "params": {
     "cover": 0.7,
     "shieldMult": 0.4,
     "closedMult": 0.7,
     "cdScale": 1.5,
     "dmgVariance": 0.3,
-    "collision": { "passes": 3, "fightMass": 8 },
+    "collision": { "passes": 6, "fightMass": 8 },
     "captain": { "shock": 20, "dur": 15, "regenPenalty": 4 },
     "elite": { "hp": 1.7, "dmg": 1.3, "cd": 0.85, "armor": 0.12, "speed": 1.0 },
     "control": {
@@ -151,36 +170,36 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "attacker": "WK",
     "sides": {
       "WK": {
-        "name": "Wielka Kolonia", "guardType": "ciezki", "regenBonus": 0, "supply": 60, "reserve": 150, "auraR": 260, "spawn": [50, 200, 140, 560],
+        "name": "Wielka Kolonia", "guardType": "infantry", "regenBonus": 0, "supply": 60, "reserve": 150, "auraR": 260, "spawn": [50, 300, 140, 600],
         "companies": [
-          { "role": "assault", "at": [340, 480], "face": 0, "units": { "infantry": 100 }, "delay": 0 },
-          { "role": "assault", "at": [340, 250], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
-          { "role": "assault", "at": [340, 710], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
-          { "role": "command", "at": [235, 480], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 16 },
-          { "role": "assault", "at": [235, 250], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
-          { "role": "assault", "at": [235, 710], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
-          { "role": "taran",   "at": [135, 400], "face": 0, "units": { "taran": 50 }, "delay": 0 },
-          { "role": "taran",   "at": [135, 560], "face": 0, "units": { "taran": 50 }, "delay": 2 },
-          { "role": "pekacz",  "at": [135, 240], "face": 0, "units": { "pekacz": 60 }, "delay": 10 },
-          { "role": "pekacz",  "at": [135, 720], "face": 0, "units": { "pekacz": 60 }, "delay": 12 },
-          { "role": "raider",  "at": [45, 320],  "face": 0, "units": { "biegacz": 80 }, "delay": 18 },
-          { "role": "raider",  "at": [45, 640],  "face": 0, "units": { "biegacz": 80 }, "delay": 22 },
-          { "role": "assault", "at": [45, 480],  "face": 0, "units": { "infantry": 100 }, "delay": 26 },
-          { "role": "command", "at": [235, 880], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 24 }
+          { "role": "assault", "at": [340, 600], "face": 0, "units": { "infantry": 100 }, "delay": 0 },
+          { "role": "assault", "at": [340, 370], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
+          { "role": "assault", "at": [340, 830], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
+          { "role": "command", "at": [235, 600], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 0 },
+          { "role": "assault", "at": [235, 370], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
+          { "role": "assault", "at": [235, 830], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
+          { "role": "taran",   "at": [135, 520], "face": 0, "units": { "taran": 50 }, "delay": 0 },
+          { "role": "taran",   "at": [135, 680], "face": 0, "units": { "taran": 50 }, "delay": 2 },
+          { "role": "pekacz",  "at": [135, 360], "face": 0, "units": { "pekacz": 60 }, "delay": 10 },
+          { "role": "pekacz",  "at": [135, 840], "face": 0, "units": { "pekacz": 60 }, "delay": 12 },
+          { "role": "raider",  "at": [45, 440],  "face": 0, "units": { "biegacz": 80 }, "delay": 18 },
+          { "role": "raider",  "at": [45, 760],  "face": 0, "units": { "biegacz": 80 }, "delay": 22 },
+          { "role": "assault", "at": [45, 600],  "face": 0, "units": { "infantry": 100 }, "delay": 26 },
+          { "role": "command", "at": [235, 1000], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 0 }
         ]
       },
       "LH": {
-        "name": "Lake Hodges", "guardType": "ciezki", "regenBonus": 2, "supply": 60, "reserve": 150, "auraR": 170, "spawn": [1410, 450, 60, 60],
+        "name": "Lake Hodges", "guardType": "ciezki", "regenBonus": 2, "supply": 60, "reserve": 150, "auraR": 170, "spawn": [1770, 570, 60, 60],
         "companies": [
-          { "role": "plug", "closed": true, "spacing": 10.4, "at": [800, 480], "face": 3.14159, "units": { "odzwierny": 60 } },
-          { "role": "artillery", "at": [865, 400], "face": 3.14159, "units": { "plujka": 60 } },
-          { "role": "artillery", "at": [865, 570], "face": 3.14159, "units": { "plujka": 60 } },
-          { "role": "reserve", "at": [940, 270], "face": 3.14159, "units": { "infantry": 180 } },
-          { "role": "reserve", "at": [940, 690], "face": 3.14159, "units": { "infantry": 180 } },
-          { "role": "reserve", "at": [1070, 370], "face": 3.14159, "units": { "infantry": 180 } },
-          { "role": "reserve", "at": [1070, 600], "face": 3.14159, "units": { "infantry": 180 } },
-          { "role": "reserve", "at": [950, 480], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } },
-          { "role": "reserve", "at": [1170, 485], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } }
+          { "role": "plug", "closed": true, "spacing": 10.4, "at": [1000, 600], "face": 3.14159, "units": { "odzwierny": 60 } },
+          { "role": "artillery", "at": [1065, 520], "face": 3.14159, "units": { "plujka": 60 } },
+          { "role": "artillery", "at": [1065, 690], "face": 3.14159, "units": { "plujka": 60 } },
+          { "role": "reserve", "at": [1140, 390], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1140, 810], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1270, 490], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1270, 720], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1150, 600], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } },
+          { "role": "reserve", "at": [1370, 605], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } }
         ]
       }
     }
@@ -263,30 +282,42 @@ const Sim = (function () {
     sim.rebuildTables = buildTables;
 
     // ---------- teren ----------
-    // 0 otwarte, 1 mur (ludzki), 2 osłona (trawa, patyki), 3 mur gniazda
+    // 0 otwarte, 1 pień lub kłoda, 2 osłona (mech, paprocie), 3 mur gniazda, 4 głaz, 5 korzenie; blokują 1, 3, 4 i 5
     const grid = new Uint8Array(COLS * ROWS);
-    const midY = H / 2, wallX = defs.world.wallX, passage = defs.world.passage;
+    const BLK = new Uint8Array([0, 1, 0, 1, 1, 1]);
+    const gap = defs.world.gap, passage = defs.world.passage;
     const nestC = defs.world.nest;
     (function buildTerrain() {
+      const TYPE = { wood: 1, stone: 4, root: 5 };
+      const pt = (p) => (p === 'gapTop' ? [gap[0], gap[1] - passage / 2] : p === 'gapBottom' ? [gap[0], gap[1] + passage / 2] : p);
+      const segDist = (px, py, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1; const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / l2)); return Math.hypot(px - a[0] - t * dx, py - a[1] - t * dy); };
+      const obs = defs.world.map.obstacles.map((o) => ({ v: TYPE[o.type], r: o.r, at: o.at, line: o.line && o.line.map(pt) }));
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
         const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
         let v = 0;
         if (r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1) v = 1;
-        else if (Math.abs(cx - wallX) < CELL && Math.abs(cy - midY) > passage / 2) v = 1;
         else {
+          for (const o of obs) {
+            let d;
+            if (o.at) d = Math.hypot(cx - o.at[0], cy - o.at[1]);
+            else { d = 1e9; for (let k = 0; k + 1 < o.line.length; k++) d = Math.min(d, segDist(cx, cy, o.line[k], o.line[k + 1])); }
+            if (d < o.r) { v = o.v; break; }
+          }
+          // główny przesmyk zawsze otwarty na całej szerokości
+          if (Math.abs(cx - gap[0]) < 40 && Math.abs(cy - gap[1]) <= passage / 2) v = 0;
           const dx = cx - nestC[0], dy = cy - nestC[1], d = Math.hypot(dx, dy);
           if (d > 4.3 * CELL && d < 5.5 * CELL) {
             let da = Math.atan2(dy, dx) - Math.PI;
             da = Math.atan2(Math.sin(da), Math.cos(da));
-            if (Math.abs(da) > 0.4) v = 3;
-          }
+            v = Math.abs(da) > 0.4 ? 3 : 0;
+          } else if (d <= 4.3 * CELL) v = 0;
         }
         grid[r * COLS + c] = v;
       }
-      const patches = 12;
+      const patches = defs.world.map.coverRandom;
       for (let k = 0; k < patches; k++) {
         const west = k < patches / 2;
-        const px = west ? rngMap.range(180, 700) : rngMap.range(900, 1300);
+        const px = west ? rngMap.range(150, gap[0] - 150) : rngMap.range(gap[0] + 150, nestC[0] - 200);
         const py = rngMap.range(100, H - 100), pr = rngMap.range(2, 4) * CELL;
         for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
           if (grid[r * COLS + c] !== 0) continue;
@@ -298,7 +329,7 @@ const Sim = (function () {
     function cellAt(x, y) { return ((y / CELL) | 0) * COLS + ((x / CELL) | 0); }
     function blocked(x, y) {
       if (x < 0 || y < 0 || x >= W || y >= H) return true;
-      const v = grid[cellAt(x, y)]; return v === 1 || v === 3;
+      return BLK[grid[cellAt(x, y)]] === 1;
     }
     function losClear(x0, y0, x1, y1) {
       const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
@@ -324,7 +355,7 @@ const Sim = (function () {
       f = new Int32Array(COLS * ROWS).fill(-1);
       const q = [key]; f[key] = 0;
       const nb = [[1, 0, 10], [-1, 0, 10], [0, 1, 10], [0, -1, 10], [1, 1, 14], [1, -1, 14], [-1, 1, 14], [-1, -1, 14]];
-      const isB = (i) => grid[i] === 1 || grid[i] === 3;
+      const isB = (i) => BLK[grid[i]] === 1;
       for (let h = 0; h < q.length; h++) {
         const cur = q[h], cx = cur % COLS, cy = (cur / COLS) | 0;
         for (const [dx, dy, w] of nb) {
@@ -560,7 +591,7 @@ const Sim = (function () {
         for (const c of list) useAbility(c);
       }
     }
-    function retreatPoint(c) { return c.side === 0 ? nearestOpen(110, 480) : nearestOpen(nestC[0] - 20, nestC[1]); }
+    function retreatPoint(c) { return c.side === 0 ? nearestOpen(defs.world.retreatWK[0], defs.world.retreatWK[1]) : nearestOpen(nestC[0] - 20, nestC[1]); }
     function useAbility(c) {
       if (tick < c.abilCdUntil || !c.abilType) return false;
       const u = defs.units[c.abilType], ab = u.ability;
@@ -894,7 +925,6 @@ const Sim = (function () {
       const sn = SIDES[s], t = tick / HZ, mine = comps.filter((c) => c.side === s && c.alive > 0), foes = comps.filter((c) => c.side !== s && c.alive > 0);
       if (!foes.length) return;
       const attacker = defs.scenario.attacker === sn;
-      const gap = [wallX, midY];
       for (const c of mine) {
         if (c.cstate === CS_LOST) continue;
         const foeNear = foes.filter((e) => dist(c, e) < 260).sort((a, b) => dist(c, a) - dist(c, b));
@@ -916,7 +946,7 @@ const Sim = (function () {
             if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
             if (tgt && dist(c, tgt) < 110) useAbility(c);
           } else {
-            if (c.alive < 0.3 * c.initial && c.cstate !== CS_FULL) { order(c, 'retreat', 110, midY, 8); }
+            if (c.alive < 0.3 * c.initial && c.cstate !== CS_FULL) { order(c, 'retreat', defs.world.retreatWK[0], defs.world.retreatWK[1], 8); }
             else if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
             if (c.role === 'taran' && nearestFoe && dist(c, nearestFoe) < 110) useAbility(c);
           }
@@ -1102,7 +1132,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
   // cień pada w prawo-dół. Mrówki są malowane w wysokiej rozdzielczości (atlas 2,5x większy niż rozmiar na ekranie).
   const ISO = {
     S: 2, pad: 24,
-    get ox() { return 960 * 0.5 * this.S + this.pad; },
+    H: 960, // wysokość świata (ustawiana przy starcie sceny)
+    get ox() { return this.H * 0.5 * this.S + this.pad; },
     sx(x, y) { return this.ox + (x - y) * 0.5 * this.S; },
     sy(x, y) { return (x + y) * 0.25 * this.S + this.pad; },
     wx(cx, cy) { const u = (cx - this.ox) * 2 / this.S, v = (cy - this.pad) * 4 / this.S; return (u + v) / 2; },
@@ -1184,42 +1215,61 @@ if (typeof module !== 'undefined') module.exports = Sim;
     tile(c, cx, top - h, cTop);
   }
   function makeIsoTerrain(sim) {
-    const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, S = ISO.S, wallH = 6 * S;
+    const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, S = ISO.S;
     const [cw, ch] = ISO.size(sim);
     const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
     const nz = (x, y, s) => { let h = Math.imul(x * 374761393 + y * 668265263 + s * 2246822519, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
     const nest = sim.defs.world.nest, nestR = sim.defs.world.nestR;
-    const SAND = ['#cdb27c', '#c8ac75', '#d2b985', '#c3a66f'], DARKSAND = ['#a98a5a', '#a2835a', '#b0925f', '#9c7e52'];
-    const GRASS = ['#6d9a46', '#639040', '#76a24c', '#5b873a'];
+    // dno lasu: próchnica, ściółka, mech; pnie i kłody z korą, omszałe głazy, korzenie
+    const HUM = ['#85714d', '#7e6b47', '#8c7853', '#76643f'], DIRT = ['#9a7f58', '#947a54', '#a08561', '#8a704c'];
+    const MOSS = ['#5f8f3e', '#578636', '#69984a', '#4f7d33'];
     for (let d = 0; d < rows + cols - 1; d++) for (let r = Math.max(0, d - cols + 1); r <= Math.min(rows - 1, d); r++) {
       const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C), top = ISO.sy(col * C, r * C);
       const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
-      const px = (i, a, b) => cx - 6 * S + Math.floor(nz(col, r, i) * 12 * S) % (12 * S), py = (i, a, b) => top + 1 + Math.floor(nz(col, r, i + 50) * (8 * S - 3));
-      if (v === 1) { tile(c, cx, top, '#9a9a94'); isoBox(c, cx, top, wallH, k % 2 ? '#b8b8b1' : '#b2b2ab', '#92928c', '#74746f'); c.fillStyle = 'rgba(60,60,56,0.35)'; c.fillRect(cx - 3, top - wallH + 8, 6, 1); }
-      else if (v === 3) { tile(c, cx, top, DARKSAND[k]); isoBox(c, cx, top, wallH - 2, '#98693b', '#78512d', '#583a20'); c.fillStyle = '#b88854'; c.fillRect(cx - 4, top - wallH + 8, 3, 1); }
+      const px = (i) => cx - 6 * S + Math.floor(nz(col, r, i) * 12 * S) % (12 * S), py = (i) => top + 1 + Math.floor(nz(col, r, i + 50) * (8 * S - 3));
+      const borderWall = r === 0 || c === 0 || r === rows - 1 || col === 0 || col === cols - 1;
+      if (v === 1) {
+        // pień, kłoda lub drzewo na brzegu: kora w trzech tonach z pionowymi rysami
+        const h = borderWall ? 22 : 16;
+        tile(c, cx, top, '#5a4328'); isoBox(c, cx, top, h, k % 2 ? '#9a7040' : '#926a3c', '#734f2d', '#523820');
+        c.fillStyle = 'rgba(40,26,12,0.55)'; for (let t = 0; t < 3; t++) c.fillRect(cx - 12 + t * 7 + (k % 3), top - h + 5 + t * 2, 1, 5 + (t % 2) * 2);
+        c.fillStyle = '#a77d4a'; c.fillRect(cx - 4, top - h + 2, 5, 1);
+      } else if (v === 4) {
+        // głaz: szary kamień z mchem od północy
+        const h = 14;
+        tile(c, cx, top, HUM[k]); isoBox(c, cx, top, h, '#99a095', '#767d73', '#585e56');
+        c.fillStyle = '#5f8238'; c.fillRect(cx - 7 + (k % 3) * 3, top - h + 1, 7, 2); c.fillRect(cx - 12, top - h + 7, 3, 2);
+        c.fillStyle = '#b8bfb2'; c.fillRect(cx - 4, top - h + 2 + (k % 2), 4, 1);
+      } else if (v === 5) {
+        // splątane korzenie: niska, ciemna bryła z jasnymi żyłami
+        const h = 6;
+        tile(c, cx, top, HUM[k]); isoBox(c, cx, top, h, '#6b4d2b', '#553b21', '#3d2b17');
+        c.fillStyle = '#8e6a3c'; c.fillRect(cx - 9 + (k % 3) * 4, top - h + 3, 10, 1); c.fillRect(cx + 1, top - h + 7, 7, 1);
+      } else if (v === 3) { tile(c, cx, top, DIRT[k]); isoBox(c, cx, top, 8, '#8a6238', '#6c4a2a', '#4e351f'); c.fillStyle = '#b08350'; c.fillRect(cx - 4, top - 6, 3, 1); }
       else if (v === 2) {
-        tile(c, cx, top, GRASS[k]);
-        for (let t = 0; t < 7; t++) { c.fillStyle = t % 3 ? '#4a7430' : '#8fba58'; c.fillRect(px(10 + t), py(10 + t), 1, 2 + (t % 2)); }
-        if (n > 0.84) { c.fillStyle = '#6b4a24'; c.fillRect(cx - 7, top + 10, 11, 1); c.fillStyle = '#8f6a38'; c.fillRect(cx - 7, top + 9, 9, 1); }
+        tile(c, cx, top, MOSS[k]);
+        for (let t = 0; t < 8; t++) { c.fillStyle = t % 3 ? '#35581f' : '#8fbc5a'; c.fillRect(px(10 + t), py(10 + t), 1, 2 + (t % 2)); }
+        if (n > 0.9) { // grzyb: czerwony kapelusz z kropkami na jasnej nóżce
+          const gx = px(40), gy = py(41); c.fillStyle = '#e8dfc8'; c.fillRect(gx, gy + 2, 2, 3); c.fillStyle = '#c0392b'; c.fillRect(gx - 2, gy, 6, 3); c.fillStyle = '#fff1e0'; c.fillRect(gx - 1, gy + 1, 1, 1); c.fillRect(gx + 2, gy, 1, 1);
+        }
       } else {
-        tile(c, cx, top, dn < nestR + 14 ? DARKSAND[k] : SAND[k]);
-        for (let t = 0; t < 4; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.5 ? 'rgba(112,88,52,0.55)' : 'rgba(232,214,168,0.7)'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 2 : 1, 1); }
-        if (n < 0.05) { c.fillStyle = '#b09a70'; c.fillRect(cx - 2, top + 8, 4, 2); c.fillStyle = '#e0cc9c'; c.fillRect(cx - 2, top + 8, 2, 1); }
+        tile(c, cx, top, dn < nestR + 14 ? DIRT[k] : HUM[k]);
+        // ściółka: liście w ciepłych barwach, patyki, kamyki
+        for (let t = 0; t < 5; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.7 ? '#a8672c' : nn > 0.4 ? '#8d6b2f' : '#6b5a2a'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 3 : 2, 1); }
+        if (n > 0.93) { c.fillStyle = '#2f2418'; c.fillRect(cx - 5, top + 9, 8, 1); c.fillStyle = '#6a4d2a'; c.fillRect(cx - 5, top + 8, 7, 1); }
+        else if (n < 0.04) { c.fillStyle = '#7d7f76'; c.fillRect(cx - 2, top + 8, 4, 2); c.fillStyle = '#a8aba0'; c.fillRect(cx - 2, top + 8, 2, 1); }
       }
     }
     // gniazdo: kopiec w trzech tonach i ciemne wejście od strony zachodniej
     const ell = (x, y, R, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R), 0, 0, 7); c.fill(); };
-    ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.28)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(70,46,24,0.4)');
-    ell(nest[0] - 78, nest[1], 7, '#2b1b0d');
-    // znaczniki przejścia: pasy ostrzegawcze na końcach muru
-    const wx = sim.defs.world.wallX, my = sim.H / 2, hw = sim.defs.world.passage / 2;
-    for (const yy of [my - hw, my + hw]) for (let t = 0; t < 5; t++) { c.fillStyle = t % 2 ? '#2a2a2a' : '#e6b422'; const q = yy + (yy < my ? -3 : 3); c.fillRect(Math.round(ISO.sx(wx, q)) - 10 + t * 4, Math.round(ISO.sy(wx, q)) - wallH - 1, 4, 3); }
+    ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.32)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(60,40,20,0.45)');
+    ell(nest[0] - 78, nest[1], 7, '#241508');
     return PIXI.Texture.from(cv);
   }
   /*ISO-END*/
 
   function setupScene(sim) {
-    world.removeChildren(); gGround.clear(); labels.removeChildren();
+    ISO.H = sim.H; world.removeChildren(); gGround.clear(); labels.removeChildren();
     if (!atlas) atlas = makeAntAtlas(sim.names, sim.kinds);
     terrainSpr = new PIXI.Sprite(makeIsoTerrain(sim));
     antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: true, position: true, rotation: false, uvs: true, tint: true }, 16384, false);
