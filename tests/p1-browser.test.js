@@ -17,6 +17,20 @@ const { openPage, ROOT } = require('./browser-lib');
     const nonBg = await page.evaluate(() => { const c = __P1.app.view; const t = document.createElement('canvas'); t.width = 64; t.height = 40; t.getContext('2d').drawImage(c, 0, 0, 64, 40); const d = t.getContext('2d').getImageData(0, 0, 64, 40).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 120) n++; return n; }).catch(() => -1);
     assert.ok(png.length > 20000, 'zrzut ekranu wygląda na pusty');
 
+    // kółko myszy: punkt pod kursorem zostaje pod kursorem, a mapa nie ucieka z ekranu (regresja: zoom przy widoku izometrycznym)
+    const under = () => page.evaluate(([mx, my]) => { const c = __P1.cam; return [(mx - c.x) / c.z, (my - c.y) / c.z, c.z, c.x, c.y]; }, [700, 380]);
+    const u0 = await under(); await page.mouse.move(700, 380);
+    for (let i = 0; i < 5; i++) await page.mouse.wheel(0, -240);
+    await page.waitForTimeout(200); const u1 = await under();
+    assert.ok(u1[2] > u0[2] * 1.5, 'zoom nie działa');
+    assert.ok(Math.abs(u1[0] - u0[0]) < 1 && Math.abs(u1[1] - u0[1]) < 1, 'punkt pod kursorem uciekł: ' + u0 + ' → ' + u1);
+    for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 300);
+    await page.waitForTimeout(200);
+    const u2 = await page.evaluate(() => { const c = __P1.cam, w = __P1.app.screen; return [c.x, c.y, w.width, w.height]; });
+    assert.ok(u2[0] < u2[2] && u2[1] < u2[3], 'kamera uciekła poza ekran');
+    ok('kółko myszy przybliża wokół kursora i nie gubi mapy', 'zoom ' + u0[2].toFixed(2) + ' → ' + u1[2].toFixed(2));
+    await page.evaluate(() => __P1.S.sim && (function () { const c = __P1.cam; }()));
+
     // pauza + rozkaz w pauzie
     await page.keyboard.press('Space');
     const t0 = await page.evaluate(() => __P1.S.sim.tick);
@@ -51,7 +65,7 @@ const { openPage, ROOT } = require('./browser-lib');
     ok('grupy pod klawiszami (Ctrl+1, 1)');
 
     // zaznaczanie ramką
-    await page.evaluate(() => __P1.S.selected.clear());
+    await page.evaluate(() => { __P1.startBattle(); __P1.S.selected.clear(); }); // startBattle ustawia kamerę na całą mapę
     await page.mouse.move(120, 120); await page.mouse.down(); await page.mouse.move(520, 800); await page.mouse.up();
     const nsel = await page.evaluate(() => __P1.S.selected.size);
     assert.ok(nsel >= 4, 'ramka zaznaczyła ' + nsel + ' rot');
