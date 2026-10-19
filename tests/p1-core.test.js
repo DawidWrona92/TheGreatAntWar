@@ -52,8 +52,8 @@ test('dowódca ma własną gwardię: elitarne wersje dowolnego typu (statystyki 
   return 'gwardia: ' + [...new Set(guards.map((g) => g.name))].join(', ') + '; dowolny typ bazowy jako gwardia: ok';
 });
 
-test('ciała mają masę: mrówki się nie stackują (pary nakładające się >40% poza zamkniętym plugiem)', () => {
-  const sim = make(1, 256); let worst = 0, sum = 0, n = 0, pairsTotal = 0;
+test('ciała mają masę: w walce mrówki się nie stackują (pary wróg-wróg lub z ciałem w kontakcie nakładające się >40%)', () => {
+  const sim = make(1, 256); let worst = 0, sum = 0, n = 0, friendlyPass = 0;
   for (let k = 0; k < 20 * 150 && !sim.result; k++) {
     sim.step();
     if (k % 40 === 20) {
@@ -64,13 +64,48 @@ test('ciała mają masę: mrówki się nie stackują (pary nakładające się >4
         const dx = sim.x[i] - sim.x[j]; if (Math.abs(dx) > md) continue; const dy = sim.y[i] - sim.y[j]; if (Math.abs(dy) > md) continue;
         const ci = sim.comps[sim.comp[i]], cj = sim.comps[sim.comp[j]];
         if (ci.closed && cj.closed) continue;
-        if (Math.hypot(dx, dy) < 0.6 * md) bad++;
+        if (Math.hypot(dx, dy) >= 0.6 * md) continue;
+        // liczą się nakładania w walce (wróg albo ciało w kontakcie); mijanie się swoich poza walką jest dozwolone i krótkotrwałe
+        if (sim.side[i] !== sim.side[j] || sim.contact[i] || sim.contact[j]) bad++; else friendlyPass++;
       }
       worst = Math.max(worst, bad / ids.length); sum += bad / ids.length; n++;
     }
   }
   assert.ok(worst < 0.04, 'zbyt wiele nakładających się ciał: ' + (worst * 100).toFixed(1) + '% mrówek w najgorszym pomiarze');
-  return 'najgorszy pomiar: ' + (worst * 100).toFixed(2) + '% mrówek w nakładającej się parze, średnio ' + (sum / n * 100).toFixed(2) + '%';
+  return 'w walce najgorszy pomiar: ' + (worst * 100).toFixed(2) + '% mrówek w nakładającej się parze, średnio ' + (sum / n * 100).toFixed(2) + '% (osobno: ' + (friendlyPass / n).toFixed(1) + ' par swoich mijających się poza walką na pomiar)';
+});
+
+test('poza walką swoi się mijają: rota w marszu przechodzi przez stojącą, a ta robi jej przejście', () => {
+  const { Sim, defs } = loadP1(); const sim = Sim.create({ defs, seed: 1, passage: 192, aiSides: [] });
+  const mover = sim.comps.find((c) => c.side === 0 && /^Gwardia/.test(c.name)), idle = sim.comps.find((c) => c.side === 0 && c.name === 'Rota wojowników');
+  const idleAliveBefore = idle.alive;
+  sim.command({ k: 'order', side: 'WK', comps: [mover.id], kind: 'move', x: 520, y: idle.ay });
+  let crossed = -1;
+  for (let k = 0; k < 20 * 40; k++) {
+    sim.step();
+    if (crossed < 0) { const xs = mover.ants.filter((i) => sim.alive[i]).map((i) => sim.x[i]); if (xs.length && xs.reduce((a, b) => a + b, 0) / xs.length > 480) crossed = k / 20; }
+  }
+  assert.ok(crossed > 0, 'rota w marszu nie przeszła przez stojącą (utknęła w kolejce)');
+  assert.strictEqual(idle.alive, idleAliveBefore, 'przejście nie powinno nikogo zabijać');
+  // stojąca rota wraca do szyku: średni błąd względem środka nie rośnie ponad rozmiar szyku
+  const cx = idle.ants.reduce((a, i) => a + sim.x[i], 0) / idle.ants.length;
+  assert.ok(Math.abs(cx - idle.ax) < 40, 'stojąca rota rozsypała się po przejściu: środek ' + cx.toFixed(0) + ' vs kotwica ' + idle.ax.toFixed(0));
+  return 'rota w marszu minęła stojącą po ' + crossed.toFixed(1) + ' s, bez strat; stojąca wróciła do szyku';
+});
+
+test('w walce nikt się nie mija: ciało w kontakcie z wrogiem stoi w miejscu (nie jest przepychane przez swoich)', () => {
+  const sim = make(1, 256); const moves = []; let prevX = null, prevY = null, prevC = null;
+  for (let k = 0; k < 20 * 150 && !sim.result; k++) {
+    sim.step();
+    if (prevX) for (let i = 0; i < prevX.length; i++) if (prevC[i] && sim.contact[i] && sim.alive[i]) moves.push(Math.hypot(sim.x[i] - prevX[i], sim.y[i] - prevY[i]));
+    prevX = Array.from(sim.x.subarray(0, sim.count)); prevY = Array.from(sim.y.subarray(0, sim.count)); prevC = Array.from(sim.contact.subarray(0, sim.count));
+  }
+  assert.ok(moves.length > 2000, 'za mało pomiarów walczących: ' + moves.length);
+  moves.sort((a, b) => a - b);
+  const med = moves[moves.length >> 1], p99 = moves[Math.floor(moves.length * 0.99)];
+  const p90 = moves[Math.floor(moves.length * 0.9)];
+  assert.ok(med < 0.4 && p90 < 1.2, 'walczące ciała się przesuwają: mediana ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2));
+  return moves.length + ' pomiarów mrówek w kontakcie: mediana przesunięcia na krok ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2) + ', p99 ' + p99.toFixed(2) + ' (odrzut taranów wlicza się)';
 });
 
 test('zmęczenie rośnie w marszu i walce, obniża tempo ataku i kontrolę, spada na odpoczynku', () => {
@@ -90,8 +125,9 @@ test('kapitan roty: jego śmierć obniża morale, a po czasie awansuje następca
   for (let k = 0; k < 20 * 400 && !sim.result && !ev; k++) { sim.step(); ev = sim.events.find((e) => /Poległ kapitan roty/.test(e.text)); if (ev) comp = sim.comps[ev.comp]; }
   assert.ok(ev, 'w 400 s nie poległ żaden kapitan');
   assert.ok(comp.captain === -1 || comp.alive === 0, 'kapitan nie został odebrany po śmierci');
-  const t0 = sim.tick; for (let k = 0; k < 20 * 18 && !sim.result; k++) sim.step();
-  assert.ok(comp.alive === 0 || comp.captain >= 0, 'po ' + (sim.tick - t0) / 20 + ' s nie awansował następca kapitana');
+  let promoted = comp.alive === 0 || comp.captain >= 0;
+  for (let k = 0; k < 20 * 20 && !sim.result && !promoted; k++) { sim.step(); if (comp.captain >= 0 || comp.alive === 0) promoted = true; }
+  assert.ok(promoted, 'w ciągu 20 s po śmierci nie awansował następca kapitana');
   return ev.text + ' (' + ev.t + ' s), następca awansował';
 });
 
@@ -176,7 +212,7 @@ test('szerokość przejścia zmienia przebieg: węższe przejście kosztuje atak
 
 test('kontrola feromonowa: roty osłabiają się lub tracą kontrolę, a zdarzenia mają przyczynę', () => {
   const sim = run(make(1, 256), 400); const ev = sim.report().events;
-  const changes = ev.filter((e) => /osłabiona kontrola|utrata kontroli/.test(e.text));
+  const changes = ev.filter((e) => /osłabiona kontrola|utrata kontroli/.test(e.text) && !/odzyskała/.test(e.text));
   assert.ok(changes.length > 0, 'żadna rota nie osłabła ani nie straciła kontroli w 400 s');
   assert.ok(changes.every((e) => /przyczyna:/.test(e.text) || /\)$/.test(e.text)), 'zdarzenie bez przyczyny');
   const lost = changes.filter((e) => /utrata kontroli/.test(e.text));

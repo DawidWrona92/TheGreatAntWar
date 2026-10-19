@@ -10,38 +10,39 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 3. Sprite'y są malowane w wysokiej rozdzielczości (atlas 2,4 razy większy niż na ekranie), 16 kierunków, cień rzucany w prawo-dół. Wielka Kolonia jest czarna, Lake Hodges czerwony; typy różnią się sylwetką.
 
 **Fizyka ciał**
-4. Mrówki mają ciało (okrąg o promieniu zależnym od typu) i masę. Nie mogą się przenikać. Tylny szereg czeka, aż przed nim zrobi się miejsce (poległy kolega, rozciągnięty szyk).
-5. Ruch jest wyprzedzający: mrówka nie wchodzi w punkt, w którym nałożyłaby się na inne ciało, do którego się zbliża (próbuje odchylić tor o ±0,9 rad, inaczej stoi). Po ruchu jest kilka przejść relaksacji nakładających się par.
+4. Mrówki mają ciało (okrąg o promieniu zależnym od typu) i masę. W walce nie mogą się przenikać ani stackować: tylny szereg czeka, aż przed nim zrobi się miejsce (poległy kolega, rozciągnięty szyk).
+5. Ruch jest wyprzedzający: mrówka nie wchodzi w punkt, w którym nałożyłaby się na ciało wroga albo kolegi w kontakcie z wrogiem, do którego się zbliża (próbuje odchylić tor o ±0,9 rad, inaczej stoi). Po ruchu jest kilka przejść relaksacji nakładających się par.
 6. W relaksacji lżejsza lub niewalcząca mrówka ustępuje cięższej i tej, która jest w kontakcie z wrogiem (masa walczącego jest mnożona przez `collision.fightMass`).
 7. Zamknięty plug odźwiernych jest twardą przeszkodą: mrówka wraca na tę stronę, z której przyszła (pozycja sprzed kroku). Bez tego nacisk tłumu przepychał mrówki na drugą stronę szyku.
-8. Walka wręcz wymaga kontaktu (`reach` to szczelina między ciałami, kilka jednostek), więc w kontakcie walczy pierwszy szereg, a nie stos mrówek.
+8. **Poza walką swoi się mijają**, jak w Total War: idąca mrówka przepycha się przez stojącą kolegę, a stojąca odsuwa się bokiem od jej toru i robi przejście. Dotyczy tylko swoich, którzy nie są w kontakcie z wrogiem, i tylko gdy mijana mrówka nie jest wyraźnie cięższa (masa do 2,5 razy większa niż mijającej). W walce ta reguła nie obowiązuje: ciało w kontakcie z wrogiem stoi, nikt go nie przesuwa. Mrówki przy zamkniętym plugu nie mijają się, żeby nic nie wślizgnęło się w szczelinę.
+9. Walka wręcz wymaga kontaktu (`reach` to szczelina między ciałami, kilka jednostek), więc w kontakcie walczy pierwszy szereg, a nie stos mrówek.
 
 **Roty, szyki, rozkazy**
-9. Rota ma kotwicę (środek szyku), kierunek, szyk (linia, kolumna, klin) i sloty. Kotwica jedzie po polu przepływu (jedno na cel); mrówki idą do swoich slotów, a gdy slot jest za przeszkodą, podążają za polem przepływu.
-10. Szyk układa się wg rangi typu (przód: taran i odźwierny; tył: plujki i dowódca) i rzadko, z odstępem zależnym od ciała (taran i ciężka elita mają większy). Plug ma ciasny odstęp, żeby zamykać przejście bez szczelin.
-11. Rozkazy: atak-marsz (walczy po drodze), ruch (nie walczy), stój (broni się w promieniu 18), odwrót (broni się tylko w zasięgu kontaktu), szyk, umiejętność. Rozkazy można wydawać w pauzie.
-12. Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu o wektor od środka grupy do celu); pojedyncza rota idzie dokładnie w kliknięty punkt. Obrót całego układu jak w Total War nie jest zrobiony.
-13. Rota ma nazwę zależną od typu (Rota wojowników, Rota taranów...), z numerem porządkowym (`#n`) tylko do odróżnienia w interfejsie.
+10. Rota ma kotwicę (środek szyku), kierunek, szyk (linia, kolumna, klin) i sloty. Kotwica jedzie po polu przepływu (jedno na cel); mrówki idą do swoich slotów, a gdy slot jest za przeszkodą, podążają za polem przepływu.
+11. Szyk układa się wg rangi typu (przód: taran i odźwierny; tył: plujki i dowódca) i rzadko, z odstępem zależnym od ciała (taran i ciężka elita mają większy). Plug ma ciasny odstęp, żeby zamykać przejście bez szczelin.
+12. Rozkazy: atak-marsz (walczy po drodze), ruch (nie walczy), stój (broni się w promieniu 18), odwrót (broni się tylko w zasięgu kontaktu), szyk, umiejętność. Rozkazy można wydawać w pauzie.
+13. Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu o wektor od środka grupy do celu); pojedyncza rota idzie dokładnie w kliknięty punkt. Obrót całego układu jak w Total War nie jest zrobiony.
+14. Rota ma nazwę zależną od typu (Rota wojowników, Rota taranów...), z numerem porządkowym (`#n`) tylko do odróżnienia w interfejsie.
 
 **Dowodzenie i morale**
-14. Morale to kontrola feromonowa 0-100 w trzech stanach: pełna (≥ 60), osłabiona (25-60), utracona (< 25, powrót od 45). Utrata kontroli: Wielka Kolonia wpada w szał (atakuje najbliższego wroga, ignorując rozkazy), Lake Hodges się wycofuje.
-15. Kontrola rośnie od regeneracji, bonusu za dowódcę w zasięgu i za zwartą masę, a maleje od strat w ostatnich 6 s (ułamek roty), alarmu w walce, braku dowódcy w zasięgu (silniej u Wielkiej Kolonii), odcięcia od innych rot, zmęczenia i śmierci kapitana.
-16. Dowódca ma własną rotę (gwardię). Gwardia to elita: statystyki bazowe razy mnożniki elitarności (zdrowie, obrażenia, tempo ataku, pancerz). Typ gwardii jest dowolny i wybierany przy rekrutacji (w prezentacji domyślnie ciężka). Dowódca nie siedzi w zwykłych rotach.
-17. Zasięg dowódcy (promień aury) jest rysowany na ziemi. Umiejętność dowódcy (Rozkaz) podnosi kontrolę rot w aurze.
-18. Każda rota bez dowódcy ma kapitana: mrówkę najbliżej środka szyku. Jego śmierć zbija kontrolę o `captain.shock` i na `captain.dur` sekund obniża regenerację; potem awansuje następca. To odpowiednik śmierci princepsa.
-19. Zmęczenie roty 0-100: rośnie w marszu i walce, spada na odpoczynku. Obniża tempo ataku, prędkość, obrażenia i kontrolę.
+15. Morale to kontrola feromonowa 0-100 w trzech stanach: pełna (≥ 60), osłabiona (25-60), utracona (< 25, powrót od 45). Utrata kontroli: Wielka Kolonia wpada w szał (atakuje najbliższego wroga, ignorując rozkazy), Lake Hodges się wycofuje.
+16. Kontrola rośnie od regeneracji, bonusu za dowódcę w zasięgu i za zwartą masę, a maleje od strat w ostatnich 6 s (ułamek roty), alarmu w walce, braku dowódcy w zasięgu (silniej u Wielkiej Kolonii), odcięcia od innych rot, zmęczenia i śmierci kapitana.
+17. Dowódca ma własną rotę (gwardię). Gwardia to elita: statystyki bazowe razy mnożniki elitarności (zdrowie, obrażenia, tempo ataku, pancerz). Typ gwardii jest dowolny i wybierany przy rekrutacji (w prezentacji domyślnie ciężka). Dowódca nie siedzi w zwykłych rotach.
+18. Zasięg dowódcy (promień aury) jest rysowany na ziemi. Umiejętność dowódcy (Rozkaz) podnosi kontrolę rot w aurze.
+19. Każda rota bez dowódcy ma kapitana: mrówkę najbliżej środka szyku. Jego śmierć zbija kontrolę o `captain.shock` i na `captain.dur` sekund obniża regenerację; potem awansuje następca. To odpowiednik śmierci princepsa.
+20. Zmęczenie roty 0-100: rośnie w marszu i walce, spada na odpoczynku. Obniża tempo ataku, prędkość, obrażenia i kontrolę.
 
 **Walka i frakcje**
-20. Piechota jest wspólna. Specjalne: Taran (odporny na masę, odrzuca), Biegacz (szybki, poluje na plujki), Pękacz (jednorazowy, oblepia), Odźwierny (plug, zamykany), Plujka (kwas, ograniczona amunicja), dowódca. Ciężki wojownik jest wspólny dla obu stron i jest podstawą ciężkiej gwardii.
-21. Kontry to mnożniki obrażeń (tabela poniżej). Elita dziedziczy kontry typu bazowego.
-22. Kwas to wspólna pula roty plujek: start `acidStart` strzałów na plujkę, napływ zależny od suwaka zaopatrzenia. Uzupełnienia (wojownicy z rezerwy) wchodzą w tempie zależnym od suwaka zaopatrzenia i trafiają do roty z największym niedoborem.
-23. Plug zamyka przejście od startu. Szerokość przejścia (32-320) zmienia przebieg bitwy.
-24. Tempo walki ustawia jeden mnożnik `cdScale` (czas między atakami), niezależny od balansu między typami.
-25. Przebieg jest deterministyczny: ziarno, stały krok 20 Hz, osobne strumienie losowe (mapa, uzupełnienia, walka), kolejka poleceń. Ten sam dziennik poleceń daje ten sam stan.
+21. Piechota jest wspólna. Specjalne: Taran (odporny na masę, odrzuca), Biegacz (szybki, poluje na plujki), Pękacz (jednorazowy, oblepia), Odźwierny (plug, zamykany), Plujka (kwas, ograniczona amunicja), dowódca. Ciężki wojownik jest wspólny dla obu stron i jest podstawą ciężkiej gwardii.
+22. Kontry to mnożniki obrażeń (tabela poniżej). Elita dziedziczy kontry typu bazowego.
+23. Kwas to wspólna pula roty plujek: start `acidStart` strzałów na plujkę, napływ zależny od suwaka zaopatrzenia. Uzupełnienia (wojownicy z rezerwy) wchodzą w tempie zależnym od suwaka zaopatrzenia i trafiają do roty z największym niedoborem.
+24. Plug zamyka przejście od startu. Szerokość przejścia (32-320) zmienia przebieg bitwy.
+25. Tempo walki ustawia jeden mnożnik `cdScale` (czas między atakami), niezależny od balansu między typami.
+26. Przebieg jest deterministyczny: ziarno, stały krok 20 Hz, osobne strumienie losowe (mapa, uzupełnienia, walka), kolejka poleceń. Ten sam dziennik poleceń daje ten sam stan.
 
 **Interfejs**
-26. Nad rotą zawsze widać tylko chorągiew z literą typu. Po zaznaczeniu lub najechaniu pojawia się panel: nazwa, liczebność (aktualnie/max), pasek zdrowia podzielony na mrówki (cała = pełne, ranna = połowa, martwa = puste), pasek morale ze znacznikami progów i pasek zmęczenia.
-27. Parametry są w jednym obiekcie i można je zmieniać suwakami na żywo, zapisać i wczytać.
+27. Nad rotą zawsze widać tylko chorągiew z literą typu. Po zaznaczeniu lub najechaniu pojawia się panel: nazwa, liczebność (aktualnie/max), pasek zdrowia podzielony na mrówki (cała = pełne, ranna = połowa, martwa = puste), pasek morale ze znacznikami progów i pasek zmęczenia.
+28. Parametry są w jednym obiekcie i można je zmieniać suwakami na żywo, zapisać i wczytać.
 
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
@@ -138,22 +139,22 @@ Dodatkowo: Taran odrzuca (`knock` 45), Pękacz ma `burst` (promień 22, obrażen
 ### Scenariusz (liczebność i role rot)
 Rola steruje AI. Opóźnienie to sekundy do pierwszego rozkazu (tylko strona atakująca). `@guard` to gwardia dowódcy wybranego typu.
 
-Wielka Kolonia (atakuje, rezerwa 300, promień aury 260):
+Wielka Kolonia (atakuje, rezerwa 150, promień aury 260):
 | Rola | Skład | Pozycja | Opóźnienie |
 |---|---|---|---|
-| assault | infantry 130 | (340, 480) | 0 |
-| assault | infantry 130 | (340, 250) | 5 |
-| assault | infantry 130 | (340, 710) | 5 |
+| assault | infantry 100 | (340, 480) | 0 |
+| assault | infantry 100 | (340, 250) | 5 |
+| assault | infantry 100 | (340, 710) | 5 |
 | command | @guard 50, dowodca 1 | (235, 480) | 16 |
-| assault | infantry 130 | (235, 250) | 22 |
-| assault | infantry 130 | (235, 710) | 22 |
+| assault | infantry 100 | (235, 250) | 22 |
+| assault | infantry 100 | (235, 710) | 22 |
 | taran | taran 50 | (135, 400) | 0 |
 | taran | taran 50 | (135, 560) | 2 |
 | pekacz | pekacz 60 | (135, 240) | 10 |
 | pekacz | pekacz 60 | (135, 720) | 12 |
 | raider | biegacz 80 | (45, 320) | 18 |
 | raider | biegacz 80 | (45, 640) | 22 |
-| assault | infantry 130 | (45, 480) | 26 |
+| assault | infantry 100 | (45, 480) | 26 |
 | command | @guard 50, dowodca 1 | (235, 880) | 24 |
 
 Lake Hodges (broni, rezerwa 150, promień aury 170, bonus regeneracji 2):
@@ -162,10 +163,10 @@ Lake Hodges (broni, rezerwa 150, promień aury 170, bonus regeneracji 2):
 | plug | odzwierny 60 | (800, 480) |  |
 | artillery | plujka 60 | (865, 400) |  |
 | artillery | plujka 60 | (865, 570) |  |
-| reserve | infantry 100 | (940, 270) |  |
-| reserve | infantry 100 | (940, 690) |  |
-| reserve | infantry 100 | (1070, 370) |  |
-| reserve | infantry 100 | (1070, 600) |  |
+| reserve | infantry 180 | (940, 270) |  |
+| reserve | infantry 180 | (940, 690) |  |
+| reserve | infantry 180 | (1070, 370) |  |
+| reserve | infantry 180 | (1070, 600) |  |
 | reserve | @guard 50, dowodca 1 | (950, 480) |  |
 | reserve | @guard 50, dowodca 1 | (1170, 485) |  |
 
@@ -446,6 +447,9 @@ function update_ants():
 
 function body_ahead(i, p):       // czy w p ciało i wejdzie w ciało j, do którego się zbliża
     for j in neighbours of p within 2 hash cells, j != i, alive:
+        // poza walką swoi się mijają: kolega bez kontaktu z wrogiem i nie za ciężki (masa <= 2.5 * własna) nie blokuje,
+        // chyba że jest elementem zamkniętego plugu
+        if side[j] == side[i] and not contact[j] and T.mass[type[j]] <= 2.5 * T.mass[type[i]] and not closed_plug(j): continue
         md = 0.92 * (radius[i] + radius[j])
         if distance(p, pos[j]) < md and distance(p, pos[j]) < distance(pos[i], pos[j]): return true
     return false
@@ -504,6 +508,7 @@ function resolve_collisions():
     for i: mass[i] = T.mass[type[i]]
            if closed plug ant: mass = 1e6 (nieruchomy)  elif contact[i]: mass *= collision.fightMass
     build a grid with cell 13 (>= największa średnica ciała), so only 3x3 cells need to be scanned
+    near_plug[k] = 1 for every non-fixed ant within the 3x3 cells of a fixed (closed plug) ant
     repeat collision.passes times:
         for i ascending, for j > i in 3x3 cells:
             md = radius[i] + radius[j]; d = distance(i, j); if d >= md: continue
@@ -514,6 +519,16 @@ function resolve_collisions():
                 new = pos[f] + u * md                                    // wróć na stronę, z której przyszła
                 pos[o] = blocked(new) ? prev[o] : new
                 continue
+            if side[i] == side[j] and not contact[i] and not contact[j] and not near_plug[i] and not near_plug[j]:
+                // swoi poza walką: idący (większa prędkość z tego kroku o > 1) nie ustępuje, stojący odsuwa się
+                // bokiem od toru idącego i robi mu przejście (o ile nie jest wyraźnie cięższy)
+                speedI = |vel[i]|; speedJ = |vel[j]|
+                if speedI > speedJ + 1 or speedJ > speedI + 1:
+                    m = faster one; y = the other
+                    if T.mass[type[y]] <= 2.5 * T.mass[type[m]]:
+                        perp = normalize(rotate90(vel[m])); sign = side of y relative to the mover's path
+                        pos[y] += (perp * sign * 0.8 + normalize(pos[y] - pos[m]) * 0.3) * overlap * 1.1   // przeciwna strona, gdy to mur
+                        continue
             overlap = md - d; u = normalize(pos[i] - pos[j])
             wi = mass[j] / (mass[i] + mass[j]); wj = 1 - wi              // lżejszy przesuwa się bardziej
             move i by u*overlap*wi, j by -u*overlap*wj, each only if the new point is not blocked

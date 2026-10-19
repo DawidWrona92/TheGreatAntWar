@@ -151,21 +151,21 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "attacker": "WK",
     "sides": {
       "WK": {
-        "name": "Wielka Kolonia", "guardType": "ciezki", "regenBonus": 0, "supply": 60, "reserve": 300, "auraR": 260, "spawn": [50, 200, 140, 560],
+        "name": "Wielka Kolonia", "guardType": "ciezki", "regenBonus": 0, "supply": 60, "reserve": 150, "auraR": 260, "spawn": [50, 200, 140, 560],
         "companies": [
-          { "role": "assault", "at": [340, 480], "face": 0, "units": { "infantry": 130 }, "delay": 0 },
-          { "role": "assault", "at": [340, 250], "face": 0, "units": { "infantry": 130 }, "delay": 5 },
-          { "role": "assault", "at": [340, 710], "face": 0, "units": { "infantry": 130 }, "delay": 5 },
+          { "role": "assault", "at": [340, 480], "face": 0, "units": { "infantry": 100 }, "delay": 0 },
+          { "role": "assault", "at": [340, 250], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
+          { "role": "assault", "at": [340, 710], "face": 0, "units": { "infantry": 100 }, "delay": 5 },
           { "role": "command", "at": [235, 480], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 16 },
-          { "role": "assault", "at": [235, 250], "face": 0, "units": { "infantry": 130 }, "delay": 22 },
-          { "role": "assault", "at": [235, 710], "face": 0, "units": { "infantry": 130 }, "delay": 22 },
+          { "role": "assault", "at": [235, 250], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
+          { "role": "assault", "at": [235, 710], "face": 0, "units": { "infantry": 100 }, "delay": 22 },
           { "role": "taran",   "at": [135, 400], "face": 0, "units": { "taran": 50 }, "delay": 0 },
           { "role": "taran",   "at": [135, 560], "face": 0, "units": { "taran": 50 }, "delay": 2 },
           { "role": "pekacz",  "at": [135, 240], "face": 0, "units": { "pekacz": 60 }, "delay": 10 },
           { "role": "pekacz",  "at": [135, 720], "face": 0, "units": { "pekacz": 60 }, "delay": 12 },
           { "role": "raider",  "at": [45, 320],  "face": 0, "units": { "biegacz": 80 }, "delay": 18 },
           { "role": "raider",  "at": [45, 640],  "face": 0, "units": { "biegacz": 80 }, "delay": 22 },
-          { "role": "assault", "at": [45, 480],  "face": 0, "units": { "infantry": 130 }, "delay": 26 },
+          { "role": "assault", "at": [45, 480],  "face": 0, "units": { "infantry": 100 }, "delay": 26 },
           { "role": "command", "at": [235, 880], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 24 }
         ]
       },
@@ -175,10 +175,10 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
           { "role": "plug", "closed": true, "spacing": 10.4, "at": [800, 480], "face": 3.14159, "units": { "odzwierny": 60 } },
           { "role": "artillery", "at": [865, 400], "face": 3.14159, "units": { "plujka": 60 } },
           { "role": "artillery", "at": [865, 570], "face": 3.14159, "units": { "plujka": 60 } },
-          { "role": "reserve", "at": [940, 270], "face": 3.14159, "units": { "infantry": 100 } },
-          { "role": "reserve", "at": [940, 690], "face": 3.14159, "units": { "infantry": 100 } },
-          { "role": "reserve", "at": [1070, 370], "face": 3.14159, "units": { "infantry": 100 } },
-          { "role": "reserve", "at": [1070, 600], "face": 3.14159, "units": { "infantry": 100 } },
+          { "role": "reserve", "at": [940, 270], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [940, 690], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1070, 370], "face": 3.14159, "units": { "infantry": 180 } },
+          { "role": "reserve", "at": [1070, 600], "face": 3.14159, "units": { "infantry": 180 } },
           { "role": "reserve", "at": [950, 480], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } },
           { "role": "reserve", "at": [1170, 485], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } }
         ]
@@ -199,7 +199,7 @@ const Sim = (function () {
   const F_LINE = 0, F_COL = 1, F_WEDGE = 2;
   const CS_FULL = 0, CS_WEAK = 1, CS_LOST = 2;
   const SIDES = ['WK', 'LH'];
-  const CAUSE_NAMES = { cmdDeath: 'śmierć dowódcy', noCmd: 'brak dowódcy w zasięgu', loss: 'ciężkie straty', alarm: 'alarm w walce', cutOff: 'odcięcie od innych rot', captain: 'śmierć kapitana roty' };
+  const CAUSE_NAMES = { cmdDeath: 'śmierć dowódcy', noCmd: 'brak dowódcy w zasięgu', loss: 'ciężkie straty', alarm: 'alarm w walce', cutOff: 'odcięcie od innych rot', captain: 'śmierć kapitana roty', fatigue: 'zmęczenie roty' };
 
   function hashSeed(seed) {
     if (typeof seed === 'number') return seed >>> 0;
@@ -614,7 +614,7 @@ const Sim = (function () {
       c.control = Math.max(0, Math.min(100, c.control + d));
       // przyczyna dominująca
       const cmdRecent = tick - c.cmdDiedAt < 15 * HZ;
-      const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff'], [capOut ? P.captain.regenPenalty * 2 : 0, 'captain']];
+      const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff'], [capOut ? P.captain.regenPenalty * 2 : 0, 'captain'], [FP.effControl * fat * 1.2, 'fatigue']];
       cand.sort((a, b) => b[0] - a[0]); c.lastCause = cand[0][0] > 0 ? CAUSE_NAMES[cand[0][1]] : '';
       const prev = c.cstate;
       if (c.cstate === CS_FULL) { if (c.control < PC.weakAt) c.cstate = CS_WEAK; }
@@ -675,8 +675,10 @@ const Sim = (function () {
     // ---------- główna pętla mrówek ----------
     // Fizyka ciał: mrówki nie przenikają się. Po ruchu kilka przejść rozsuwa nakładające się pary, a lżejsza lub niewalcząca
     // mrówka ustępuje cięższej i tej, która jest w kontakcie z wrogiem, więc tylny szereg czeka, aż przed nim zrobi się miejsce.
-    const contact = new Uint8Array(cap), massArr = new Float32Array(cap), prevX = new Float32Array(cap), prevY = new Float32Array(cap);
+    const contact = new Uint8Array(cap), massArr = new Float32Array(cap), prevX = new Float32Array(cap), prevY = new Float32Array(cap), lvx = new Float32Array(cap), lvy = new Float32Array(cap);
     let colStart = null, colCur = null, colItems = null;
+    sim.contact = contact;
+    const nearFixed = new Uint8Array(cap);
     function resolveCollisions() {
       const MASS = T.mass, fm = P.collision.fightMass;
       for (let i = 0; i < count; i++) if (alive[i]) {
@@ -692,6 +694,12 @@ const Sim = (function () {
       for (let c = 0; c < CC * CR; c++) colStart[c + 1] += colStart[c];
       colCur.set(colStart.subarray(0, CC * CR));
       for (let i = 0; i < count; i++) if (alive[i]) colItems[colCur[((ay[i] / CS) | 0) * CC + ((ax[i] / CS) | 0)]++] = i;
+      // ciała przy zamkniętym plugu nie robią manewrów mijania (zostają przy zwykłym odpychaniu), żeby nic nie wślizgnęło się w szczelinę
+      nearFixed.fill(0, 0, count);
+      for (let f = 0; f < count; f++) if (alive[f] && massArr[f] >= 1e6) {
+        const cx = (ax[f] / CS) | 0, cy = (ay[f] / CS) | 0;
+        for (let yy = cy > 0 ? cy - 1 : 0; yy <= (cy < CR - 1 ? cy + 1 : CR - 1); yy++) for (let xx = cx > 0 ? cx - 1 : 0; xx <= (cx < CC - 1 ? cx + 1 : CC - 1); xx++) for (let k = colStart[yy * CC + xx]; k < colStart[yy * CC + xx + 1]; k++) nearFixed[colItems[k]] = 1;
+      }
       for (let pass = 0; pass < P.collision.passes; pass++) for (let i = 0; i < count; i++) {
         if (!alive[i]) continue;
         const ri = T.radius[type[i]], mi = massArr[i], cx = (ax[i] / CS) | 0, cy = (ay[i] / CS) | 0;
@@ -714,6 +722,21 @@ const Sim = (function () {
               continue;
             }
             let d = Math.sqrt(d2); if (d < 1e-3) { dx = (i & 1) ? 1 : -1; dy = (j & 1) ? 1 : -1; d = Math.SQRT2; }
+            if (side[i] === side[j] && !contact[i] && !contact[j] && !nearFixed[i] && !nearFixed[j]) {
+              // swoi poza walką: ten, który idzie, nie ustępuje; stojący odsuwa się bokiem od jego toru i robi przejście
+              const si = Math.hypot(lvx[i], lvy[i]), sj = Math.hypot(lvx[j], lvy[j]);
+              if (si > sj + 1 || sj > si + 1) {
+                const m = si > sj ? i : j, y = m === i ? j : i;
+                if (T.mass[type[y]] <= PASS_MASS * T.mass[type[m]]) {
+                  const vl = Math.hypot(lvx[m], lvy[m]) || 1, px = -lvy[m] / vl, py = lvx[m] / vl;
+                  const sg = ((ax[y] - ax[m]) * px + (ay[y] - ay[m]) * py) >= 0 ? 1 : -1, ov2 = md - d, nxm = (ax[y] - ax[m]) / d, nym = (ay[y] - ay[m]) / d;
+                  let tx = Math.fround(ax[y] + (px * sg * 0.8 + nxm * 0.3) * ov2 * 1.1), ty = Math.fround(ay[y] + (py * sg * 0.8 + nym * 0.3) * ov2 * 1.1);
+                  if (blocked(tx, ty)) { tx = Math.fround(ax[y] - (px * sg * 0.8 - nxm * 0.3) * ov2 * 1.1); ty = Math.fround(ay[y] - (py * sg * 0.8 - nym * 0.3) * ov2 * 1.1); }
+                  if (!blocked(tx, ty)) { ax[y] = tx; ay[y] = ty; }
+                  continue;
+                }
+              }
+            }
             const ov = md - d, ux = dx / d, uy = dy / d, wi = mj / (mi + mj), wj = 1 - wi;
             let nx = Math.fround(ax[i] + ux * ov * wi), ny = Math.fround(ay[i] + uy * ov * wi);
             if (!blocked(nx, ny)) { ax[i] = nx; ay[i] = ny; }
@@ -724,12 +747,16 @@ const Sim = (function () {
       }
     }
     // czy w punkcie (nx, ny) ciało mrówki i nachodziłoby na inne ciało, do którego zbliża się (stan siatki z początku kroku)
+    const PASS_MASS = 2.5;
     function bodyAhead(i, nx, ny) {
       const ri = T.radius[type[i]], cx = (nx / HASH) | 0, cy = (ny / HASH) | 0, x0 = cx > 1 ? cx - 2 : 0, x1 = cx < HC - 3 ? cx + 2 : HC - 1, y0 = cy > 1 ? cy - 2 : 0, y1 = cy < HR - 3 ? cy + 2 : HR - 1;
       for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) {
         const cc = yy * HC + xx;
         for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
           const j = cellItems[k]; if (j === i || !alive[j]) continue;
+          // poza walką swoi się mijają: idąca mrówka przepycha się przez stojącą, a ta robi jej przejście
+          // (nie dotyczy kolegów w kontakcie z wrogiem, zamkniętego plugu i ciał wyraźnie cięższych)
+          if (side[j] === side[i] && !contact[j] && T.mass[type[j]] <= PASS_MASS * T.mass[type[i]] && !(kinds[type[j]] === 'odzwierny' && comps[compOf[j]].closed)) continue;
           const md = (ri + T.radius[type[j]]) * 0.92, dx = nx - ax[j], dy = ny - ay[j], dn = dx * dx + dy * dy;
           if (dn >= md * md) continue;
           const ox = ax[i] - ax[j], oy = ay[i] - ay[j];
@@ -810,6 +837,7 @@ const Sim = (function () {
           for (const rot of [0.9, -0.9]) { const cr = Math.cos(rot), sr = Math.sin(rot), rx = vx * cr - vy * sr, ry = vx * sr + vy * cr; if (!bodyAhead(i, ax[i] + rx * DT, ay[i] + ry * DT)) { vx = rx; vy = ry; moved = true; break; } }
           if (!moved) { vx = 0; vy = 0; }
         }
+        lvx[i] = vx; lvy[i] = vy;
         let nx = Math.fround(ax[i] + vx * DT), ny = Math.fround(ay[i] + vy * DT); // pozycje są Float32: bez fround mrówka mogła wylądować na krawędzi muru
         if (blocked(nx, ny)) { if (!blocked(nx, ay[i])) ny = ay[i]; else if (!blocked(ax[i], ny)) nx = ax[i]; else { nx = ax[i]; ny = ay[i]; } }
         ax[i] = nx; ay[i] = ny;
