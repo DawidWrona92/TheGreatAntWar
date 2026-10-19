@@ -56,6 +56,7 @@ const { openPage, ROOT } = require('./browser-lib');
     ok('grupa rot zachowuje szyk, pojedyncza rota idzie w wskazany punkt');
 
     // formacje, umiejętność, odwrót, stój klawiszami
+    await page.evaluate(() => { const S = __P1.S; S.selected.clear(); S.sim.comps.filter((c) => c.side === 0).forEach((c) => S.selected.add(c.id)); });
     await page.keyboard.press('KeyC');
     assert.strictEqual(await page.evaluate(() => __P1.S.sim.comps[0].formation), 2, 'klin');
     await page.keyboard.press('KeyZ');
@@ -96,7 +97,7 @@ const { openPage, ROOT } = require('./browser-lib');
     ok('suwak parametru zmienia wartość w działającej symulacji', ok1.join(' → '));
 
     // ekran końcowy
-    await page.evaluate(() => { __P1.S.defs = JSON.parse(JSON.stringify(__P1.S.defs)); __P1.startBattle(); const s = __P1.S.sim; s.aiSides.add('WK'); let n = 0; while (!s.result && n++ < 20 * 900) s.step(); });
+    await page.evaluate(() => { __P1.S.defs = JSON.parse(JSON.stringify(__P1.S.defs)); __P1.startBattle(); const s = __P1.S.sim; s.aiSides.add('WK'); let n = 0; while (!s.result && n++ < 20 * 910) s.step(); });
     await page.waitForSelector('#end:not(.hidden)', { timeout: 15000 });
     const endText = await page.textContent('#endBody');
     assert.ok(/Straty/.test(endText) && /Ocalałe roty/.test(endText) && /Przyczyny/.test(endText));

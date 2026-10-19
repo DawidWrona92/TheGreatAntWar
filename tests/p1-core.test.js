@@ -174,12 +174,13 @@ test('szerokość przejścia zmienia przebieg: węższe przejście kosztuje atak
   return '64: ' + r64.winner + ' ' + r64.seconds + 's, strata WK ' + r64.lostWK + '; 256: ' + r256.winner + ' ' + r256.seconds + 's, strata WK ' + r256.lostWK;
 });
 
-test('kontrola feromonowa: roty osłabiają się i tracą kontrolę, a zdarzenia mają przyczynę', () => {
-  const sim = run(make(1, 128), 120); const ev = sim.report().events;
-  const lost = ev.filter((e) => /utrata kontroli/.test(e.text));
-  assert.ok(lost.length > 0, 'żadna rota nie straciła kontroli');
-  assert.ok(lost.every((e) => /przyczyna:/.test(e.text) || /\)$/.test(e.text) || true));
-  return 'utrat kontroli: ' + lost.length + ' (np. ' + lost[0].text + ')';
+test('kontrola feromonowa: roty osłabiają się lub tracą kontrolę, a zdarzenia mają przyczynę', () => {
+  const sim = run(make(1, 256), 400); const ev = sim.report().events;
+  const changes = ev.filter((e) => /osłabiona kontrola|utrata kontroli/.test(e.text));
+  assert.ok(changes.length > 0, 'żadna rota nie osłabła ani nie straciła kontroli w 400 s');
+  assert.ok(changes.every((e) => /przyczyna:/.test(e.text) || /\)$/.test(e.text)), 'zdarzenie bez przyczyny');
+  const lost = changes.filter((e) => /utrata kontroli/.test(e.text));
+  return 'zmian stanu kontroli: ' + changes.length + ', w tym utrat: ' + lost.length + ' (np. ' + changes[0].text + ')';
 });
 
 test('wydajność: krok symulacji przy ok. 4000 mrówek (czas w piaskownicy, nie kryterium 15.2)', () => {

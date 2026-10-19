@@ -90,7 +90,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
       <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="256"><span class="v" id="mPassV">256</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
@@ -105,12 +105,12 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
 <script type="application/json" id="defs">
 {
-  "world": { "w": 1600, "h": 960, "passage": 256, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
+  "world": { "w": 1600, "h": 960, "passage": 192, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
   "params": {
     "cover": 0.7,
     "shieldMult": 0.4,
-    "closedMult": 0.55,
-    "cdScale": 4,
+    "closedMult": 0.7,
+    "cdScale": 1.5,
     "dmgVariance": 0.3,
     "collision": { "passes": 3, "fightMass": 8 },
     "captain": { "shock": 20, "dur": 15, "regenPenalty": 4 },
@@ -120,8 +120,8 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
       "massBonus": 2, "cutOff": 2, "orderBoost": 25
     },
-    "supply": { "WK": 60, "LH": 60, "reinfPerSec": 8, "acidRefill": 0.06, "acidStart": 1.6, "acidCap": 6 },
-    "fatigue": { "move": 1.2, "fight": 4, "rest": 5, "effCd": 0.6, "effSpeed": 0.35, "effDmg": 0.25, "effControl": 4 },
+    "supply": { "WK": 60, "LH": 60, "reinfPerSec": 3, "acidRefill": 0.02, "acidStart": 3, "acidCap": 6 },
+    "fatigue": { "move": 0.35, "fight": 2, "rest": 3, "effCd": 0.6, "effSpeed": 0.35, "effDmg": 0.25, "effControl": 4 },
     "aiPeriod": 20
   },
   "units": {
@@ -132,9 +132,9 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 1.8, "cd": 0.8, "aggro": 40, "radius": 3.2, "mass": 0.7, "rank": 2.5, "armor": 0,   "size": 0.5,
                    "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 } },
     "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 2,   "cd": 1.0, "aggro": 0,  "radius": 4.6, "mass": 1.2, "rank": 3,   "armor": 0,   "size": 0.7,
-                   "burst": { "radius": 22, "dmg": 1.2, "stuck": 6, "seek": 120 },
+                   "burst": { "radius": 22, "dmg": 3.5, "stuck": 6, "seek": 120 },
                    "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
-    "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 2,   "cd": 1.1, "aggro": 20, "radius": 5.6, "mass": 6,   "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
+    "odzwierny": { "name": "Odźwierny",  "hp": 24, "speed": 11, "dmg": 1.6, "reach": 2,   "cd": 1.1, "aggro": 20, "radius": 5.6, "mass": 6,   "rank": 0,   "armor": 0.4, "size": 0.9, "heavy": true,
                    "ability": { "id": "close", "name": "Zamknij wejście" } },
     "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
     "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 2.5, "cd": 1.0, "aggro": 24, "radius": 5.4, "mass": 3,   "rank": 5,   "armor": 0.2, "size": 1.0,
@@ -409,16 +409,16 @@ const Sim = (function () {
           c.initial = c.alive;
           if (!c.spacing) { let mr = 0; for (const k in cd.units) if (k !== 'dowodca') mr = Math.max(mr, T.radius[ti[k]]); c.spacing = Math.max(SPACING, mr * 2.1); }
           if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / c.spacing) + 1);
-          const nP = c.startBy.plujka || 0; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
+          let nP = 0; for (const k in c.startBy) if (kinds[ti[k]] === 'plujka') nP += c.startBy[k]; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
           // umiejętność rity: pierwszy typ specjalny, inaczej dowódca
           let best = null, bestN = 0;
           for (const k in c.startBy) if (defs.units[k].ability && k !== 'dowodca' && c.startBy[k] > bestN) { best = k; bestN = c.startBy[k]; }
           if (!best && c.startBy.dowodca) best = 'dowodca';
           c.abilType = best;
           if (!c.name) { let dom = 'dowodca', dn = 0; for (const k in c.startBy) if (k !== 'dowodca' && c.startBy[k] > dn) { dn = c.startBy[k]; dom = k; } const bs = defs.units[dom].base; c.name = bs ? 'Gwardia dowódcy (' + defs.units[bs].name.toLowerCase() + ')' : (defs.companyNames[dom] || dom); }
-          if (!cd.units.dowodca) { let bi = -1, bs = 1e9; for (const i of c.ants) { const sc = T.rank[type[i]] * 1000 + Math.abs(slotV[i]); if (sc < bs) { bs = sc; bi = i; } } c.captain = bi; }
           c.num = comps.filter((o) => o.side === s && o.name === c.name).length;
           repack(c);
+          if (!cd.units.dowodca) c.captain = pickCaptain(c);
           for (const i of c.ants) { const p = slotWorld(c, i); const o = blocked(p[0], p[1]) ? [c.ax, c.ay] : p; ax[i] = o[0] + rngMap.range(-1, 1); ay[i] = o[1] + rngMap.range(-1, 1); }
         });
       });
@@ -426,6 +426,12 @@ const Sim = (function () {
     })();
     function slotWorld(c, i) {
       return [c.ax + c.fx * slotU[i] - c.fy * slotV[i], c.ay + c.fy * slotU[i] + c.fx * slotV[i]];
+    }
+    // kapitan roty to mrówka najbliżej środka szyku (nie na jego narożniku)
+    function pickCaptain(c) {
+      let bi = -1, bs = 1e9;
+      for (const i of c.ants) { if (!alive[i] || kinds[type[i]] === 'dowodca') continue; const sc = Math.abs(slotU[i]) + Math.abs(slotV[i]); if (sc < bs) { bs = sc; bi = i; } }
+      return bi;
     }
     function repack(c) {
       const list = c.ants.filter((i) => alive[i]);
@@ -602,7 +608,7 @@ const Sim = (function () {
       c.fatigue = Math.max(0, Math.min(100, c.fatigue + fg));
       const fat = c.fatigue / 100; d -= FP.effControl * fat;
       const capOut = tick < c.captainPenaltyUntil; if (capOut) d -= P.captain.regenPenalty;
-      if (c.captain < 0 && !capOut && c.alive > 0 && !(c.startBy.dowodca)) { for (const i of c.ants) if (alive[i] && kinds[type[i]] !== 'dowodca') { c.captain = i; break; } }
+      if (c.captain < 0 && !capOut && c.alive > 0 && !(c.startBy.dowodca)) c.captain = pickCaptain(c);
       const ne = nearestEnemyComp(c);
       if (c.cstate === CS_LOST && ne && ne.d < 90) d = Math.min(d, 0);
       c.control = Math.max(0, Math.min(100, c.control + d));
@@ -669,7 +675,7 @@ const Sim = (function () {
     // ---------- główna pętla mrówek ----------
     // Fizyka ciał: mrówki nie przenikają się. Po ruchu kilka przejść rozsuwa nakładające się pary, a lżejsza lub niewalcząca
     // mrówka ustępuje cięższej i tej, która jest w kontakcie z wrogiem, więc tylny szereg czeka, aż przed nim zrobi się miejsce.
-    const contact = new Uint8Array(cap), massArr = new Float32Array(cap);
+    const contact = new Uint8Array(cap), massArr = new Float32Array(cap), prevX = new Float32Array(cap), prevY = new Float32Array(cap);
     let colStart = null, colCur = null, colItems = null;
     function resolveCollisions() {
       const MASS = T.mass, fm = P.collision.fightMass;
@@ -697,6 +703,16 @@ const Sim = (function () {
             let dx = ax[i] - ax[j], dy = ay[i] - ay[j]; const md = ri + T.radius[type[j]], d2 = dx * dx + dy * dy;
             if (d2 >= md * md) continue;
             const mj = massArr[j]; if (mi >= 1e6 && mj >= 1e6) continue;
+            if (mi >= 1e6 || mj >= 1e6) {
+              // zamknięty plug jest twardą przeszkodą: mrówka wraca na tę stronę, z której przyszła (pozycja sprzed kroku),
+              // więc nacisk tłumu nie przepchnie jej na drugą stronę szyku
+              const f = mi >= 1e6 ? i : j, o = f === i ? j : i;
+              let ux = prevX[o] - ax[f], uy = prevY[o] - ay[f], ud = Math.sqrt(ux * ux + uy * uy);
+              if (ud < md * 0.9) { ux = ax[o] - ax[f]; uy = ay[o] - ay[f]; ud = Math.sqrt(ux * ux + uy * uy) || 1; }
+              const nx = Math.fround(ax[f] + ux / ud * md), ny = Math.fround(ay[f] + uy / ud * md);
+              if (!blocked(nx, ny)) { ax[o] = nx; ay[o] = ny; } else { ax[o] = prevX[o]; ay[o] = prevY[o]; }
+              continue;
+            }
             let d = Math.sqrt(d2); if (d < 1e-3) { dx = (i & 1) ? 1 : -1; dy = (j & 1) ? 1 : -1; d = Math.SQRT2; }
             const ov = md - d, ux = dx / d, uy = dy / d, wi = mj / (mi + mj), wj = 1 - wi;
             let nx = Math.fround(ax[i] + ux * ov * wi), ny = Math.fround(ay[i] + uy * ov * wi);
@@ -706,6 +722,21 @@ const Sim = (function () {
           }
         }
       }
+    }
+    // czy w punkcie (nx, ny) ciało mrówki i nachodziłoby na inne ciało, do którego zbliża się (stan siatki z początku kroku)
+    function bodyAhead(i, nx, ny) {
+      const ri = T.radius[type[i]], cx = (nx / HASH) | 0, cy = (ny / HASH) | 0, x0 = cx > 1 ? cx - 2 : 0, x1 = cx < HC - 3 ? cx + 2 : HC - 1, y0 = cy > 1 ? cy - 2 : 0, y1 = cy < HR - 3 ? cy + 2 : HR - 1;
+      for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) {
+        const cc = yy * HC + xx;
+        for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
+          const j = cellItems[k]; if (j === i || !alive[j]) continue;
+          const md = (ri + T.radius[type[j]]) * 0.92, dx = nx - ax[j], dy = ny - ay[j], dn = dx * dx + dy * dy;
+          if (dn >= md * md) continue;
+          const ox = ax[i] - ax[j], oy = ay[i] - ay[j];
+          if (dn < ox * ox + oy * oy) return true; // zbliża się do ciała, w które by wszedł
+        }
+      }
+      return false;
     }
     function updateAnts() {
       for (let i = 0; i < count; i++) {
@@ -722,7 +753,8 @@ const Sim = (function () {
         c.errSum += sd; c.errN++;
         // ewentualne namierzanie
         if (isPek) {
-          if (burstMode && ((tick + i) & 3) === 0 && tgt < 0) tgt = acquire(i, defs.units.pekacz.burst.seek, c);
+          // gwardia z pękaczy nie ma przycisku umiejętności, więc detonuje, gdy wróg podejdzie na kontakt
+          if ((burstMode || c.startBy.dowodca) && ((tick + i) & 3) === 0 && tgt < 0) tgt = acquire(i, burstMode ? defs.units.pekacz.burst.seek : 30, c);
         } else if (engage && T.ranged[ty] && eff.kind !== 'retreat') {
           if (c.acid > 0 && (tgt < 0 || ((tick + i) & 7) === 0)) {
             if (tgt >= 0 && Math.hypot(ax[tgt] - ax[i], ay[tgt] - ay[i]) <= T.range[ty] && losClear(ax[i], ay[i], ax[tgt], ay[tgt])) { /* zostaje */ }
@@ -772,6 +804,12 @@ const Sim = (function () {
         vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
         const fixed = tn === 'odzwierny' && c.closed;
         if (fixed) { avx[i] = 0; avy[i] = 0; }
+        // tylny szereg czeka: mrówka nie wchodzi w zajęte miejsce (próbuje lekko odchylić tor, inaczej stoi)
+        if ((vx !== 0 || vy !== 0) && bodyAhead(i, ax[i] + vx * DT, ay[i] + vy * DT)) {
+          let moved = false;
+          for (const rot of [0.9, -0.9]) { const cr = Math.cos(rot), sr = Math.sin(rot), rx = vx * cr - vy * sr, ry = vx * sr + vy * cr; if (!bodyAhead(i, ax[i] + rx * DT, ay[i] + ry * DT)) { vx = rx; vy = ry; moved = true; break; } }
+          if (!moved) { vx = 0; vy = 0; }
+        }
         let nx = Math.fround(ax[i] + vx * DT), ny = Math.fround(ay[i] + vy * DT); // pozycje są Float32: bez fround mrówka mogła wylądować na krawędzi muru
         if (blocked(nx, ny)) { if (!blocked(nx, ay[i])) ny = ay[i]; else if (!blocked(ax[i], ny)) nx = ax[i]; else { nx = ax[i]; ny = ay[i]; } }
         ax[i] = nx; ay[i] = ny;
@@ -799,7 +837,7 @@ const Sim = (function () {
     function reinforcements() {
       for (let s = 0; s < 2; s++) {
         const sn = SIDES[s];
-        accum[sn] += P.supply[sn] / 100 * P.supply.reinfPerSec * DT;
+        accum[sn] += P.supply[sn] / 100 * P.supply.reinfPerSec; // reinforcements() działa raz na sekundę, więc 1 s zamiast DT
         while (accum[sn] >= 1 && reserve[sn] > 0 && count < cap) {
           let best = null, bd = 0;
           for (const c of comps) if (c.side === s && c.alive > 0 && c.cstate !== CS_LOST && c.domType === ti.infantry) { const def = c.initial - c.alive; if (def > bd) { bd = def; best = c; } }
@@ -811,7 +849,7 @@ const Sim = (function () {
         // kwas: dopływ do wspólnej puli rot z plujkami
         for (const c of comps) if (c.side === s && c.acidMax > 0 && c.alive > 0) {
           const nP = c.ants.reduce((a, i) => a + (alive[i] && kinds[type[i]] === 'plujka' ? 1 : 0), 0);
-          c.acidMax = nP * P.supply.acidCap; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.supply.acidRefill * DT);
+          c.acidMax = nP * P.supply.acidCap; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.supply.acidRefill);
         }
       }
     }
@@ -841,6 +879,10 @@ const Sim = (function () {
               order(c, 'attack', art.ax, art.ay, 3);
             }
             if (nearestFoe && nearestFoe.acidMax > 0 && dist(c, nearestFoe) < 220) useAbility(c);
+          } else if (c.role === 'command') {
+            // gwardia dowódcy idzie ok. 170 jednostek za najbardziej wysuniętą rotą szturmową, żeby dowódca nie wpadł w lej jako pierwszy
+            let front = null; for (const o of mine) if (o.role === 'assault' || o.role === 'taran') if (!front || o.ax > front.ax) front = o;
+            if (front && tick >= c.aiUntil) order(c, 'attack', front.ax - 170, front.ay * 0.5 + c.ay * 0.5, 2);
           } else if (c.role === 'pekacz') {
             const tgt = foes.find((e) => e.closed) || nearestFoe;
             if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
@@ -875,6 +917,7 @@ const Sim = (function () {
     sim.result = null; let nestTimer = 0;
     const aliveSide = [0, 0];
     function checkEnd() {
+      if (sim.result) return;
       aliveSide[0] = aliveSide[1] = 0;
       let nestWK = 0, nestLH = 0;
       for (let i = 0; i < count; i++) if (alive[i]) {
@@ -903,6 +946,7 @@ const Sim = (function () {
       if (tick % 10 === 0) updateShields();
       if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) updateControl(c);
       for (const c of comps) if (c.alive > 0) updateAnchor(c);
+      for (let i = 0; i < count; i++) { prevX[i] = ax[i]; prevY[i] = ay[i]; }
       updateAnts();
       resolveCollisions();
       if (tick % HZ === 10) reinforcements();
@@ -920,7 +964,6 @@ const Sim = (function () {
       return h.toString(16);
     };
     sim.report = function () {
-      checkEnd.call(null);
       const out = { seed, passage, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
       SIDES.forEach((sn, s) => {
         const surv = {}; for (let i = 0; i < count; i++) if (alive[i] && side[i] === s) { const k = names[type[i]]; surv[k] = (surv[k] || 0) + 1; }
@@ -953,7 +996,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 256),
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192),
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false

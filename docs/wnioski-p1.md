@@ -1,40 +1,46 @@
 # P1: wnioski (prototyp bitwy)
 
-Dokument 0.5 kanonizuje zasady, to repozytorium kanonizuje liczby. Poniżej tylko to, co zostało wykonane i zmierzone, oraz to, czego nie sprawdzono.
+Dokument 0.5 kanonizuje zasady, to repozytorium kanonizuje liczby. Poniżej tylko to, co wykonano i zmierzono, oraz to, czego nie sprawdzono. Decyzje projektowe i pseudokod bitwy: [projekt-bitwy.md](projekt-bitwy.md).
 
 ## Co powstało
-`prototypy/p1-bitwa.html`: jeden plik HTML (PixiJS 7.4.2 z CDN), rdzeń symulacji oddzielony od rysowania (blok `SIM-BEGIN`/`SIM-END`, bez dostępu do DOM, stały krok 20 Hz, ziarno, kolejka poleceń), definicje jednostek i scenariusza w JSON na początku pliku, panel parametrów na żywo (zapis/odczyt/eksport zestawu), panel diagnostyczny, pauza z wydawaniem rozkazów, przyspieszenie, restart z tym samym ziarnem.
-Zakres 15.2 zrealizowany: mapa sektora z przejściem o regulowanej szerokości, osłonami i gniazdem z wejściem; obie frakcje (gracz wybiera stronę, druga pod AI opartym na regułach); piechota wspólna, Taran, Biegacz, Pękacz, Odźwierny, Plujka i dowódcy; ok. 2400 mrówek na starcie plus rezerwy (łącznie do ok. 3150); klik, ramka i grupy klawiszami, atak-marsz, ruch, stój, odwrót, szyk (linia, kolumna, klin), umiejętność roty; kontrola feromonowa w trzech stanach ze wskaźnikiem przy rocie i zasięgiem dowódcy na ziemi; kwas jako ograniczona amunicja i uzupełnienia zależne od suwaka zaopatrzenia; ekran końcowy ze stratami, ocalałymi rotami, zabójcami i przyczynami.
+`prototypy/p1-bitwa.html`: jeden plik HTML (PixiJS 7.4.2 z CDN), rdzeń symulacji oddzielony od rysowania (blok `SIM-BEGIN`/`SIM-END`, bez DOM, stały krok 20 Hz, ziarno, kolejka poleceń), definicje w JSON na początku pliku, panel parametrów na żywo (zapis, odczyt, eksport), diagnostyka, pauza z rozkazami, przyspieszenie, restart z tym samym ziarnem.
+Zakres 15.2: mapa z przejściem o regulowanej szerokości, osłonami i gniazdem; obie frakcje (strona do wyboru, druga pod AI opartym na regułach); piechota wspólna i ciężka, Taran, Biegacz, Pękacz, Odźwierny, Plujka; dowódca z własną gwardią dowolnego typu; ok. 1900 mrówek w 23 rotach plus rezerwy; klik, ramka, grupy klawiszami, atak-marsz, ruch, stój, odwrót, szyki, umiejętność roty; marsz grupy rot z zachowaniem rozmieszczenia; kontrola feromonowa w trzech stanach; zmęczenie; kapitan roty; kwas jako ograniczona amunicja i uzupełnienia zależne od suwaka zaopatrzenia; ekran końcowy ze stratami, ocalałymi rotami, zabójcami i przyczynami.
+Fizyka ciał: mrówki mają masę i nie przenikają się; tylny szereg czeka na wolne miejsce.
+Widok: izometria 2:1, sprite'y malowane w wysokiej rozdzielczości w 16 kierunkach, chorągwie rot zawsze widoczne, a panel (liczebność, pasek zdrowia z podziałem na mrówki, morale, zmęczenie) po zaznaczeniu lub najechaniu. Podglądy: `docs/wyniki/p1-widok-izometryczny.png`, `docs/wyniki/p1-panele-rot.png`.
 
-## Zmierzone (wykonane: `node tests/p1-experiment.js --seeds 20 --widths 64,128,160,192,256,320`)
-Proxy w postaci AI przeciw AI, 20 ziaren na szerokość. Wynik to opis modelu, nie rzeczywistości, i nie zastępuje próby grą. Surowe dane: `docs/wyniki/p1-szerokosc-przejscia.json`.
+## Zmierzone (wykonane: `node tests/p1-experiment.js --seeds 10 --widths 64,128,192,256,320`)
+Proxy: AI przeciw AI, 10 ziaren na szerokość, kod i parametry jak w commicie z tymi wynikami. To opis modelu, nie rzeczywistości, i nie zastępuje gry. Surowe dane: `docs/wyniki/p1-szerokosc-przejscia.json`.
 
-| Szerokość przejścia | Wygrane WK | Czas bitwy s (min / mediana / p90 / max) | Strata WK (mediana) | Strata LH (min / mediana / max) |
-|---|---|---|---|---|
-| 64 | 6/20 | 135 / 248 / 306 / 408 | 1393 | 553 / 783 / 952 |
-| 128 | 3/20 | 184 / 235 / 301 / 370 | 1389 | 682 / 746 / 889 |
-| 160 | 1/20 | 193 / 222 / 252 / 342 | 1390 | 646 / 750 / 942 |
-| 192 | 4/20 | 148 / 231 / 329 / 365 | 1390 | 550 / 767 / 866 |
-| 256 | 10/20 | 214 / 264 / 327 / 477 | 1388 | 701 / 828 / 975 |
-| 320 | 20/20 | 136 / 175 / 199 / 231 | 1167 | 854 / 892 / 915 |
+| Szerokość przejścia | Wygrane WK | Czas bitwy s (min / mediana / p90 / max) | Strata WK (mediana) | Strata LH (mediana) | Powody końca |
+|---|---|---|---|---|---|
+| 64 | 8/10 | 624 / 812 / 901 / 901 | 122 | 599 | minął czas, obrona utrzymana: 2, Wielka Kolonia zajęła gniazdo: 8 |
+| 128 | 4/10 | 752 / 901 / 901 / 901 | 346 | 733 | minął czas, obrona utrzymana: 6, Wielka Kolonia zajęła gniazdo: 4 |
+| 192 | 5/10 | 727 / 901 / 901 / 901 | 561 | 764 | zniszczenie obrońców: 4, minął czas, obrona utrzymana: 5, Wielka Kolonia zajęła gniazdo: 1 |
+| 256 | 10/10 | 489 / 619 / 661 / 669 | 656 | 798 | Wielka Kolonia zajęła gniazdo: 5, zniszczenie obrońców: 5 |
+| 320 | 10/10 | 501 / 621 / 657 / 665 | 604 | 798 | zniszczenie obrońców: 5, Wielka Kolonia zajęła gniazdo: 5 |
 
-Wnioski z liczb:
-- Szerokość przejścia zmienia wynik od 192 w górę (256: połowa wygranych WK, 320: wszystkie). Poniżej 192 efekt nie jest monotoniczny (64: 6/20, 128: 3/20, 160: 1/20), więc kryterium „zmiana szerokości zmienia przebieg widocznie” jest spełnione tylko częściowo. Przyczyna do zbadania: przy bardzo wąskim przejściu mniej mrówek WK wpada w strefę kwasu naraz.
-- Domyślna szerokość to 256, bo tam wygrane WK są najbliżej połowy (10/20). To balans proxy na tej mapie, nie dowód równowagi frakcji.
-- Mediana czasu bitwy AI przeciw AI to 3,5-4,5 minuty. Kryterium 5-15 minut dotyczy gry z graczem i **nie zostało sprawdzone**; pokrętłem tempa jest `params.cdScale`.
+- Wynik zależy od szerokości przejścia, ale **nie monotonicznie**: 64 daje 8/10 dla WK (przy wąskim przejściu wybuchy pękaczy obejmują cały plug), 128 daje 4/10, 192 daje 5/10, a od 256 WK wygrywa zawsze. Domyślna szerokość to 192, bo tam wygrane są najbliżej połowy. To balans proxy na tej jednej mapie.
+- Czas bitwy: tam, gdzie rozstrzygnięcie zapada, mediana to ok. 10 minut; w przypadkach bez rozstrzygnięcia (901 s) wygrywa obrońca z upływu czasu. Kryterium 15.2 (5-15 minut) dotyczy gry z graczem i nie jest sprawdzone.
+- **Suwak zaopatrzenia działa** (192, 6 ziaren, zaopatrzenie obu stron równe): przy 0 WK wygrywa 6/6, przy 100 wygrywa 1/6. Wyższe zaopatrzenie pomaga obrońcy (kwas i uzupełnienia). Dane: `docs/wyniki/p1-zaopatrzenie.json`.
+- Strat jest teraz mniej niż w poprzednich wersjach, bo mrówki mają ciała: w kontakcie walczy pierwszy szereg, a nie stos. Dlatego przywrócono `cdScale` 1,5 (wcześniej 4) i obniżono przyrost zmęczenia.
 
-## Błędy znalezione po drodze (i sprawdzane testami)
-- Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru): plujki nigdy nie strzelały, a uzupełnienia nie wchodziły. Test regresji w `tests/p1-core.test.js`.
-- Plug odźwiernych stał poza przejściem, był za wąski i obracał się za wrogiem, a szybkie mrówki przeciskały się przez szyk. Teraz jest zamknięty od startu, szerokość liczona z geometrii, a ruch w głąb zamkniętego szyku jest odrzucany. Test: nieśmiertelny plug nie przepuszcza nikogo przy 64, 128 i 256.
-- Wskaźnik zaangażowania w walce rósł do 20 zamiast do 1, więc kontrola spadała do zera bez strat.
+## Błędy znalezione po drodze (każdy ma test)
+- Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.
+- Plug stał poza przejściem, był za wąski, obracał się za wrogiem, a szybkie mrówki i nacisk tłumu przepychały się przez szyk. Test: nieśmiertelny zamknięty plug nie przepuszcza nikogo przy 64, 128 i 256.
+- Kapitan roty był wybierany w narożniku szyku (każda walka oznaczała natychmiastowy wstrząs morale); teraz najbliżej środka.
+- `report()` zmieniał stan gry (wołał `checkEnd`); teraz jest tylko do odczytu, a koniec bitwy jest idempotentny.
 - Pozycje w `Float32Array` mogły wylądować na krawędzi muru.
+- Pomiary czasu kroku w Node były zawyżone kilkukrotnie, bo rdzeń działał w `node:vm`; teraz jest wykonywany w głównym kontekście.
 
 ## Testy
-`npm install && npm test` (rdzeń w Node: determinizm, granice, plug, kwas i uzupełnienia, wydajność; przeglądarka: start, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy). W piaskownicy: 10/10 testów rdzenia i test przeglądarkowy przeszły.
+`npm install && npm test`. Rdzeń (14 testów): zakres i nazwy rot, gwardia dowolnego typu, ciała nie nakładają się (najgorszy pomiar 0,7% mrówek w nakładającej się parze), zmęczenie, kapitan, determinizm (także z rozkazami), granice, kwas i uzupełnienia, geometria plugu, wpływ szerokości, kontrola feromonowa, wydajność. Przeglądarka: start, kółko myszy, marsz grupy rot z zachowaniem rozmieszczenia, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy.
+Krok symulacji przy ok. 4200 mrówkach w Node: mediana 9 ms, p99 17 ms, max 50 ms przy budżecie 50 ms (20 Hz). To czas sandboxa, nie kryterium 15.2.
 
 ## Nie zweryfikowane
-- Czy to jest fajne: czy dowodzenie rotami bawi, czy unikaty są czytelne w ruchu, czy po trzech bitwach da się powiedzieć, dlaczego się wygrało. Wymaga gry człowieka.
-- Wydajność 50 klatek/s przy 4000 mrówek w Chrome na typowym PC. Zmierzono tylko krok symulacji w Node: ok. 3900 mrówek, mediana 22 ms, p99 63 ms przy budżecie 50 ms (20 Hz), czyli krok bywa blisko budżetu w największym tłoku. Renderer w piaskownicy jest programowy (kilka klatek/s), więc FPS tu nic nie mówi.
-- Plik `wojna-superkolonii-prototyp-a-feromony.html` z 15.1 nie był dostępny, a użytkownik ocenił go jako słabej jakości, więc rysowanie izometryczne napisano od nowa (blok `ISO-BEGIN`/`ISO-END` w `p1-bitwa.html`, do skopiowania do P2 i P3): rzut 2:1, kafle 16x8 px, mury jako niskie krawężniki, mrówki w 16 kierunkach zbudowane z odkopanego sprite'a mrówki z prototypu A (przemalowanego na czerń i czerwień, z nakładkami per typ jednostki i obrotem pod rzut izometryczny) z cieniem rzucanym. Podgląd: `docs/wyniki/p1-widok-izometryczny.png`.
-- Grafika zastępcza jest tymczasowa; AI jest proste (WK nie omija strefy kwasu, co jest główną przyczyną ich strat).
+- Czy to jest fajne: czy dowodzenie rotami bawi, czy unikaty są czytelne w ruchu, czy po trzech bitwach da się powiedzieć, dlaczego się wygrało, czy zmęczenie i kapitan są zrozumiałe. Wymaga gry człowieka.
+- Wydajność 50 klatek/s w Chrome na typowym PC. Renderer w piaskownicy jest programowy, więc FPS tu nic nie mówi.
+- Gwardia typu Taran lub Odźwierny ma tylko statystyki elity (bez Szarży i Zamknięcia); gwardia pękaczy detonuje przy kontakcie.
+- Marsz grupy tylko przesuwa układ rot, nie obraca go jak w Total War.
+- Niski odsetek rozstrzygnięć przy wąskich przejściach (obrona dociąga do końca czasu) jest cechą obecnych liczb, nie wynikiem zaplanowanego balansu; do dostrojenia w teście ręcznym suwakami.
+- Liczebność poniżej widełek 2000-4000 z 15.2 jest decyzją użytkownika (czytelność); test 10 tys. mrówek należy do etapu T.
 - Dźwięk, kampania, ekonomia, lotnictwo, wnętrze gniazda, splot i beczki są poza zakresem P1.

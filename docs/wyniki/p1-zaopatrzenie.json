@@ -1,0 +1,249 @@
+{
+ "opis": "AI przeciw AI, szeroko\u015b\u0107 192, 6 ziaren, zaopatrzenie obu stron r\u00f3wne 0 albo 100",
+ "sup0": {
+  "192": {
+   "runs": 6,
+   "winsWK": 6,
+   "winRateWK": 1,
+   "reasons": {
+    "Wielka Kolonia zaj\u0119\u0142a gniazdo": 2,
+    "zniszczenie obro\u0144c\u00f3w": 4
+   },
+   "seconds": {
+    "min": 669,
+    "median": 793,
+    "p90": 875,
+    "max": 875
+   },
+   "lostWK": {
+    "min": 249,
+    "median": 407,
+    "p90": 543,
+    "max": 543
+   },
+   "lostLH": {
+    "min": 617,
+    "median": 648,
+    "p90": 650,
+    "max": 650
+   },
+   "stepMeanMs": 5.07,
+   "stepMaxMs": 69.8
+  }
+ },
+ "sup100": {
+  "192": {
+   "runs": 6,
+   "winsWK": 1,
+   "winRateWK": 0.17,
+   "reasons": {
+    "Wielka Kolonia zaj\u0119\u0142a gniazdo": 1,
+    "min\u0105\u0142 czas, obrona utrzymana": 5
+   },
+   "seconds": {
+    "min": 846,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 680,
+    "median": 767,
+    "p90": 825,
+    "max": 825
+   },
+   "lostLH": {
+    "min": 522,
+    "median": 658,
+    "p90": 758,
+    "max": 758
+   },
+   "stepMeanMs": 5.39,
+   "stepMaxMs": 56.8
+  }
+ },
+ "runs0": [
+  {
+   "seed": 1,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
+   "seconds": 669,
+   "lostWK": 311,
+   "lostLH": 617,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.099988650448409,
+   "stepMaxMs": 34.419445,
+   "hash": "c18b3613",
+   "controlLost": 21
+  },
+  {
+   "seed": 2,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "zniszczenie obro\u0144c\u00f3w",
+   "seconds": 875,
+   "lostWK": 521,
+   "lostLH": 648,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.228006440457121,
+   "stepMaxMs": 69.83714,
+   "hash": "e18873f",
+   "controlLost": 28
+  },
+  {
+   "seed": 3,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "zniszczenie obro\u0144c\u00f3w",
+   "seconds": 810,
+   "lostWK": 543,
+   "lostLH": 648,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 4.834168704012346,
+   "stepMaxMs": 49.82147,
+   "hash": "969abfbd",
+   "controlLost": 30
+  },
+  {
+   "seed": 4,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "zniszczenie obro\u0144c\u00f3w",
+   "seconds": 793,
+   "lostWK": 249,
+   "lostLH": 650,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.490714119798231,
+   "stepMaxMs": 47.753408,
+   "hash": "32059a65",
+   "controlLost": 20
+  },
+  {
+   "seed": 5,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
+   "seconds": 735,
+   "lostWK": 407,
+   "lostLH": 643,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 4.8754209443537695,
+   "stepMaxMs": 35.292237,
+   "hash": "38db953e",
+   "controlLost": 37
+  },
+  {
+   "seed": 6,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "zniszczenie obro\u0144c\u00f3w",
+   "seconds": 791,
+   "lostWK": 359,
+   "lostLH": 649,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 4.89588456782554,
+   "stepMaxMs": 47.678423,
+   "hash": "e9176320",
+   "controlLost": 36
+  }
+ ],
+ "runs100": [
+  {
+   "seed": 1,
+   "passage": 192,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
+   "seconds": 846,
+   "lostWK": 825,
+   "lostLH": 522,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.5924004991725935,
+   "stepMaxMs": 42.641084,
+   "hash": "b9ec4034",
+   "controlLost": 41
+  },
+  {
+   "seed": 2,
+   "passage": 192,
+   "winner": "LH",
+   "reason": "min\u0105\u0142 czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 767,
+   "lostLH": 581,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.6090020708657,
+   "stepMaxMs": 37.470524,
+   "hash": "40ed674e",
+   "controlLost": 40
+  },
+  {
+   "seed": 3,
+   "passage": 192,
+   "winner": "LH",
+   "reason": "min\u0105\u0142 czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 680,
+   "lostLH": 610,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.689762025860182,
+   "stepMaxMs": 50.010178,
+   "hash": "8228c01b",
+   "controlLost": 35
+  },
+  {
+   "seed": 4,
+   "passage": 192,
+   "winner": "LH",
+   "reason": "min\u0105\u0142 czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 704,
+   "lostLH": 758,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.117803173362926,
+   "stepMaxMs": 56.768022,
+   "hash": "307c7054",
+   "controlLost": 19
+  },
+  {
+   "seed": 5,
+   "passage": 192,
+   "winner": "LH",
+   "reason": "min\u0105\u0142 czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 818,
+   "lostLH": 658,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.153231118146498,
+   "stepMaxMs": 30.681638,
+   "hash": "4136326c",
+   "controlLost": 41
+  },
+  {
+   "seed": 6,
+   "passage": 192,
+   "winner": "LH",
+   "reason": "min\u0105\u0142 czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 750,
+   "lostLH": 734,
+   "startWK": 1262,
+   "startLH": 682,
+   "stepMeanMs": 5.176340937014417,
+   "stepMaxMs": 38.683137,
+   "hash": "2e3c900e",
+   "controlLost": 37
+  }
+ ]
+}
