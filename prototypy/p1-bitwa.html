@@ -92,6 +92,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     </div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="256"><span class="v" id="mPassV">256</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
     <p style="margin-top:12px"><button id="mStart" style="padding:8px 18px;font-weight:600;border-color:var(--acc)">Start</button></p>
     <div id="mHelp"></div>
@@ -111,28 +112,32 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "closedMult": 0.55,
     "cdScale": 4,
     "dmgVariance": 0.3,
-    "separation": 0.5,
+    "collision": { "passes": 3, "fightMass": 8 },
+    "captain": { "shock": 20, "dur": 15, "regenPenalty": 4 },
+    "elite": { "hp": 1.7, "dmg": 1.3, "cd": 0.85, "armor": 0.12, "speed": 1.0 },
     "control": {
       "regen": 5, "cmdBonus": 3, "noCmdWK": 6, "noCmdLH": 2, "lossK": 80, "alarmK": 2,
       "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
       "massBonus": 2, "cutOff": 2, "orderBoost": 25
     },
     "supply": { "WK": 60, "LH": 60, "reinfPerSec": 8, "acidRefill": 0.06, "acidStart": 1.6, "acidCap": 6 },
+    "fatigue": { "move": 1.2, "fight": 4, "rest": 5, "effCd": 0.6, "effSpeed": 0.35, "effDmg": 0.25, "effControl": 4 },
     "aiPeriod": 20
   },
   "units": {
-    "infantry":  { "name": "Piechota",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 5,   "cd": 1.0, "aggro": 28, "radius": 2.2, "rank": 2,   "armor": 0,   "size": 0.55 },
-    "taran":     { "name": "Taran",      "hp": 50, "speed": 16, "dmg": 3.5, "reach": 6,   "cd": 1.3, "aggro": 24, "radius": 3.4, "rank": 0,   "armor": 0.3, "size": 0.95, "knock": 45,
+    "infantry":  { "name": "Wojownik",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 2,   "cd": 1.0, "aggro": 28, "radius": 4.0, "mass": 1,   "rank": 2,   "armor": 0,   "size": 0.55 },
+    "ciezki":    { "name": "Wojownik ciężki", "hp": 24, "speed": 22, "dmg": 2.2, "reach": 2, "cd": 1.1, "aggro": 26, "radius": 4.8, "mass": 2.5, "rank": 1, "armor": 0.3, "size": 0.7 },
+    "taran":     { "name": "Taran",      "hp": 50, "speed": 16, "dmg": 3.5, "reach": 2.5, "cd": 1.3, "aggro": 24, "radius": 6.2, "mass": 5,   "rank": 0,   "armor": 0.3, "size": 0.95, "knock": 45,
                    "ability": { "id": "charge", "name": "Szarża", "dur": 5, "cd": 35, "mult": 1.8 } },
-    "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 4.5, "cd": 0.8, "aggro": 40, "radius": 1.9, "rank": 2.5, "armor": 0,   "size": 0.5,
+    "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 1.8, "cd": 0.8, "aggro": 40, "radius": 3.2, "mass": 0.7, "rank": 2.5, "armor": 0,   "size": 0.5,
                    "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 } },
-    "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 5,   "cd": 1.0, "aggro": 0,  "radius": 2.6, "rank": 3,   "armor": 0,   "size": 0.7,
-                   "burst": { "radius": 20, "dmg": 1.2, "stuck": 6, "seek": 120 },
+    "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 2,   "cd": 1.0, "aggro": 0,  "radius": 4.6, "mass": 1.2, "rank": 3,   "armor": 0,   "size": 0.7,
+                   "burst": { "radius": 22, "dmg": 1.2, "stuck": 6, "seek": 120 },
                    "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
-    "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 5,   "cd": 1.1, "aggro": 20, "radius": 3.2, "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
+    "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 2,   "cd": 1.1, "aggro": 20, "radius": 5.6, "mass": 6,   "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
                    "ability": { "id": "close", "name": "Zamknij wejście" } },
-    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 2.0, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
-    "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 6,   "cd": 1.0, "aggro": 24, "radius": 3.0, "rank": 5,   "armor": 0.2, "size": 1.0,
+    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
+    "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 2.5, "cd": 1.0, "aggro": 24, "radius": 5.4, "mass": 3,   "rank": 5,   "armor": 0.2, "size": 1.0,
                    "ability": { "id": "order", "name": "Rozkaz", "cd": 40 } }
   },
   "counters": {
@@ -141,29 +146,41 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "biegacz":   { "plujka": 2.4, "odzwierny": 0.3, "taran": 0.3, "infantry": 0.9 },
     "plujka":    { "taran": 1.6 }
   },
+  "companyNames": { "infantry": "Rota wojowników", "taran": "Rota taranów", "biegacz": "Rota biegaczy", "pekacz": "Rota pękaczy", "odzwierny": "Rota odźwiernych", "plujka": "Rota plujek", "ciezki": "Rota wojowników ciężkich", "dowodca": "Rota dowódców" },
   "scenario": {
     "attacker": "WK",
     "sides": {
       "WK": {
-        "name": "Wielka Kolonia", "regenBonus": 0, "supply": 60, "reserve": 500, "auraR": 150, "spawn": [60, 200, 160, 560],
+        "name": "Wielka Kolonia", "guardType": "ciezki", "regenBonus": 0, "supply": 60, "reserve": 300, "auraR": 260, "spawn": [50, 200, 140, 560],
         "companies": [
-          { "name": "1. rota",   "role": "assault", "at": [230, 480], "face": 0, "units": { "infantry": 250, "dowodca": 1 }, "delay": 0 },
-          { "name": "2. rota",   "role": "assault", "at": [230, 290], "face": 0, "units": { "infantry": 250 }, "delay": 6 },
-          { "name": "3. rota",   "role": "assault", "at": [230, 670], "face": 0, "units": { "infantry": 250 }, "delay": 6 },
-          { "name": "4. rota",   "role": "assault", "at": [60, 480],  "face": 0, "units": { "infantry": 250 }, "delay": 25 },
-          { "name": "Tarany",    "role": "taran",   "at": [140, 480], "face": 0, "units": { "taran": 100 }, "delay": 0 },
-          { "name": "Pękacze",   "role": "pekacz",  "at": [140, 330], "face": 0, "units": { "pekacz": 150, "dowodca": 1 }, "delay": 10 },
-          { "name": "Biegacze",  "role": "raider",  "at": [140, 640], "face": 0, "units": { "biegacz": 200 }, "delay": 18 }
+          { "role": "assault", "at": [340, 480], "face": 0, "units": { "infantry": 130 }, "delay": 0 },
+          { "role": "assault", "at": [340, 250], "face": 0, "units": { "infantry": 130 }, "delay": 5 },
+          { "role": "assault", "at": [340, 710], "face": 0, "units": { "infantry": 130 }, "delay": 5 },
+          { "role": "command", "at": [235, 480], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 16 },
+          { "role": "assault", "at": [235, 250], "face": 0, "units": { "infantry": 130 }, "delay": 22 },
+          { "role": "assault", "at": [235, 710], "face": 0, "units": { "infantry": 130 }, "delay": 22 },
+          { "role": "taran",   "at": [135, 400], "face": 0, "units": { "taran": 50 }, "delay": 0 },
+          { "role": "taran",   "at": [135, 560], "face": 0, "units": { "taran": 50 }, "delay": 2 },
+          { "role": "pekacz",  "at": [135, 240], "face": 0, "units": { "pekacz": 60 }, "delay": 10 },
+          { "role": "pekacz",  "at": [135, 720], "face": 0, "units": { "pekacz": 60 }, "delay": 12 },
+          { "role": "raider",  "at": [45, 320],  "face": 0, "units": { "biegacz": 80 }, "delay": 18 },
+          { "role": "raider",  "at": [45, 640],  "face": 0, "units": { "biegacz": 80 }, "delay": 22 },
+          { "role": "assault", "at": [45, 480],  "face": 0, "units": { "infantry": 130 }, "delay": 26 },
+          { "role": "command", "at": [235, 880], "face": 0, "units": { "@guard": 50, "dowodca": 1 }, "delay": 24 }
         ]
       },
       "LH": {
-        "name": "Lake Hodges", "regenBonus": 2, "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
+        "name": "Lake Hodges", "guardType": "ciezki", "regenBonus": 2, "supply": 60, "reserve": 150, "auraR": 170, "spawn": [1410, 450, 60, 60],
         "companies": [
-          { "name": "Odźwierni",   "role": "plug", "closed": true, "at": [800, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
-          { "name": "Plujki",      "role": "artillery", "at": [850, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
-          { "name": "Rota północ", "role": "reserve",   "at": [900, 340],  "face": 3.14159, "units": { "infantry": 220 } },
-          { "name": "Rota południe", "role": "reserve", "at": [900, 620],  "face": 3.14159, "units": { "infantry": 220 } },
-          { "name": "Odwód",       "role": "reserve",   "at": [1040, 480], "face": 3.14159, "units": { "infantry": 200, "dowodca": 1 } }
+          { "role": "plug", "closed": true, "spacing": 10.4, "at": [800, 480], "face": 3.14159, "units": { "odzwierny": 60 } },
+          { "role": "artillery", "at": [865, 400], "face": 3.14159, "units": { "plujka": 60 } },
+          { "role": "artillery", "at": [865, 570], "face": 3.14159, "units": { "plujka": 60 } },
+          { "role": "reserve", "at": [940, 270], "face": 3.14159, "units": { "infantry": 100 } },
+          { "role": "reserve", "at": [940, 690], "face": 3.14159, "units": { "infantry": 100 } },
+          { "role": "reserve", "at": [1070, 370], "face": 3.14159, "units": { "infantry": 100 } },
+          { "role": "reserve", "at": [1070, 600], "face": 3.14159, "units": { "infantry": 100 } },
+          { "role": "reserve", "at": [950, 480], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } },
+          { "role": "reserve", "at": [1170, 485], "face": 3.14159, "units": { "@guard": 50, "dowodca": 1 } }
         ]
       }
     }
@@ -178,11 +195,11 @@ const Sim = (function () {
   const HZ = 20, DT = 1 / HZ;
   const CELL = 16;      // komórka terenu
   const HASH = 8;       // komórka siatki przestrzennej
-  const SPACING = 5.2;  // odstęp w szyku
+  const SPACING = 11;   // domyślny odstęp w szyku (rzadki rój, widać pojedyncze mrówki); plug ma ciaśniejszy
   const F_LINE = 0, F_COL = 1, F_WEDGE = 2;
   const CS_FULL = 0, CS_WEAK = 1, CS_LOST = 2;
   const SIDES = ['WK', 'LH'];
-  const CAUSE_NAMES = { cmdDeath: 'śmierć dowódcy', noCmd: 'brak dowódcy w zasięgu', loss: 'ciężkie straty', alarm: 'alarm w walce', cutOff: 'odcięcie od innych rot' };
+  const CAUSE_NAMES = { cmdDeath: 'śmierć dowódcy', noCmd: 'brak dowódcy w zasięgu', loss: 'ciężkie straty', alarm: 'alarm w walce', cutOff: 'odcięcie od innych rot', captain: 'śmierć kapitana roty' };
 
   function hashSeed(seed) {
     if (typeof seed === 'number') return seed >>> 0;
@@ -208,9 +225,12 @@ const Sim = (function () {
   function create(opts) {
     const defs = JSON.parse(JSON.stringify(opts.defs));
     if (opts.passage != null) defs.world.passage = opts.passage;
+    if (opts.guard) for (const s of SIDES) if (opts.guard[s]) defs.scenario.sides[s].guardType = opts.guard[s];
     if (opts.supply) for (const s of SIDES) if (opts.supply[s] != null) defs.params.supply[s] = opts.supply[s];
     const seed = opts.seed == null ? 1 : opts.seed;
     const rng = createRng(seed), rngMap = rng.fork('map'), rngSpawn = rng.fork('spawn'), rngCombat = rng.fork('combat');
+    // Dowódca może być dowolnego typu: gwardia dowódcy to elitarna wersja każdego typu bazowego (generowana tu)
+    for (const k of Object.keys(defs.units)) if (k !== 'dowodca' && !defs.units[k].base) defs.units['gwardia_' + k] = { name: 'Gwardzista: ' + defs.units[k].name.toLowerCase(), base: k };
     const aiSides = new Set(opts.aiSides || SIDES);
     const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
@@ -218,20 +238,26 @@ const Sim = (function () {
     const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides };
 
     // ---------- tabele typów (przebudowywane po zmianie suwaków) ----------
-    let names, nT, ti, T, mult;
+    let names, kinds, nT, ti, T, mult;
     function buildTables() {
       names = Object.keys(defs.units); nT = names.length; ti = {};
       names.forEach((n, i) => { ti[n] = i; });
+      kinds = names.map((n) => defs.units[n].base || n); // rodzaj zachowania: elita zachowuje się jak jej typ bazowy
       const f = () => new Float32Array(nT);
-      T = { hp: f(), speed: f(), dmg: f(), reach: f(), cd: f(), aggro: f(), radius: f(), rank: f(), armor: f(), range: f(), aoe: f(), knock: f(), size: f(), ranged: new Uint8Array(nT), heavy: new Uint8Array(nT) };
+      T = { mass: f(), hp: f(), speed: f(), dmg: f(), reach: f(), cd: f(), aggro: f(), radius: f(), rank: f(), armor: f(), range: f(), aoe: f(), knock: f(), size: f(), ranged: new Uint8Array(nT), heavy: new Uint8Array(nT) };
+      const E = defs.params.elite;
+      // elita (gwardia dowódcy) = statystyki bazowe powiększone o mnożniki elitarności; liczone na nowo po zmianie suwaków
+      const statOf = (n) => { const u = defs.units[n]; if (!u.base) return u; const b = defs.units[u.base]; return Object.assign({}, b, { name: u.name, ability: undefined, burst: undefined, hp: b.hp * E.hp, dmg: b.dmg * E.dmg, cd: b.cd * E.cd, armor: Math.min(0.8, (b.armor || 0) + E.armor), speed: b.speed * E.speed, radius: b.radius * 1.1, mass: (b.mass || 1) * 1.3, size: (b.size || 0.6) * 1.15, rank: b.rank - 0.5 }); };
       names.forEach((n, i) => {
-        const u = defs.units[n];
-        for (const k of ['hp', 'speed', 'dmg', 'reach', 'cd', 'aggro', 'radius', 'rank', 'armor', 'range', 'aoe', 'knock', 'size']) T[k][i] = u[k] || 0;
+        const u = statOf(n);
+        for (const k of ['mass', 'hp', 'speed', 'dmg', 'reach', 'cd', 'aggro', 'radius', 'rank', 'armor', 'range', 'aoe', 'knock', 'size']) T[k][i] = u[k] || 0;
         T.ranged[i] = u.ranged ? 1 : 0; T.heavy[i] = u.heavy ? 1 : 0;
       });
       mult = new Float32Array(nT * nT).fill(1);
       for (const a in defs.counters) for (const d in defs.counters[a]) mult[ti[a] * nT + ti[d]] = defs.counters[a][d];
-      sim.names = names; sim.ti = ti; sim.T = T;
+      // elita dziedziczy kontry swojego typu bazowego
+      for (const n of names) { const b = defs.units[n].base; if (!b) continue; for (let o = 0; o < nT; o++) { mult[ti[n] * nT + o] = mult[ti[b] * nT + o]; mult[o * nT + ti[n]] = mult[o * nT + ti[b]]; } }
+      sim.names = names; sim.kinds = kinds; sim.ti = ti; sim.T = T;
     }
     buildTables();
     sim.rebuildTables = buildTables;
@@ -365,28 +391,33 @@ const Sim = (function () {
         sd.companies.forEach((cd, idx) => {
           const at = nearestOpen(cd.at[0], cd.at[1]);
           const c = {
-            id: comps.length, side: s, sideName: sn, name: cd.name, role: cd.role, delay: cd.delay || 0,
+            id: comps.length, side: s, sideName: sn, name: cd.name || '', role: cd.role, spacing: cd.spacing || 0, fatigue: 0, delay: cd.delay || 0,
             ants: [], alive: 0, initial: 0, ax: at[0], ay: at[1], face: cd.face, fx: Math.cos(cd.face), fy: Math.sin(cd.face),
             formation: F_LINE, fcols: 0, order: { kind: 'hold', x: at[0], y: at[1] }, eff: null,
             control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
             deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
-            lastCause: ''
+            captain: -1, captainPenaltyUntil: 0, lastCause: ''
           };
           comps.push(c);
+          if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
           for (const k in cd.units) {
             const t = ti[k];
             for (let n = 0; n < cd.units[k]; n++) addAnt(t, s, c.id, at[0], at[1]);
             c.startBy[k] = cd.units[k]; stats[sn].start[k] = (stats[sn].start[k] || 0) + cd.units[k];
           }
           c.initial = c.alive;
-          if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / SPACING) + 1);
+          if (!c.spacing) { let mr = 0; for (const k in cd.units) if (k !== 'dowodca') mr = Math.max(mr, T.radius[ti[k]]); c.spacing = Math.max(SPACING, mr * 2.1); }
+          if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / c.spacing) + 1);
           const nP = c.startBy.plujka || 0; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
           // umiejętność rity: pierwszy typ specjalny, inaczej dowódca
           let best = null, bestN = 0;
           for (const k in c.startBy) if (defs.units[k].ability && k !== 'dowodca' && c.startBy[k] > bestN) { best = k; bestN = c.startBy[k]; }
           if (!best && c.startBy.dowodca) best = 'dowodca';
           c.abilType = best;
+          if (!c.name) { let dom = 'dowodca', dn = 0; for (const k in c.startBy) if (k !== 'dowodca' && c.startBy[k] > dn) { dn = c.startBy[k]; dom = k; } const bs = defs.units[dom].base; c.name = bs ? 'Gwardia dowódcy (' + defs.units[bs].name.toLowerCase() + ')' : (defs.companyNames[dom] || dom); }
+          if (!cd.units.dowodca) { let bi = -1, bs = 1e9; for (const i of c.ants) { const sc = T.rank[type[i]] * 1000 + Math.abs(slotV[i]); if (sc < bs) { bs = sc; bi = i; } } c.captain = bi; }
+          c.num = comps.filter((o) => o.side === s && o.name === c.name).length;
           repack(c);
           for (const i of c.ants) { const p = slotWorld(c, i); const o = blocked(p[0], p[1]) ? [c.ax, c.ay] : p; ax[i] = o[0] + rngMap.range(-1, 1); ay[i] = o[1] + rngMap.range(-1, 1); }
         });
@@ -400,7 +431,7 @@ const Sim = (function () {
       const list = c.ants.filter((i) => alive[i]);
       c.ants = list;
       list.sort((a, b) => (T.rank[type[a]] - T.rank[type[b]]) || (a - b));
-      const n = list.length, s = SPACING;
+      const n = list.length, s = c.spacing;
       if (c.formation === F_WEDGE) {
         const rows = Math.ceil(Math.sqrt(n));
         for (let k = 0; k < n; k++) { const r = Math.floor(Math.sqrt(k)), idx = k - r * r; slotV[list[k]] = (idx - r) * s; slotU[list[k]] = ((rows - 1) / 2 - r) * s * 0.9; }
@@ -433,6 +464,10 @@ const Sim = (function () {
       c.alive--; c.lost++; c.lostBy[tn] = (c.lostBy[tn] || 0) + 1; c.deaths.push(tick);
       stats[sn].lost[tn] = (stats[sn].lost[tn] || 0) + 1;
       if (a >= 0) { const kn = SIDES[side[a]], an = names[type[a]]; stats[kn].kills[tn] = (stats[kn].kills[tn] || 0) + 1; stats[kn].killedBy[an] = (stats[kn].killedBy[an] || 0) + 1; }
+      if (d === c.captain) {
+        c.captain = -1; c.captainPenaltyUntil = tick + P.captain.dur * HZ; c.control = Math.max(0, c.control - P.captain.shock);
+        logEvent('Poległ kapitan roty: ' + c.name + ' (' + sn + ')', sn, c.id);
+      }
       if (tn === 'dowodca') {
         c.cmdDiedAt = tick; const arr = commanders[sn]; arr.splice(arr.indexOf(d), 1);
         logEvent('Poległ dowódca (' + c.name + ', ' + sn + ')', sn, c.id);
@@ -442,13 +477,13 @@ const Sim = (function () {
     function hit(a, d, base, melee) {
       if (!alive[d]) return;
       let dmg = base * (1 - P.dmgVariance / 2 + P.dmgVariance * rngCombat.next());
-      if (a >= 0) dmg *= mult[type[a] * nT + type[d]];
+      if (a >= 0) { dmg *= mult[type[a] * nT + type[d]]; dmg *= 1 - P.fatigue.effDmg * comps[compOf[a]].fatigue / 100; }
       if (melee) dmg *= 1 - T.armor[type[d]];
       const g = grid[cellAt(ax[d], ay[d])];
       if (g === 2) dmg *= P.cover;
       if (shield[d] > tick) dmg *= P.shieldMult;
       const dc = comps[compOf[d]];
-      if (dc.closed && names[type[d]] === 'odzwierny') dmg *= P.closedMult;
+      if (dc.closed && kinds[type[d]] === 'odzwierny') dmg *= P.closedMult;
       hp[d] -= dmg;
       if (hp[d] <= 0) kill(d, a, melee ? 'melee' : 'ranged');
       else if (melee && a >= 0 && T.knock[type[a]] > 0 && !T.heavy[type[d]]) {
@@ -561,12 +596,19 @@ const Sim = (function () {
       let d = PC.regen + (inCmd ? PC.cmdBonus : 0) - pLoss - pAlarm - pNoCmd - pCut;
       if (n >= 0.7 * c.initial && friendNear) d += PC.massBonus;
       d += defs.scenario.sides[sn].regenBonus || 0;
+      // zmęczenie: rośnie w marszu i walce, spada na odpoczynku; obniża tempo ataku, prędkość, obrażenia i kontrolę
+      const FP = P.fatigue;
+      let fg = FP.fight * eng; if (c.moving) fg += FP.move * (c.abilUntil > tick ? 2.5 : 1); else if (eng < 0.05) fg -= FP.rest;
+      c.fatigue = Math.max(0, Math.min(100, c.fatigue + fg));
+      const fat = c.fatigue / 100; d -= FP.effControl * fat;
+      const capOut = tick < c.captainPenaltyUntil; if (capOut) d -= P.captain.regenPenalty;
+      if (c.captain < 0 && !capOut && c.alive > 0 && !(c.startBy.dowodca)) { for (const i of c.ants) if (alive[i] && kinds[type[i]] !== 'dowodca') { c.captain = i; break; } }
       const ne = nearestEnemyComp(c);
       if (c.cstate === CS_LOST && ne && ne.d < 90) d = Math.min(d, 0);
       c.control = Math.max(0, Math.min(100, c.control + d));
       // przyczyna dominująca
       const cmdRecent = tick - c.cmdDiedAt < 15 * HZ;
-      const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff']];
+      const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff'], [capOut ? P.captain.regenPenalty * 2 : 0, 'captain']];
       cand.sort((a, b) => b[0] - a[0]); c.lastCause = cand[0][0] > 0 ? CAUSE_NAMES[cand[0][1]] : '';
       const prev = c.cstate;
       if (c.cstate === CS_FULL) { if (c.control < PC.weakAt) c.cstate = CS_WEAK; }
@@ -578,8 +620,8 @@ const Sim = (function () {
         else logEvent(c.name + ' (' + sn + ') odzyskała: ' + lab, sn, c.id);
         c.dirty = true;
       }
-      c.cdMod = c.cstate === CS_FULL ? 1 : PC.weakCd;
-      c.spMod = c.cstate === CS_FULL ? 1 : PC.weakSpeed;
+      c.cdMod = (c.cstate === CS_FULL ? 1 : PC.weakCd) * (1 + FP.effCd * fat);
+      c.spMod = (c.cstate === CS_FULL ? 1 : PC.weakSpeed) * (1 - FP.effSpeed * fat);
       c.berserk = c.cstate === CS_LOST && c.side === 0;
       // skuteczny rozkaz
       if (c.cstate === CS_LOST) {
@@ -625,13 +667,51 @@ const Sim = (function () {
     }
 
     // ---------- główna pętla mrówek ----------
-    const fixedBuf = new Int32Array(48);
+    // Fizyka ciał: mrówki nie przenikają się. Po ruchu kilka przejść rozsuwa nakładające się pary, a lżejsza lub niewalcząca
+    // mrówka ustępuje cięższej i tej, która jest w kontakcie z wrogiem, więc tylny szereg czeka, aż przed nim zrobi się miejsce.
+    const contact = new Uint8Array(cap), massArr = new Float32Array(cap);
+    let colStart = null, colCur = null, colItems = null;
+    function resolveCollisions() {
+      const MASS = T.mass, fm = P.collision.fightMass;
+      for (let i = 0; i < count; i++) if (alive[i]) {
+        let m = MASS[type[i]]; const c = comps[compOf[i]];
+        if (c.closed && kinds[type[i]] === 'odzwierny') m = 1e6; else if (contact[i]) m *= fm;
+        massArr[i] = m;
+      }
+      // własna, grubsza siatka (komórka >= największa średnica ciała), więc wystarczy przeszukać 3x3 komórek
+      const CS = 13, CC = Math.ceil(W / CS) + 1, CR = Math.ceil(H / CS) + 1;
+      if (!colStart || colStart.length !== CC * CR + 1) { colStart = new Int32Array(CC * CR + 1); colCur = new Int32Array(CC * CR); colItems = new Int32Array(cap); }
+      colStart.fill(0);
+      for (let i = 0; i < count; i++) if (alive[i]) colStart[((ay[i] / CS) | 0) * CC + ((ax[i] / CS) | 0) + 1]++;
+      for (let c = 0; c < CC * CR; c++) colStart[c + 1] += colStart[c];
+      colCur.set(colStart.subarray(0, CC * CR));
+      for (let i = 0; i < count; i++) if (alive[i]) colItems[colCur[((ay[i] / CS) | 0) * CC + ((ax[i] / CS) | 0)]++] = i;
+      for (let pass = 0; pass < P.collision.passes; pass++) for (let i = 0; i < count; i++) {
+        if (!alive[i]) continue;
+        const ri = T.radius[type[i]], mi = massArr[i], cx = (ax[i] / CS) | 0, cy = (ay[i] / CS) | 0;
+        const y0 = cy > 0 ? cy - 1 : 0, y1 = cy < CR - 1 ? cy + 1 : CR - 1, x0 = cx > 0 ? cx - 1 : 0, x1 = cx < CC - 1 ? cx + 1 : CC - 1;
+        for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) {
+          const cc = yy * CC + xx;
+          for (let k = colStart[cc]; k < colStart[cc + 1]; k++) {
+            const j = colItems[k]; if (j <= i || !alive[j]) continue;
+            let dx = ax[i] - ax[j], dy = ay[i] - ay[j]; const md = ri + T.radius[type[j]], d2 = dx * dx + dy * dy;
+            if (d2 >= md * md) continue;
+            const mj = massArr[j]; if (mi >= 1e6 && mj >= 1e6) continue;
+            let d = Math.sqrt(d2); if (d < 1e-3) { dx = (i & 1) ? 1 : -1; dy = (j & 1) ? 1 : -1; d = Math.SQRT2; }
+            const ov = md - d, ux = dx / d, uy = dy / d, wi = mj / (mi + mj), wj = 1 - wi;
+            let nx = Math.fround(ax[i] + ux * ov * wi), ny = Math.fround(ay[i] + uy * ov * wi);
+            if (!blocked(nx, ny)) { ax[i] = nx; ay[i] = ny; }
+            nx = Math.fround(ax[j] - ux * ov * wj); ny = Math.fround(ay[j] - uy * ov * wj);
+            if (!blocked(nx, ny)) { ax[j] = nx; ay[j] = ny; }
+          }
+        }
+      }
+    }
     function updateAnts() {
-      const sepK = P.separation;
       for (let i = 0; i < count; i++) {
         if (!alive[i]) continue;
-        const c = comps[compOf[i]], ty = type[i], tn = names[ty];
-        cdT[i] -= DT; if (stuck[i] > 0) stuck[i] -= DT;
+        const c = comps[compOf[i]], ty = type[i], tn = kinds[ty];
+        cdT[i] -= DT; if (stuck[i] > 0) stuck[i] -= DT; contact[i] = 0;
         let tgt = target[i];
         if (tgt >= 0 && !alive[tgt]) tgt = -1;
         const eff = c.eff, engage = eff.engage;
@@ -661,17 +741,17 @@ const Sim = (function () {
           const tx = ax[tgt], ty2 = ay[tgt], dx = tx - ax[i], dy = ty2 - ay[i], d = Math.hypot(dx, dy) || 1;
           heading[i] = Math.atan2(dy, dx);
           if (isPek) {
-            if (d <= 7) { burst(i); continue; }
+            if (d <= T.radius[ty] + T.radius[type[tgt]] + 3) { burst(i); continue; }
             gx = tx; gy = ty2; speed *= 1.3; goalSet = true; fighting = true;
           } else if (T.ranged[ty]) {
             if (d <= T.range[ty]) {
-              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
+              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i]; contact[i] = 1;
               if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             }
           } else {
             const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
             if (d <= reach) {
-              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
+              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i]; contact[i] = 1;
               if (cdT[i] <= 0) { hit(i, tgt, T.dmg[ty], true); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             } else { gx = tx; gy = ty2; goalSet = true; fighting = true; }
           }
@@ -690,38 +770,9 @@ const Sim = (function () {
         const ddx = gx - ax[i], ddy = gy - ay[i], dd = Math.hypot(ddx, ddy);
         if (dd > 1.2 && speed > 0) { const s = Math.min(speed, dd / DT); vx = ddx / dd * s; vy = ddy / dd * s; if (!fighting || tgt < 0) heading[i] = Math.atan2(vy, vx); }
         vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
-        // rozpychanie
-        let px = 0, py = 0, nf = 0;
         const fixed = tn === 'odzwierny' && c.closed;
         if (fixed) { avx[i] = 0; avy[i] = 0; }
-        const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0, rr = T.radius[ty];
-        for (let yy = clampH(cy - 1, HR); yy <= clampH(cy + 1, HR); yy++) for (let xx = clampH(cx - 1, HC); xx <= clampH(cx + 1, HC); xx++) {
-          const cc = yy * HC + xx;
-          for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
-            const j = cellItems[k]; if (j === i || !alive[j]) continue;
-            const ex = ax[i] - ax[j], ey = ay[i] - ay[j], md = rr + T.radius[type[j]], e2 = ex * ex + ey * ey;
-            const jf = names[type[j]] === 'odzwierny' && comps[compOf[j]].closed;
-            if (jf && nf < 48 && e2 < 400) fixedBuf[nf++] = j;
-            if (e2 >= md * md) continue;
-            const e = Math.sqrt(e2) || 0.01, push = (md - e) / e;
-            // zamknięty odźwierny nie ustępuje, więc to inni są odpychani podwójnie
-            const w = fixed ? 0 : (jf ? 2 : 1);
-            px += ex * push * w; py += ey * push * w;
-          }
-        }
-        const pl = Math.hypot(px, py); if (pl > 2) { px = px / pl * 2; py = py / pl * 2; }
-        let nx = ax[i] + vx * DT + px * sepK, ny = ay[i] + vy * DT + py * sepK;
-        // zamknięty plug jest twardą przeszkodą: ruch do wnętrza jego mrówek jest odrzucany,
-        // więc nawet sprint pod naciskiem tłumu nie przeciśnie się przez szyk
-        if (nf > 0 && !fixed) {
-          for (let pass = 0; pass < 2; pass++) for (let k = 0; k < nf; k++) {
-            const j = fixedBuf[k], md = rr + T.radius[type[j]];
-            let dx = nx - ax[j], dy = ny - ay[j], d = Math.hypot(dx, dy);
-            if (d < md) { if (d < 1e-3) { dx = ax[i] - ax[j]; dy = ay[i] - ay[j]; d = Math.hypot(dx, dy) || 1; } nx = ax[j] + dx / d * md; ny = ay[j] + dy / d * md; }
-          }
-          for (let k = 0; k < nf; k++) { const j = fixedBuf[k], md = rr + T.radius[type[j]] - 0.05; if (Math.hypot(nx - ax[j], ny - ay[j]) < md) { nx = ax[i]; ny = ay[i]; break; } }
-        }
-        nx = Math.fround(nx); ny = Math.fround(ny); // pozycje są Float32: bez tego mrówka mogła wylądować na krawędzi muru
+        let nx = Math.fround(ax[i] + vx * DT), ny = Math.fround(ay[i] + vy * DT); // pozycje są Float32: bez fround mrówka mogła wylądować na krawędzi muru
         if (blocked(nx, ny)) { if (!blocked(nx, ay[i])) ny = ay[i]; else if (!blocked(ax[i], ny)) nx = ax[i]; else { nx = ax[i]; ny = ay[i]; } }
         ax[i] = nx; ay[i] = ny;
       }
@@ -732,13 +783,13 @@ const Sim = (function () {
       for (const c of comps) {
         if (!c.closed || c.alive <= 0) continue;
         for (const i of c.ants) {
-          if (!alive[i] || names[type[i]] !== 'odzwierny') continue;
+          if (!alive[i] || kinds[type[i]] !== 'odzwierny') continue;
           const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0;
           for (let yy = clampH(cy - 3, HR); yy <= clampH(cy + 3, HR); yy++) for (let xx = clampH(cx - 3, HC); xx <= clampH(cx + 3, HC); xx++) {
             const cc = yy * HC + xx;
             for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
               const j = cellItems[k];
-              if (alive[j] && side[j] === side[i] && names[type[j]] === 'plujka') shield[j] = tick + 12;
+              if (alive[j] && side[j] === side[i] && kinds[type[j]] === 'plujka') shield[j] = tick + 12;
             }
           }
         }
@@ -759,7 +810,7 @@ const Sim = (function () {
         }
         // kwas: dopływ do wspólnej puli rot z plujkami
         for (const c of comps) if (c.side === s && c.acidMax > 0 && c.alive > 0) {
-          const nP = c.ants.reduce((a, i) => a + (alive[i] && names[type[i]] === 'plujka' ? 1 : 0), 0);
+          const nP = c.ants.reduce((a, i) => a + (alive[i] && kinds[type[i]] === 'plujka' ? 1 : 0), 0);
           c.acidMax = nP * P.supply.acidCap; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.supply.acidRefill * DT);
         }
       }
@@ -853,6 +904,7 @@ const Sim = (function () {
       if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) updateControl(c);
       for (const c of comps) if (c.alive > 0) updateAnchor(c);
       updateAnts();
+      resolveCollisions();
       if (tick % HZ === 10) reinforcements();
       for (const c of comps) if (c.alive <= 0) c.eff = c.eff || null;
       if (tick % HZ === HZ - 1) checkEnd();
@@ -903,7 +955,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const S = {
     side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 256),
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
-    sim: null, defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
+    sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
   };
   if (S.speedIdx < 0) S.speedIdx = 1;
@@ -926,6 +978,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const c = 'Kontrola feromonowa';
     for (const [k, l] of [['regen', 'Regeneracja /s'], ['cmdBonus', 'Bonus dowódcy /s'], ['noCmdWK', 'Brak dowódcy WK /s'], ['noCmdLH', 'Brak dowódcy LH /s'], ['lossK', 'Waga strat'], ['alarmK', 'Waga alarmu'], ['weakAt', 'Próg osłabienia'], ['lostAt', 'Próg utraty'], ['weakCd', 'Spowolnienie ataku przy osłabieniu'], ['orderBoost', 'Rozkaz dowódcy: +kontrola']])
       TUN.push([c, 'params.control.' + k, l]);
+    const fz = 'Zmęczenie';
+    for (const [k, l, mx] of [['move', 'Przyrost w marszu /s'], ['fight', 'Przyrost w walce /s'], ['rest', 'Odpoczynek /s'], ['effCd', 'Spowolnienie ataku', 1.5], ['effSpeed', 'Spowolnienie ruchu', 1], ['effDmg', 'Spadek obrażeń', 1], ['effControl', 'Utrata kontroli /s']]) TUN.push([fz, 'params.fatigue.' + k, l, 0, mx]);
+    for (const [k, l, mx] of [['shock', 'Kapitan: spadek kontroli po śmierci', 60], ['dur', 'Kapitan: czas osłabienia (s)', 60], ['regenPenalty', 'Kapitan: kara regeneracji /s', 15]]) TUN.push(['Kapitan roty', 'params.captain.' + k, l, 0, mx]);
+    for (const [k, l, mx] of [['hp', 'Elita: zdrowie ×', 4], ['dmg', 'Elita: obrażenia ×', 4], ['cd', 'Elita: czas ataku ×', 2], ['armor', 'Elita: dodatkowy pancerz', 0.6]]) TUN.push(['Gwardia dowódcy (elita)', 'params.elite.' + k, l, 0, mx]);
+    TUN.push(['Teren i walka', 'params.collision.fightMass', 'Masa walczących (kolejka z tyłu)', 0, 30]);
     TUN.push(['Zaopatrzenie', 'params.supply.WK', 'Zaopatrzenie WK (%)', 0, 100], ['Zaopatrzenie', 'params.supply.LH', 'Zaopatrzenie LH (%)', 0, 100],
       ['Zaopatrzenie', 'params.supply.reinfPerSec', 'Maks. uzupełnienia /s'], ['Zaopatrzenie', 'params.supply.acidRefill', 'Dopływ kwasu'], ['Zaopatrzenie', 'params.supply.acidStart', 'Kwas na start (strzałów na plujkę, od restartu)', 1], ['Zaopatrzenie', 'params.supply.acidCap', 'Pojemność kwasu (strzałów na plujkę)'],
       ['Teren i walka', 'params.cover', 'Mnożnik obrażeń w osłonie', 0, 1], ['Teren i walka', 'params.shieldMult', 'Tarcza odźwiernych', 0, 1],
@@ -965,135 +1022,158 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('stage').appendChild(app.view);
   const world = new PIXI.Container(); app.stage.addChild(world);
   const gGround = new PIXI.Graphics(), gOver = new PIXI.Graphics(), labels = new PIXI.Container();
+  const GLYPH = { infantry: 'W', ciezki: 'C', taran: 'T', biegacz: 'B', pekacz: 'P', odzwierny: 'O', plujka: 'K', dowodca: 'D' };
   let terrainSpr = null, antsPC = null, sprites = [], shown = null, dirOf = null, atlas = null;
   const cam = { x: 0, y: 0, z: 1 };
   /*ISO-BEGIN*/
   // ---------- widok izometryczny 2:1 (kod do ponownego użycia w P2 i P3) ----------
-  // Rzut: x ekranu = ox + (x - y) * 0.5, y ekranu = (x + y) * 0.25. Światło z lewej góry: lewe ściany jaśniejsze od prawych,
-  // cień pada w prawo-dół. Trzy tony na materiał, bez czystej czerni i bez gradientów (zasady skilla retro-rts-sprites).
+  // Rzut: x ekranu = ox + (x - y) * 0.5 * S, y ekranu = (x + y) * 0.25 * S + pad. Światło z lewej góry: lewe ściany jaśniejsze,
+  // cień pada w prawo-dół. Mrówki są malowane w wysokiej rozdzielczości (atlas 2,5x większy niż rozmiar na ekranie).
   const ISO = {
-    pad: 24, wallH: 7,
-    ox: 960 * 0.5 + 24,
-    sx(x, y) { return this.ox + (x - y) * 0.5; },
-    sy(x, y) { return (x + y) * 0.25 + this.pad; },
-    // odwrotność: współrzędne kontenera -> świat
-    wx(cx, cy) { const u = (cx - this.ox) * 2, v = (cy - this.pad) * 4; return (u + v) / 2; },
-    wy(cx, cy) { const u = (cx - this.ox) * 2, v = (cy - this.pad) * 4; return (v - u) / 2; }
+    S: 2, pad: 24,
+    get ox() { return 960 * 0.5 * this.S + this.pad; },
+    sx(x, y) { return this.ox + (x - y) * 0.5 * this.S; },
+    sy(x, y) { return (x + y) * 0.25 * this.S + this.pad; },
+    wx(cx, cy) { const u = (cx - this.ox) * 2 / this.S, v = (cy - this.pad) * 4 / this.S; return (u + v) / 2; },
+    wy(cx, cy) { const u = (cx - this.ox) * 2 / this.S, v = (cy - this.pad) * 4 / this.S; return (v - u) / 2; },
+    size(sim) { return [Math.ceil((sim.W + sim.H) * 0.5 * this.S + this.pad * 2), Math.ceil((sim.W + sim.H) * 0.25 * this.S + this.pad * 2 + 24)]; },
+    // elipsa, w którą rzutuje się okrąg o promieniu R na ziemi
+    rx(R) { return R * 0.7071 * this.S; }, ry(R) { return R * 0.3536 * this.S; }
   };
   const PAL = {
-    WK: { body: '#1d1d20', hi: '#5a5a62', dark: '#0e0e10', leg: '#34343a', acc: '#9aa0a6' },
-    LH: { body: '#b3261e', hi: '#f07a66', dark: '#6a120e', leg: '#8e1d17', acc: '#f2c27a' }
+    WK: { base: '#2b2b32', hi: '#8a8a98', dark: '#0b0b0f', leg: '#16161b', trim: '#b8b8c4' },
+    LH: { base: '#c4352c', hi: '#ffa088', dark: '#560c08', leg: '#74140f', trim: '#f2c27a' }
   };
-  const DIRS = 16, CELLW = 32, CELLH = 24, AX = 16, AY = 15;
-  // Sprite mrówki: pixel art z odkopanego prototypu A (widok z boku, głowa w prawo), przemalowany na barwy frakcji,
-  // z nakładkami per typ jednostki i obracany do 16 kierunków rzutu izometrycznego.
-  const ANT_ROWS = ["........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................","........................",".....................0..","....................000.","....................0...","................1110....","....11t1...110..1100....","...12t110.12110.11100...","..122111001110000000.00.","..12110100.000.0....0...","...010000....0..0....0..","....0000.0.0.0..0.......","........0s0ss0ss.0......","......s0ss0ss0sss0......","......0ss0sss0ssss......","........ssssssss........","........................"];
-  const ANT_PAL = { WK: { '0': '#16161a', '1': '#34343a', '2': '#6c6c76', t: '#c9c9d2' }, LH: { '0': '#6a120e', '1': '#b3261e', '2': '#f07a66', t: '#f2c27a' } };
-  // [skala x, skala y, nakładki jako [x, y, szer, wys, kolor lub 'acc' lub 'tan']]
-  const ANT_TYPE = {
-    infantry: [0.5, 0.5, []],
-    taran: [0.78, 0.78, [[10, 21, 5, 2, 'acc'], [18, 21, 3, 1, 'acc'], [19, 20, 2, 1, 'acc']]],
-    biegacz: [0.58, 0.4, []],
-    pekacz: [0.62, 0.62, [[3, 22, 5, 3, '#e8c84a'], [4, 21, 3, 1, '#e8c84a'], [4, 25, 3, 1, '#c9a92f']]],
-    odzwierny: [0.7, 0.7, [[20, 19, 2, 8, 'tan'], [20, 19, 1, 8, 'tanhi']]],
-    plujka: [0.5, 0.5, [[2, 20, 2, 2, '#7bd34a'], [3, 19, 1, 1, '#b4f08a']]],
-    dowodca: [0.86, 0.86, [[11, 22, 3, 3, '#f2c230'], [22, 19, 1, 1, '#f2c230'], [23, 18, 1, 1, '#f2c230'], [21, 27, 1, 1, '#f2c230']]]
-  };
-  const antBase = {};
-  function antSprite(type, side) {
-    const key = side + type; if (antBase[key]) return antBase[key];
-    const cv = document.createElement('canvas'); cv.width = 24; cv.height = 32; const c = cv.getContext('2d'), pal = ANT_PAL[side];
-    for (let y = 0; y < 32; y++) for (let x = 0; x < 24; x++) { const ch = ANT_ROWS[y][x]; if (ch !== '.' && ch !== 's') { c.fillStyle = pal[ch]; c.fillRect(x, y, 1, 1); } }
-    for (const [x, y, w, h, col] of ANT_TYPE[type][2]) { c.fillStyle = col === 'acc' ? (side === 'WK' ? '#9aa0a6' : '#f2c27a') : col === 'tan' ? (side === 'LH' ? '#d9b27c' : '#8c8c94') : col === 'tanhi' ? (side === 'LH' ? '#f0d9b0' : '#b8b8c0') : col; c.fillRect(x, y, w, h); }
-    return (antBase[key] = cv);
+  const DIRS = 16, CELLW = 64, CELLH = 48, AX = 32, AY = 31, ATLAS_SCALE = 0.42;
+  // wielkość ciała (mnożnik rozmiaru malowania) i wygląd per rodzaj
+  const LOOK = { infantry: 1.0, ciezki: 1.2, taran: 1.5, biegacz: 0.9, pekacz: 1.15, odzwierny: 1.4, plujka: 1.0, dowodca: 1.5 };
+  function sphere(c, x, y, rx, ry, rot, base, hi, dark) {
+    const g = c.createRadialGradient(x - rx * 0.35, y - ry * 0.45, Math.min(rx, ry) * 0.1, x, y, Math.max(rx, ry) * 1.1);
+    g.addColorStop(0, hi); g.addColorStop(0.5, base); g.addColorStop(1, dark);
+    c.fillStyle = g; c.beginPath(); c.ellipse(x, y, Math.max(0.6, rx), Math.max(0.6, ry), rot, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.28)'; c.beginPath(); c.ellipse(x - rx * 0.3, y - ry * 0.42, rx * 0.28, ry * 0.2, rot, 0, 7); c.fill();
   }
-  const IMGSMOOTH = true;
-  function drawIsoAnt(c, ox, oy, type, side, dir) {
-    const th = dir * Math.PI * 2 / DIRS, vx = (Math.cos(th) - Math.sin(th)) * 0.5, vy = (Math.cos(th) + Math.sin(th)) * 0.25;
-    const flip = vx < 0, phi = Math.atan2(vy, flip ? -vx : vx), [sx, sy] = ANT_TYPE[type];
+  function line(c, pts, w, col) { c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke(); }
+  function drawPaintedAnt(c, ox, oy, kind, side, dir, elite) {
+    const p = PAL[side], th = dir * Math.PI * 2 / DIRS, ca = Math.cos(th), sa = Math.sin(th);
+    const sz = (LOOK[kind] || 1) * (elite ? 1.12 : 1), m = 4.3 * sz;
+    const P = (a, b, z) => { const dx = a * ca - b * sa, dy = a * sa + b * ca; return [ox + AX + m * (dx - dy) * 0.5, oy + AY + m * (dx + dy) * 0.25 - z * m * 0.5, dx + dy]; };
+    const sc = Math.atan2((ca + sa) * 0.25, (ca - sa) * 0.5); // kierunek ciała na ekranie
+    const slim = kind === 'biegacz', swell = kind === 'pekacz', big = kind === 'taran' || kind === 'dowodca' || kind === 'ciezki';
     // cień rzucany w prawo-dół
-    c.fillStyle = 'rgba(40,28,12,0.32)';
-    const rw = 7 * sx + 1, rh = 3 * sx + 0.8;
-    for (let y = -Math.ceil(rh); y <= Math.ceil(rh); y++) { const w = Math.round(rw * Math.sqrt(Math.max(0, 1 - (y * y) / (rh * rh + 0.01)))); c.fillRect(Math.round(ox + AX + 1) - w, Math.round(oy + AY + 2) + y, 2 * w + 1, 1); }
-    c.save(); c.translate(ox + AX, oy + AY); if (flip) c.scale(-1, 1); c.rotate(phi * 0.8); c.scale(sx, sy); c.imageSmoothingEnabled = IMGSMOOTH;
-    c.drawImage(antSprite(type, side), -12, -24); c.restore();
+    const sh = P(0, 0, 0), sg = c.createRadialGradient(sh[0] + 3, sh[1] + 2, 1, sh[0] + 3, sh[1] + 2, 17 * sz);
+    sg.addColorStop(0, 'rgba(40,28,12,0.38)'); sg.addColorStop(1, 'rgba(40,28,12,0)');
+    c.save(); c.translate(sh[0] + 3, sh[1] + 2); c.scale(1, 0.5); c.translate(-sh[0] - 3, -sh[1] - 2); c.fillStyle = sg; c.beginPath(); c.arc(sh[0] + 3, sh[1] + 2, 17 * sz, 0, 7); c.fill(); c.restore();
+    // nogi: trzy pary, dwa segmenty
+    const reach = slim ? 5.6 : 4.4, lw = slim ? 1.3 : (big ? 2.2 : 1.7);
+    for (const a of [-1.3, 0.2, 1.7]) for (const b of [-1, 1]) {
+      const hip = P(a, b * 0.8, 2.2), knee = P(a + (a > 0 ? 1.2 : (a < 0 ? -0.6 : 0.2)), b * reach * 0.85, 4.2), foot = P(a + (a > 0 ? 2.6 : (a < 0 ? -2.4 : 0.4)), b * reach * 1.25, 0);
+      line(c, [hip, knee, foot], lw, p.leg);
+    }
+    // części ciała od najdalszej do najbliższej kamery
+    const abR = swell ? 3.9 : (slim ? 1.8 : (big ? 2.9 : 2.5)), thR = slim ? 1.3 : (big ? 2.0 : 1.7), hdR = big ? 2.4 : (slim ? 1.4 : 1.8);
+    const abA = swell ? -5.6 : -4.6, hdA = 4.4, abZ = kind === 'plujka' ? 5.2 : 2.8;
+    const parts = [{ k: 'ab', pt: P(abA, 0, abZ), r: abR }, { k: 'th', pt: P(0, 0, 3.0), r: thR }, { k: 'hd', pt: P(hdA, 0, 3.1), r: hdR }].sort((u, v) => u.pt[2] - v.pt[2]);
+    for (const q of parts) {
+      const el = q.k === 'hd' ? 1.0 : 1.3;
+      sphere(c, q.pt[0], q.pt[1], q.r * m * 0.52 * el, q.r * m * 0.52, sc, p.base, p.hi, p.dark);
+      if (q.k === 'ab' && swell) sphere(c, q.pt[0] - 0.8, q.pt[1] - 0.6, q.r * m * 0.34, q.r * m * 0.3, sc, '#e8c84a', '#fff0a6', '#8a6a10');
+      if (q.k === 'ab' && kind === 'plujka') { const t = P(abA - 2.0, 0, abZ + 1.8); sphere(c, t[0], t[1], 1.9, 1.7, 0, '#6fcf3a', '#d4ff9e', '#2d6a14'); }
+      if (q.k === 'th' && (kind === 'ciezki' || kind === 'taran')) sphere(c, q.pt[0], q.pt[1] - 0.5, q.r * m * 0.5, q.r * m * 0.36, sc, '#8d939c', '#e4e8ee', '#4a4f57');
+      if (q.k === 'hd' && kind === 'taran') { const h = P(hdA + 1.6, 0, 3.6); sphere(c, h[0], h[1], 4.2, 3.0, sc, '#8d939c', '#eef1f5', '#454a52'); }
+      if (q.k === 'th' && kind === 'dowodca') { c.fillStyle = '#f2c230'; c.fillRect(q.pt[0] - 3, q.pt[1] - 3, 6, 3); }
+      if (elite && q.k === 'th') { c.strokeStyle = '#f2c230'; c.lineWidth = 1.6; c.beginPath(); c.ellipse(q.pt[0], q.pt[1], q.r * m * 0.55, q.r * m * 0.36, sc, 0, 7); c.stroke(); }
+      if (elite && q.k === 'hd') { const g = P(hdA + 0.2, 0, 5.6); c.fillStyle = '#f2c230'; c.beginPath(); c.arc(g[0], g[1], 1.6, 0, 7); c.fill(); }
+    }
+    if (kind === 'odzwierny') {
+      for (const b of [-3.2, -1.6, 0, 1.6, 3.2]) { const q = P(hdA + 1.5, b, 3.2); sphere(c, q[0], q[1], 2.6, 2.4, 0, side === 'LH' ? '#dcb98a' : '#8e8e98', side === 'LH' ? '#fff0d0' : '#d6d6e0', side === 'LH' ? '#7c5c34' : '#3a3a42'); }
+    }
+    // czułki i żuwaczki
+    const hp = P(hdA, 0, 3.1);
+    for (const b of [-1, 1]) {
+      const a1 = P(hdA + 2.4, b * 1.6, 5.0), a2 = P(hdA + 4.2, b * 3.0, 5.4); line(c, [hp, a1, a2], 1.0, p.dark);
+      const m1 = P(hdA + 2.0, b * 0.6, 2.4), m2 = P(hdA + 3.2, b * 0.2, 2.2); line(c, [m1, m2], 1.2, p.dark);
+    }
+    if (kind === 'dowodca') for (const b of [-1, 1]) { const a3 = P(hdA + 4.4, b * 3.4, 6.2); c.fillStyle = '#f2c230'; c.beginPath(); c.arc(a3[0], a3[1], 1.5, 0, 7); c.fill(); }
   }
-  const TYPE_LIST = Object.keys(DEFS0.units);
-  function makeAntAtlas() {
-    const cv = document.createElement('canvas'); cv.width = CELLW * DIRS; cv.height = CELLH * TYPE_LIST.length * 2;
-    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
-    const base = PIXI.BaseTexture.from(cv, { scaleMode: PIXI.SCALE_MODES.NEAREST }), tex = {};
-    SIDES.forEach((s, si) => TYPE_LIST.forEach((t, ti) => { const row = (si * TYPE_LIST.length + ti) * CELLH; for (let d = 0; d < DIRS; d++) { drawIsoAnt(c, d * CELLW, row, t, s, d); tex[s + t + d] = new PIXI.Texture(base, new PIXI.Rectangle(d * CELLW, row, CELLW, CELLH)); } }));
+  function makeAntAtlas(names, kinds) {
+    const cv = document.createElement('canvas'); cv.width = CELLW * DIRS; cv.height = CELLH * names.length * 2;
+    const c = cv.getContext('2d');
+    const base = PIXI.BaseTexture.from(cv, { scaleMode: PIXI.SCALE_MODES.LINEAR, mipmap: PIXI.MIPMAP_MODES ? PIXI.MIPMAP_MODES.OFF : 0 }), tex = {};
+    SIDES.forEach((s, si) => names.forEach((n, ni) => { const row = (si * names.length + ni) * CELLH, elite = n !== kinds[ni]; for (let d = 0; d < DIRS; d++) { drawPaintedAnt(c, d * CELLW, row, kinds[ni], s, d, elite); tex[s + n + d] = new PIXI.Texture(base, new PIXI.Rectangle(d * CELLW, row, CELLW, CELLH)); } }));
     base.update(); tex.cv = cv; return tex;
   }
-  // kafel 16x8 piksele: szerokości wierszy 4,8,12,16,16,12,8,4 składają się bez szczelin
-  const ROWW = [4, 8, 12, 16, 16, 12, 8, 4];
-  function tile(c, cx, top, col) { c.fillStyle = col; for (let j = 0; j < 8; j++) c.fillRect(cx - ROWW[j] / 2, top + j, ROWW[j], 1); }
+  // kafel: diament 16S x 8S, szerokości wierszy rosną o 4 px na wiersz (nachylenie 2:1), więc składa się bez szczelin
+  function rowW(j) { const h = 4 * ISO.S; return j < h ? 4 * (j + 1) : 4 * (8 * ISO.S - j); }
+  function tile(c, cx, top, col) { c.fillStyle = col; for (let j = 0; j < 8 * ISO.S; j++) { const w = rowW(j); c.fillRect(cx - w / 2, top + j, w, 1); } }
   function isoBox(c, cx, top, h, cTop, cL, cR) {
-    for (let px = 0; px < 8; px++) { const yb = top + 4 + (px >> 1); c.fillStyle = cL; c.fillRect(cx - 8 + px, yb - h + 1, 1, h); }
-    for (let px = 8; px < 16; px++) { const yb = top + 7 - ((px - 8) >> 1); c.fillStyle = cR; c.fillRect(cx - 8 + px, yb - h + 1, 1, h); }
+    const hw = 8 * ISO.S, half = 4 * ISO.S, rows = 8 * ISO.S;
+    for (let px = 0; px < hw; px++) { c.fillStyle = cL; c.fillRect(cx - hw + px, top + half + (px >> 1) - h + 1, 1, h); }
+    for (let px = hw; px < 2 * hw; px++) { c.fillStyle = cR; c.fillRect(cx - hw + px, top + rows - 1 - ((px - hw) >> 1) - h + 1, 1, h); }
     tile(c, cx, top - h, cTop);
   }
   function makeIsoTerrain(sim) {
-    const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, wallH = ISO.wallH;
-    const cw = Math.ceil((sim.W + sim.H) * 0.5 + ISO.pad * 2), ch = Math.ceil((sim.W + sim.H) * 0.25 + ISO.pad * 2 + 12);
+    const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, S = ISO.S, wallH = 6 * S;
+    const [cw, ch] = ISO.size(sim);
     const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
     const nz = (x, y, s) => { let h = Math.imul(x * 374761393 + y * 668265263 + s * 2246822519, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
     const nest = sim.defs.world.nest, nestR = sim.defs.world.nestR;
-    const SAND = ['#cdb27c', '#c7ab74', '#d2b985', '#c2a56e'], DARKSAND = ['#a98a5a', '#a2835a', '#b0925f', '#9c7e52'];
-    const GRASS = ['#6d9a46', '#628f3f', '#76a24c', '#5a8639'];
+    const SAND = ['#cdb27c', '#c8ac75', '#d2b985', '#c3a66f'], DARKSAND = ['#a98a5a', '#a2835a', '#b0925f', '#9c7e52'];
+    const GRASS = ['#6d9a46', '#639040', '#76a24c', '#5b873a'];
     for (let d = 0; d < rows + cols - 1; d++) for (let r = Math.max(0, d - cols + 1); r <= Math.min(rows - 1, d); r++) {
-      const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C) + 0, top = ISO.sy(col * C, r * C) - ISO.pad + ISO.pad;
+      const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C), top = ISO.sy(col * C, r * C);
       const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
-      if (v === 1) { tile(c, cx, top, '#9a9a94'); isoBox(c, cx, top, wallH, k % 2 ? '#b4b4ad' : '#aeaea7', '#8f8f89', '#72726d'); }
-      else if (v === 3) { tile(c, cx, top, DARKSAND[k]); isoBox(c, cx, top, 6, '#93673a', '#76502d', '#573a20'); }
+      const px = (i, a, b) => cx - 6 * S + Math.floor(nz(col, r, i) * 12 * S) % (12 * S), py = (i, a, b) => top + 1 + Math.floor(nz(col, r, i + 50) * (8 * S - 3));
+      if (v === 1) { tile(c, cx, top, '#9a9a94'); isoBox(c, cx, top, wallH, k % 2 ? '#b8b8b1' : '#b2b2ab', '#92928c', '#74746f'); c.fillStyle = 'rgba(60,60,56,0.35)'; c.fillRect(cx - 3, top - wallH + 8, 6, 1); }
+      else if (v === 3) { tile(c, cx, top, DARKSAND[k]); isoBox(c, cx, top, wallH - 2, '#98693b', '#78512d', '#583a20'); c.fillStyle = '#b88854'; c.fillRect(cx - 4, top - wallH + 8, 3, 1); }
       else if (v === 2) {
         tile(c, cx, top, GRASS[k]);
-        c.fillStyle = '#4a7430'; for (let t = 0; t < 3; t++) { const px = cx - 5 + Math.floor(nz(col, r, 5 + t) * 10), py = top + 1 + Math.floor(nz(col, r, 9 + t) * 5); c.fillRect(px, py, 1, 2); }
-        c.fillStyle = '#9bc35f'; { const px = cx - 4 + Math.floor(nz(col, r, 20) * 8), py = top + 2 + Math.floor(nz(col, r, 21) * 4); c.fillRect(px, py, 1, 1); }
-        if (n > 0.86) { c.fillStyle = '#6b4a24'; c.fillRect(cx - 4, top + 5, 6, 1); c.fillStyle = '#8a6334'; c.fillRect(cx - 4, top + 4, 5, 1); }
+        for (let t = 0; t < 7; t++) { c.fillStyle = t % 3 ? '#4a7430' : '#8fba58'; c.fillRect(px(10 + t), py(10 + t), 1, 2 + (t % 2)); }
+        if (n > 0.84) { c.fillStyle = '#6b4a24'; c.fillRect(cx - 7, top + 10, 11, 1); c.fillStyle = '#8f6a38'; c.fillRect(cx - 7, top + 9, 9, 1); }
       } else {
         tile(c, cx, top, dn < nestR + 14 ? DARKSAND[k] : SAND[k]);
-        if (n > 0.9) { c.fillStyle = 'rgba(110,86,50,0.7)'; c.fillRect(cx - 3 + Math.floor(n * 10) % 6, top + 2 + (k % 3), 2, 1); }
-        else if (n < 0.06) { c.fillStyle = '#e4cf9f'; c.fillRect(cx - 2, top + 3, 2, 1); }
+        for (let t = 0; t < 4; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.5 ? 'rgba(112,88,52,0.55)' : 'rgba(232,214,168,0.7)'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 2 : 1, 1); }
+        if (n < 0.05) { c.fillStyle = '#b09a70'; c.fillRect(cx - 2, top + 8, 4, 2); c.fillStyle = '#e0cc9c'; c.fillRect(cx - 2, top + 8, 2, 1); }
       }
     }
     // gniazdo: kopiec w trzech tonach i ciemne wejście od strony zachodniej
-    const rings = [[nestR, 'rgba(120,86,48,0.28)'], [nestR * 0.72, 'rgba(120,86,48,0.3)'], [nestR * 0.42, 'rgba(70,46,24,0.4)']];
-    for (const [rr, col] of rings) { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(nest[0], nest[1]), ISO.sy(nest[0], nest[1]), rr * 0.7071, rr * 0.3536, 0, 0, 7); c.fill(); }
-    const ex = ISO.sx(nest[0] - 78, nest[1]), ey = ISO.sy(nest[0] - 78, nest[1]);
-    c.fillStyle = '#2b1b0d'; c.beginPath(); c.ellipse(ex, ey, 9, 4, 0, 0, 7); c.fill();
+    const ell = (x, y, R, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R), 0, 0, 7); c.fill(); };
+    ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.28)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(70,46,24,0.4)');
+    ell(nest[0] - 78, nest[1], 7, '#2b1b0d');
     // znaczniki przejścia: pasy ostrzegawcze na końcach muru
     const wx = sim.defs.world.wallX, my = sim.H / 2, hw = sim.defs.world.passage / 2;
-    for (const yy of [my - hw, my + hw]) for (let t = 0; t < 4; t++) { c.fillStyle = t % 2 ? '#2a2a2a' : '#e6b422'; c.fillRect(Math.round(ISO.sx(wx, yy + (yy < my ? -2 : 2))) - 6 + t * 3, Math.round(ISO.sy(wx, yy + (yy < my ? -2 : 2))) - wallH - 1, 3, 2); }
+    for (const yy of [my - hw, my + hw]) for (let t = 0; t < 5; t++) { c.fillStyle = t % 2 ? '#2a2a2a' : '#e6b422'; const q = yy + (yy < my ? -3 : 3); c.fillRect(Math.round(ISO.sx(wx, q)) - 10 + t * 4, Math.round(ISO.sy(wx, q)) - wallH - 1, 4, 3); }
     return PIXI.Texture.from(cv);
   }
   /*ISO-END*/
 
   function setupScene(sim) {
     world.removeChildren(); gGround.clear(); labels.removeChildren();
-    if (!atlas) atlas = makeAntAtlas();
+    if (!atlas) atlas = makeAntAtlas(sim.names, sim.kinds);
     terrainSpr = new PIXI.Sprite(makeIsoTerrain(sim));
-    antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: false, position: true, rotation: false, uvs: true, tint: true }, 16384, false);
+    antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: true, position: true, rotation: false, uvs: true, tint: true }, 16384, false);
     sprites = []; shown = new Uint8Array(sim.cap); dirOf = new Uint8Array(sim.cap).fill(255);
     for (let i = 0; i < sim.cap; i++) {
       const sp = new PIXI.Sprite(atlas.WKinfantry0);
-      sp.anchor.set(AX / CELLW, AY / CELLH); sp.alpha = 0; sprites.push(sp); antsPC.addChild(sp);
+      sp.anchor.set(AX / CELLW, AY / CELLH); sp.scale.set(ATLAS_SCALE); sp.alpha = 0; sprites.push(sp); antsPC.addChild(sp);
     }
     world.addChild(terrainSpr, gGround, antsPC, gOver, labels);
+    const mk = (txt, size, fill) => { const t = new PIXI.Text(txt, { fontFamily: 'system-ui, sans-serif', fontSize: size, fontWeight: '600', fill, stroke: 0x000000, strokeThickness: 3 }); t.anchor.set(0.5, 1); labels.addChild(t); return t; };
     sim.comps.forEach((c) => {
-      const t = new PIXI.Text(c.name, { fontFamily: 'system-ui, sans-serif', fontSize: 12, fill: c.side === 0 ? 0xffffff : 0xffd7cf, stroke: 0x000000, strokeThickness: 3 });
-      t.anchor.set(0.5, 1); c._label = t; labels.addChild(t);
+      let dom = 'dowodca', dn = 0; for (const k in c.startBy) if (k !== 'dowodca' && c.startBy[k] > dn) { dn = c.startBy[k]; dom = k; }
+      c._kind = sim.kinds[sim.ti[dom]]; c._elite = sim.kinds[sim.ti[dom]] !== dom;
+      c._label = mk(c.name + ' #' + c.num, 13, c.side === 0 ? 0xffffff : 0xffd7cf); c._cnt = mk('', 13, 0xe6e0c8); c._flag = mk(GLYPH[c._kind] || '?', 11, 0xffffff);
+      c._flag.anchor.set(0.5, 0.5);
     });
   }
   function fitCamera() {
-    const w = app.screen.width, h = app.screen.height - 150, cw = (S.sim.W + S.sim.H) * 0.5 + ISO.pad * 2, ch = (S.sim.W + S.sim.H) * 0.25 + ISO.pad * 2 + 12, z = Math.min(w / cw, h / ch);
+    const w = app.screen.width, h = app.screen.height - 150, [cw, ch] = ISO.size(S.sim), z = Math.min(w / cw, h / ch);
     cam.z = z; cam.x = (w - cw * z) / 2; cam.y = 40 + (h - ch * z) / 2; applyCam();
   }
   // kamera nie może uciec poza mapę: co najmniej 120 px zawartości zostaje na ekranie
   function applyCam() {
     if (S.sim) {
-      const cw = (S.sim.W + S.sim.H) * 0.5 + ISO.pad * 2, ch = (S.sim.W + S.sim.H) * 0.25 + ISO.pad * 2 + 12, m = 120;
+      const [cw, ch] = ISO.size(S.sim), m = 120;
       cam.x = Math.min(app.screen.width - m, Math.max(m - cw * cam.z, cam.x)); cam.y = Math.min(app.screen.height - m, Math.max(m - ch * cam.z, cam.y));
     }
     world.scale.set(cam.z); world.position.set(cam.x, cam.y);
@@ -1103,7 +1183,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
-    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
+    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
     S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
     setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar();
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
@@ -1119,7 +1199,16 @@ if (typeof module !== 'undefined') module.exports = Sim;
     S.sim.command(cmd);
     if (S.paused) S.sim.flush();
   }
-  const orderAt = (kind, wx, wy) => issue({ k: 'order', kind, x: wx, y: wy });
+  // Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu);
+  // pojedyncza rota idzie dokładnie tam, gdzie wskazano.
+  function orderAt(kind, wx, wy) {
+    if (S.observe || !S.sim || S.over) return;
+    const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0);
+    if (!cs.length) return;
+    if (cs.length === 1) { issue1(cs[0].id, { k: 'order', kind, x: wx, y: wy }); return; }
+    let mx = 0, my = 0; for (const c of cs) { mx += c.ax; my += c.ay; } mx /= cs.length; my /= cs.length;
+    for (const c of cs) issue1(c.id, { k: 'order', kind, x: wx + (c.ax - mx), y: wy + (c.ay - my) });
+  }
   const doFormation = (f) => issue({ k: 'formation', f });
   const doAbility = () => issue({ k: 'ability' });
   const doHold = () => { const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0); if (!cs.length) return; for (const c of cs) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };
@@ -1160,6 +1249,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
   view.addEventListener('pointermove', (e) => {
     const r = view.getBoundingClientRect();
     if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
+    if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
+      const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
+      for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 5 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
+      S.hover = best >= 0 ? sim.comp[best] : -1;
+    }
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
   });
   view.addEventListener('pointerup', (e) => {
@@ -1224,8 +1318,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
   $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); };
   $('mObs').onchange = () => { S.observe = $('mObs').checked; };
+  $('mGuard').onchange = () => { S.guard = $('mGuard').value; };
   $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
-  function syncMenu() { $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+  function syncMenu() { $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
   function buildCmdBar() {
     const b = $('cmdbar'); b.innerHTML = '';
@@ -1244,7 +1339,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (S.observe && c.side !== 0) continue;
       const d = document.createElement('div'); d.className = 'card'; d.dataset.id = c.id;
       d.onclick = (e) => { if (e.shiftKey) { S.selected.has(c.id) ? S.selected.delete(c.id) : S.selected.add(c.id); } else { S.selected.clear(); S.selected.add(c.id); } buildCards(); };
-      d.innerHTML = '<div class="nm"><span></span><span class="n"></span></div><div class="bar"><i></i></div><div class="sub"><span class="stl"></span><span class="ab"></span></div>';
+      d.innerHTML = '<div class="nm"><span></span><span class="n"></span></div><div class="bar"><i></i></div><div class="bar fg"><i></i></div><div class="sub"><span class="stl"></span><span class="ab"></span></div>';
       host.appendChild(d);
     }
     updateCards();
@@ -1254,8 +1349,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
     for (const d of $('cards').children) {
       const c = S.sim.comps[+d.dataset.id];
       d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0);
-      d.querySelector('.nm span').textContent = c.name; d.querySelector('.n').textContent = c.alive + '/' + c.initial;
-      const bar = d.querySelector('.bar i'); bar.style.width = c.control + '%'; bar.style.background = c.cstate === 0 ? 'var(--ok)' : (c.cstate === 1 ? 'var(--warn)' : 'var(--bad)');
+      d.querySelector('.nm span').textContent = c.name + ' #' + c.num; { const f = d.querySelector('.fg i'); f.style.width = c.fatigue + '%'; f.style.background = '#7aa7ff'; d.querySelector('.fg').title = 'Zmęczenie ' + Math.round(c.fatigue) + '%'; } d.querySelector('.n').textContent = c.alive + '/' + c.initial;
+      const bar = d.querySelector('.bar:not(.fg) i'); bar.style.width = c.control + '%'; bar.style.background = c.cstate === 0 ? 'var(--ok)' : (c.cstate === 1 ? 'var(--warn)' : 'var(--bad)');
       const lab = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : CS_LABEL[c.cstate];
       d.querySelector('.stl').innerHTML = '<span class="st st' + c.cstate + '">' + lab + '</span>' + (c.cmdIn ? '' : ' <span title="Poza zasięgiem dowódcy" style="color:var(--bad)">bez dowódcy</span>');
       const ab = d.querySelector('.ab');
@@ -1268,38 +1363,58 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const HEX = { WK: 0x222222, LH: 0xc0392b };
   function render() {
     const sim = S.sim; if (!sim) return;
-    const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2);
+    const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2), k = 1 / cam.z;
     for (let i = 0; i < cnt; i++) {
       const sp = p[i];
       if (sim.alive[i]) {
-        const d = ((Math.round(sim.heading[i] * K) % DIRS) + DIRS) % DIRS, nm = SIDES[sim.side[i]] + sim.names[sim.type[i]];
-        if (!shown[i] || dirOf[i] !== d) { shown[i] = 1; dirOf[i] = d; sp.texture = atlas[nm + d]; sp.alpha = 1; }
+        const d = ((Math.round(sim.heading[i] * K) % DIRS) + DIRS) % DIRS;
+        if (!shown[i] || dirOf[i] !== d) { shown[i] = 1; dirOf[i] = d; sp.texture = atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]] + d]; sp.alpha = 1; }
         sp.x = ISO.sx(sim.x[i], sim.y[i]); sp.y = ISO.sy(sim.x[i], sim.y[i]);
       } else if (shown[i]) { shown[i] = 0; sp.alpha = 0; }
     }
     gGround.clear(); gOver.clear();
-    const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), R * 0.7071, R * 0.3536);
+    const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R));
     // zasięg dowódców na ziemi
-    for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.names[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s) {
-      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 / cam.z, s === 'WK' ? 0x111111 : 0xe0483a, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
+    for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.kinds[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s) {
+      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 * k, s === 'WK' ? 0x111111 : 0xe0483a, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
     }
     for (const c of sim.comps) {
-      const lb = c._label; if (c.alive <= 0) { lb.visible = false; continue; }
-      const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 1.1 + 12;
-      lb.visible = true; lb.scale.set(1 / cam.z * 0.9); lb.position.set(sx, sy - up - 12 / cam.z);
-      // wskaźnik kontroli: trzy segmenty i znacznik wartości
-      const w = 34 / cam.z, h = 5 / cam.z, x = sx - w / 2, y = sy - up - 8 / cam.z;
-      const cols = [0x6fbf4a, 0xe6b422, 0xe0483a];
-      gOver.beginFill(0x000000, 0.7).drawRect(x - 1 / cam.z, y - 1 / cam.z, w + 2 / cam.z, h + 2 / cam.z).endFill();
-      for (let k = 0; k < 3; k++) gOver.beginFill(cols[k], c.cstate === k ? 1 : 0.25).drawRect(x + k * w / 3, y, w / 3 - 0.5 / cam.z, h).endFill();
-      gOver.beginFill(0xffffff, 0.95).drawRect(x + (1 - c.control / 100) * w - 0.5 / cam.z, y - 2 / cam.z, 1.5 / cam.z, h + 4 / cam.z).endFill();
-      if (S.selected.has(c.id)) {
-        const rad = Math.sqrt(c.alive) * 3.3 + 10;
-        gOver.lineStyle(2 / cam.z, 0xe6b422, 0.95); ell(gOver, c.ax, c.ay, rad);
-        const o = c.order; gOver.lineStyle(1.2 / cam.z, 0xe6b422, 0.6).moveTo(sx, sy).lineTo(ISO.sx(o.x, o.y), ISO.sy(o.x, o.y)); ell(gOver, o.x, o.y, 8);
+      const show = c.alive > 0, sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id);
+      c._label.visible = c._cnt.visible = info; c._flag.visible = show;
+      if (!show) continue;
+      const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 2.2 + 16 * k;
+      // chorągiew: zawsze widoczna, bez liczb
+      const fy = sy - up, fw = 15 * k, fh = 10 * k, col = c.side === 0 ? 0x2b2b32 : 0xc4352c;
+      gOver.lineStyle(1.4 * k, 0x2a2018, 1).moveTo(sx, fy).lineTo(sx, fy - 20 * k);
+      gOver.lineStyle(1 * k, c._elite ? 0xf2c230 : (c.side === 0 ? 0xb8b8c4 : 0xf2c27a), 1).beginFill(col, 1).drawRect(sx, fy - 20 * k, fw, fh).endFill();
+      c._flag.scale.set(k); c._flag.position.set(sx + fw / 2, fy - 20 * k + fh / 2);
+      if (info) {
+        // panel informacji: nazwa, liczebność (aktualnie/max), pasek zdrowia z podziałem na mrówki, morale i zmęczenie
+        const W = 92 * k, x0 = sx - W / 2, yb = fy - 28 * k;
+        c._label.scale.set(k * 0.9); c._label.position.set(sx, yb - 36 * k); c._cnt.text = c.alive + '/' + c.initial; c._cnt.scale.set(k * 0.9); c._cnt.position.set(sx, yb - 22 * k);
+        let nF = 0, nW = 0; for (const i of c.ants) if (sim.alive[i]) { if (sim.hp[i] >= sim.T.hp[sim.type[i]] * 0.999) nF++; else nW++; }
+        const N = Math.max(1, Math.min(c.initial, 60)), sF = Math.round(nF / c.initial * N), sW = Math.min(N - sF, Math.round(nW / c.initial * N)), sw = W / N, bh = 6 * k;
+        gOver.lineStyle(0).beginFill(0x000000, 0.75).drawRect(x0 - k, yb - 16 * k, W + 2 * k, 4 * bh + 3 * k).endFill();
+        for (let q = 0; q < N; q++) {
+          const x = x0 + q * sw, w = Math.max(0.4 * k, sw - 0.7 * k);
+          if (q < sF) gOver.beginFill(0x6fbf4a, 1).drawRect(x, yb - 15 * k, w, bh).endFill();
+          else if (q < sF + sW) gOver.beginFill(0xe6a028, 1).drawRect(x, yb - 15 * k + bh / 2, w, bh / 2).endFill();
+          else gOver.beginFill(0x3a1a14, 1).drawRect(x, yb - 15 * k + bh - 1.2 * k, w, 1.2 * k).endFill();
+        }
+        const stCol = [0x6fbf4a, 0xe6b422, 0xe0483a][c.cstate];
+        gOver.beginFill(0x20201a, 1).drawRect(x0, yb - 15 * k + bh + k, W, bh - k).endFill().beginFill(stCol, 1).drawRect(x0, yb - 15 * k + bh + k, W * c.control / 100, bh - k).endFill();
+        for (const th of [sim.defs.params.control.lostAt, sim.defs.params.control.weakAt]) gOver.beginFill(0xffffff, 0.8).drawRect(x0 + W * th / 100 - 0.4 * k, yb - 15 * k + bh + k, 0.8 * k, bh - k).endFill();
+        gOver.beginFill(0x20201a, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W, bh - k).endFill().beginFill(0x7aa7ff, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W * c.fatigue / 100, bh - k).endFill();
       }
+      if (sel) {
+        const rad = Math.sqrt(c.alive) * 5 + 14;
+        gOver.lineStyle(2 * k, 0xe6b422, 0.95); ell(gOver, c.ax, c.ay, rad);
+        const o = c.order; gOver.lineStyle(1.2 * k, 0xe6b422, 0.6).moveTo(sx, sy).lineTo(ISO.sx(o.x, o.y), ISO.sy(o.x, o.y)); ell(gOver, o.x, o.y, 9);
+      }
+      // kapitan roty: złoty znacznik nad mrówką
+      if (c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
     }
-    for (let k = markers.length - 1; k >= 0; k--) { const m = markers[k]; m.t -= 0.02; if (m.t <= 0) { markers.splice(k, 1); continue; } gOver.lineStyle(2 / cam.z, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t); ell(gOver, m.x, m.y, (1.2 - m.t) * 56 + 8); }
+    for (let q = markers.length - 1; q >= 0; q--) { const m = markers[q]; m.t -= 0.02; if (m.t <= 0) { markers.splice(q, 1); continue; } gOver.lineStyle(2 * k, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t); ell(gOver, m.x, m.y, (1.2 - m.t) * 60 + 8); }
     drawBox();
   }
   const boxG = new PIXI.Graphics(); app.stage.addChild(boxG);
@@ -1359,7 +1474,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, app, cam, SIDES, get atlas() { return atlas; } };
+  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, get atlas() { return atlas; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

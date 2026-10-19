@@ -44,6 +44,17 @@ const { openPage, ROOT } = require('./browser-lib');
     assert.strictEqual(await page.evaluate(() => __P1.S.sim.tick), t1);
     ok('pauza zatrzymuje czas, a rozkaz PPM działa w pauzie', before + ' → ' + after);
 
+    // kilka zaznaczonych rot jedzie w szyku (zachowują wzajemne rozmieszczenie), pojedyncza idzie dokładnie w wskazany punkt
+    const g = await page.evaluate(() => { const S = __P1.S, cs = [0, 1, 2].map((i) => S.sim.comps[i]); S.selected.clear(); cs.forEach((c) => S.selected.add(c.id)); return cs.map((c) => [c.ax, c.ay]); });
+    await page.mouse.click(760, 420, { button: 'right' }); await page.waitForTimeout(300);
+    const og = await page.evaluate(() => [0, 1, 2].map((i) => { const o = __P1.S.sim.comps[i].order; return [o.x, o.y]; }));
+    for (let i = 1; i < 3; i++) assert.ok(Math.abs((og[i][0] - og[0][0]) - (g[i][0] - g[0][0])) < 2 && Math.abs((og[i][1] - og[0][1]) - (g[i][1] - g[0][1])) < 2, 'grupa nie zachowała szyku: ' + JSON.stringify([g, og]));
+    const one = await page.evaluate(() => { const S = __P1.S; S.selected.clear(); S.selected.add(5); return null; });
+    await page.mouse.click(760, 420, { button: 'right' }); await page.waitForTimeout(300);
+    const o1 = await page.evaluate(() => { const o = __P1.S.sim.comps[5].order, c = __P1.cam; const cx = (760 - c.x) / c.z, cy = (420 - c.y) / c.z; return [o.x, o.y, __P1.ISO.wx(cx, cy), __P1.ISO.wy(cx, cy)]; });
+    assert.ok(Math.hypot(o1[0] - o1[2], o1[1] - o1[3]) < 2, 'pojedyncza rota nie idzie w kliknięty punkt: ' + o1);
+    ok('grupa rot zachowuje szyk, pojedyncza rota idzie w wskazany punkt');
+
     // formacje, umiejętność, odwrót, stój klawiszami
     await page.keyboard.press('KeyC');
     assert.strictEqual(await page.evaluate(() => __P1.S.sim.comps[0].formation), 2, 'klin');

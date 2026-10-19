@@ -25,11 +25,74 @@ test('definicje JSON parsują się, a HTML przypina PixiJS 7.4.2 z CDN', () => {
   assert.ok(!/Math\.random/.test(html.slice(html.indexOf('/*SIM-BEGIN*/'), html.indexOf('/*SIM-END*/'))), 'rdzeń nie może używać Math.random');
 });
 
-test('zakres: 2000-4000 mrówek na polu, roty 50-300 (sekcja 15.2)', () => {
+test('zakres: rzadszy rój, ponad 20 rot po 50-300 mrówek; nazwy rot zależą od typu', () => {
   const sim = make(1);
-  assert.ok(sim.count >= 2000 && sim.count + 700 <= 4000 + 700, 'liczba mrówek ' + sim.count);
+  assert.ok(sim.count >= 1400 && sim.count <= 4000, 'liczba mrówek ' + sim.count);
+  assert.ok(sim.comps.length >= 20, 'rot: ' + sim.comps.length);
   for (const c of sim.comps) assert.ok(c.initial >= 50 && c.initial <= 301, c.name + ' ma ' + c.initial);
-  return 'start: ' + sim.count + ' mrówek, ' + sim.comps.length + ' rot';
+  const names = new Set(sim.comps.map((c) => c.name));
+  assert.ok(names.has('Rota wojowników') && names.has('Rota taranów') && names.has('Rota plujek') && names.has('Rota odźwiernych'));
+  assert.strictEqual(sim.comps.filter((c) => c.name === 'Rota wojowników' && c.side === 0).length, 6);
+  return 'start: ' + sim.count + ' mrówek, ' + sim.comps.length + ' rot (' + [...names].join(', ') + ')';
+});
+
+test('dowódca ma własną gwardię: elitarne wersje dowolnego typu (statystyki bazowe razy elitarność), wybór przy rekrutacji', () => {
+  const sim = make(1);
+  const T = sim.T, ti = sim.ti;
+  assert.ok(T.hp[ti.gwardia_ciezki] > T.hp[ti.ciezki] * 1.5 && T.dmg[ti.gwardia_ciezki] > T.dmg[ti.ciezki] && T.armor[ti.gwardia_ciezki] > T.armor[ti.ciezki], 'elita nie jest silniejsza od bazy');
+  const guards = sim.comps.filter((c) => /^Gwardia/.test(c.name));
+  assert.strictEqual(guards.length, 4);
+  for (const g of guards) assert.ok(g.startBy.dowodca === 1 && Object.keys(g.startBy).length === 2, 'gwardia ma mieć dowódcę i jeden typ elity');
+  const { Sim, defs } = loadP1();
+  for (const type of ['infantry', 'biegacz', 'taran', 'pekacz', 'odzwierny', 'plujka']) {
+    const s2 = Sim.create({ defs, seed: 1, guard: { WK: type } });
+    const g = s2.comps.find((c) => c.side === 0 && /^Gwardia/.test(c.name));
+    assert.ok(g && g.startBy['gwardia_' + type] === 50, 'gwardia typu ' + type + ' nie powstała: ' + JSON.stringify(g && g.startBy));
+  }
+  return 'gwardia: ' + [...new Set(guards.map((g) => g.name))].join(', ') + '; dowolny typ bazowy jako gwardia: ok';
+});
+
+test('ciała mają masę: mrówki się nie stackują (pary nakładające się >40% poza zamkniętym plugiem)', () => {
+  const sim = make(1, 256); let worst = 0, sum = 0, n = 0, pairsTotal = 0;
+  for (let k = 0; k < 20 * 150 && !sim.result; k++) {
+    sim.step();
+    if (k % 40 === 20) {
+      const ids = []; for (let i = 0; i < sim.count; i++) if (sim.alive[i]) ids.push(i);
+      let bad = 0;
+      for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+        const i = ids[a], j = ids[b], md = sim.T.radius[sim.type[i]] + sim.T.radius[sim.type[j]];
+        const dx = sim.x[i] - sim.x[j]; if (Math.abs(dx) > md) continue; const dy = sim.y[i] - sim.y[j]; if (Math.abs(dy) > md) continue;
+        const ci = sim.comps[sim.comp[i]], cj = sim.comps[sim.comp[j]];
+        if (ci.closed && cj.closed) continue;
+        if (Math.hypot(dx, dy) < 0.6 * md) bad++;
+      }
+      worst = Math.max(worst, bad / ids.length); sum += bad / ids.length; n++;
+    }
+  }
+  assert.ok(worst < 0.04, 'zbyt wiele nakładających się ciał: ' + (worst * 100).toFixed(1) + '% mrówek w najgorszym pomiarze');
+  return 'najgorszy pomiar: ' + (worst * 100).toFixed(2) + '% mrówek w nakładającej się parze, średnio ' + (sum / n * 100).toFixed(2) + '%';
+});
+
+test('zmęczenie rośnie w marszu i walce, obniża tempo ataku i kontrolę, spada na odpoczynku', () => {
+  const sim = run(make(1, 256), 90);
+  const f = sim.comps.map((c) => c.fatigue);
+  assert.ok(f.every((v) => v >= 0 && v <= 100), 'zmęczenie poza zakresem');
+  const marched = sim.comps.filter((c) => c.side === 0 && c.role === 'assault'), rested = sim.comps.filter((c) => c.role === 'plug');
+  assert.ok(Math.max(...marched.map((c) => c.fatigue)) > 15, 'maszerujące roty nie męczą się');
+  assert.ok(Math.max(...marched.map((c) => c.fatigue)) > Math.max(...rested.map((c) => c.fatigue)), 'odpoczywający plug męczy się bardziej niż maszerujący');
+  const tired = marched.sort((a, b) => b.fatigue - a.fatigue)[0];
+  assert.ok(tired.cdMod > 1.05 && tired.spMod < 0.98, 'zmęczenie nie wpływa na tempo ataku i prędkość');
+  return 'maks. zmęczenie marszu ' + tired.fatigue.toFixed(0) + '%, mnożnik czasu ataku ' + tired.cdMod.toFixed(2) + ', prędkości ' + tired.spMod.toFixed(2);
+});
+
+test('kapitan roty: jego śmierć obniża morale, a po czasie awansuje następca', () => {
+  const sim = make(1, 256); let ev = null, comp = null, before = 0;
+  for (let k = 0; k < 20 * 400 && !sim.result && !ev; k++) { sim.step(); ev = sim.events.find((e) => /Poległ kapitan roty/.test(e.text)); if (ev) comp = sim.comps[ev.comp]; }
+  assert.ok(ev, 'w 400 s nie poległ żaden kapitan');
+  assert.ok(comp.captain === -1 || comp.alive === 0, 'kapitan nie został odebrany po śmierci');
+  const t0 = sim.tick; for (let k = 0; k < 20 * 18 && !sim.result; k++) sim.step();
+  assert.ok(comp.alive === 0 || comp.captain >= 0, 'po ' + (sim.tick - t0) / 20 + ' s nie awansował następca kapitana');
+  return ev.text + ' (' + ev.t + ' s), następca awansował';
 });
 
 test('determinizm: to samo ziarno daje ten sam skrót stanu, inne ziarno inny', () => {
@@ -86,9 +149,9 @@ test('geometria plugu: nieśmiertelny zamknięty plug nie przepuszcza nikogo prz
   // Izolujemy samą geometrię: plug nie ginie, plujek brak, cała Wielka Kolonia (z biegaczami w sprincie) szturmuje przejście.
   const out = [];
   for (const w of [64, 128, 256]) {
-    const sim = make(1, w, (d) => { d.units.odzwierny.hp = 1e7; d.scenario.sides.LH.companies[1].units = { dowodca: 1 }; });
+    const sim = make(1, w, (d) => { d.units.odzwierny.hp = 1e7; d.params.supply.acidStart = 0; });
     const plug = sim.comps.find((c) => c.role === 'plug'); let leak = 0, maxPressure = 0;
-    const depth = Math.ceil(plug.initial / plug.fcols) * 5.2 / 2;
+    const depth = Math.ceil(plug.initial / plug.fcols) * plug.spacing / 2;
     for (let k = 0; k < 20 * 90 && !sim.result; k++) {
       sim.step();
       if (k % 20 === 10) {
@@ -98,7 +161,7 @@ test('geometria plugu: nieśmiertelny zamknięty plug nie przepuszcza nikogo prz
       }
     }
     assert.ok(plug.closed, 'plug nie zamknął przejścia przy ' + w);
-    assert.ok(maxPressure >= 40, 'za mało atakujących przy przejściu (' + maxPressure + '), test nic nie dowodzi');
+    assert.ok(maxPressure >= 25, 'za mało atakujących przy przejściu (' + maxPressure + '), test nic nie dowodzi');
     assert.strictEqual(leak, 0, 'przeciek przy szerokości ' + w + ': ' + leak + ' pomiarów');
     out.push(w + ': ok (nacisk do ' + maxPressure + ' mrówek)');
   }
@@ -120,8 +183,8 @@ test('kontrola feromonowa: roty osłabiają się i tracą kontrolę, a zdarzenia
 });
 
 test('wydajność: krok symulacji przy ok. 4000 mrówek (czas w piaskownicy, nie kryterium 15.2)', () => {
-  const sim = make(1, 128, (d) => { for (const s of ['WK', 'LH']) for (const c of d.scenario.sides[s].companies) for (const k in c.units) if (k === 'infantry') c.units[k] = Math.round(c.units[k] * (s === 'WK' ? 1.7 : 2.3)); });
-  const n = sim.count; assert.ok(n >= 3500 && n <= 4400, 'liczba mrówek ' + n);
+  const sim = make(1, 128, (d) => { for (const s of ['WK', 'LH']) for (const c of d.scenario.sides[s].companies) for (const k in c.units) if (k !== 'dowodca' && k !== '@guard') c.units[k] = Math.round(c.units[k] * 2.3); });
+  const n = sim.count; assert.ok(n >= 3500 && n <= 4600, 'liczba mrówek ' + n);
   const times = [];
   for (let k = 0; k < 20 * 40; k++) { const t0 = process.hrtime.bigint(); sim.step(); times.push(Number(process.hrtime.bigint() - t0) / 1e6); }
   times.sort((a, b) => a - b);
