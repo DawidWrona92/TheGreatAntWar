@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wojna superkolonii: P1 prototyp bitwy</title>
+<style>
+/*UI-STYLE*/
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
+<script type="application/json" id="defs">
+{
+  "world": { "w": 1600, "h": 960, "passage": 128, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
+  "params": {
+    "cover": 0.7,
+    "shieldMult": 0.4,
+    "closedMult": 0.55,
+    "dmgVariance": 0.3,
+    "separation": 0.5,
+    "control": {
+      "regen": 5, "cmdBonus": 3, "noCmdWK": 6, "noCmdLH": 2, "lossK": 80, "alarmK": 2,
+      "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
+      "massBonus": 2, "cutOff": 2, "orderBoost": 25
+    },
+    "supply": { "WK": 60, "LH": 60, "reinfPerSec": 8, "acidRefill": 0.06 },
+    "aiPeriod": 20
+  },
+  "units": {
+    "infantry":  { "name": "Piechota",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 5,   "cd": 1.0, "aggro": 28, "radius": 2.2, "rank": 2,   "armor": 0,   "size": 0.55 },
+    "taran":     { "name": "Taran",      "hp": 50, "speed": 16, "dmg": 3.5, "reach": 6,   "cd": 1.3, "aggro": 24, "radius": 3.4, "rank": 0,   "armor": 0.3, "size": 0.95, "knock": 45,
+                   "ability": { "id": "charge", "name": "Szarża", "dur": 5, "cd": 35, "mult": 1.8 } },
+    "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 4.5, "cd": 0.8, "aggro": 40, "radius": 1.9, "rank": 2.5, "armor": 0,   "size": 0.5,
+                   "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 } },
+    "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 5,   "cd": 1.0, "aggro": 0,  "radius": 2.6, "rank": 3,   "armor": 0,   "size": 0.7,
+                   "burst": { "radius": 24, "dmg": 4.0, "stuck": 6, "seek": 120 },
+                   "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
+    "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 5,   "cd": 1.1, "aggro": 20, "radius": 3.2, "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
+                   "ability": { "id": "close", "name": "Zamknij wejście" } },
+    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 2.2, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 2.0, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
+    "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 6,   "cd": 1.0, "aggro": 24, "radius": 3.0, "rank": 5,   "armor": 0.2, "size": 1.0,
+                   "ability": { "id": "order", "name": "Rozkaz", "cd": 40 } }
+  },
+  "counters": {
+    "taran":     { "infantry": 1.4, "odzwierny": 0.8 },
+    "infantry":  { "taran": 0.45 },
+    "biegacz":   { "plujka": 2.4, "odzwierny": 0.3, "taran": 0.3, "infantry": 0.9 },
+    "plujka":    { "taran": 1.6 }
+  },
+  "scenario": {
+    "attacker": "WK",
+    "sides": {
+      "WK": {
+        "name": "Wielka Kolonia", "supply": 60, "reserve": 500, "auraR": 150, "spawn": [60, 200, 160, 560],
+        "companies": [
+          { "name": "1. rota",   "role": "assault", "at": [230, 480], "face": 0, "units": { "infantry": 300, "dowodca": 1 }, "delay": 0 },
+          { "name": "2. rota",   "role": "assault", "at": [230, 290], "face": 0, "units": { "infantry": 300 }, "delay": 6 },
+          { "name": "3. rota",   "role": "assault", "at": [230, 670], "face": 0, "units": { "infantry": 300 }, "delay": 6 },
+          { "name": "4. rota",   "role": "assault", "at": [60, 480],  "face": 0, "units": { "infantry": 300 }, "delay": 25 },
+          { "name": "Tarany",    "role": "taran",   "at": [140, 480], "face": 0, "units": { "taran": 100 }, "delay": 0 },
+          { "name": "Pękacze",   "role": "pekacz",  "at": [140, 330], "face": 0, "units": { "pekacz": 150, "dowodca": 1 }, "delay": 10 },
+          { "name": "Biegacze",  "role": "raider",  "at": [140, 640], "face": 0, "units": { "biegacz": 200 }, "delay": 18 }
+        ]
+      },
+      "LH": {
+        "name": "Lake Hodges", "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
+        "companies": [
+          { "name": "Odźwierni",   "role": "plug",      "at": [830, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
+          { "name": "Plujki",      "role": "artillery", "at": [880, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
+          { "name": "Rota północ", "role": "reserve",   "at": [900, 340],  "face": 3.14159, "units": { "infantry": 220 } },
+          { "name": "Rota południe", "role": "reserve", "at": [900, 620],  "face": 3.14159, "units": { "infantry": 220 } },
+          { "name": "Odwód",       "role": "reserve",   "at": [1040, 480], "face": 3.14159, "units": { "infantry": 200, "dowodca": 1 } }
+        ]
+      }
+    }
+  }
+}
+</script>
+
+<script id="sim">
+/*SIM-BEGIN*/
+const Sim = (function () {
+  'use strict';
+  const HZ = 20, DT = 1 / HZ;
+  const CELL = 16;      // komórka terenu
+  const HASH = 8;       // komórka siatki przestrzennej
+  const SPACING = 5.2;  // odstęp w szyku
+  const F_LINE = 0, F_COL = 1, F_WEDGE = 2;
+  const CS_FULL = 0, CS_WEAK = 1, CS_LOST = 2;
+  const SIDES = ['WK', 'LH'];
+  const CAUSE_NAMES = { cmdDeath: 'śmierć dowódcy', noCmd: 'brak dowódcy w zasięgu', loss: 'ciężkie straty', alarm: 'alarm w walce', cutOff: 'odcięcie od innych rot' };
+
+  function hashSeed(seed) {
+    if (typeof seed === 'number') return seed >>> 0;
+    let h = 1779033703 ^ seed.length;
+    for (let i = 0; i < seed.length; i++) { h = Math.imul(h ^ seed.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function mulberry32(state) {
+    return function () {
+      state = (state + 0x6D2B79F5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // Osobny strumień na system: nowe losowanie w jednym miejscu nie przesuwa pozostałych.
+  function createRng(seed) {
+    const base = hashSeed(seed), next = mulberry32(base);
+    return { seed: base, next, range: (a, b) => a + (b - a) * next(), fork: (label) => createRng(base + ':' + label) };
+  }
+
+  function create(opts) {
+    const defs = JSON.parse(JSON.stringify(opts.defs));
+    if (opts.passage != null) defs.world.passage = opts.passage;
+    if (opts.supply) for (const s of SIDES) if (opts.supply[s] != null) defs.params.supply[s] = opts.supply[s];
+    const seed = opts.seed == null ? 1 : opts.seed;
+    const rng = createRng(seed), rngMap = rng.fork('map'), rngSpawn = rng.fork('spawn'), rngCombat = rng.fork('combat');
+    const aiSides = new Set(opts.aiSides || SIDES);
+    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control;
+    const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
+    const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
+    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides };
+
+    // ---------- tabele typów (przebudowywane po zmianie suwaków) ----------
+    let names, nT, ti, T, mult;
+    function buildTables() {
+      names = Object.keys(defs.units); nT = names.length; ti = {};
+      names.forEach((n, i) => { ti[n] = i; });
+      const f = () => new Float32Array(nT);
+      T = { hp: f(), speed: f(), dmg: f(), reach: f(), cd: f(), aggro: f(), radius: f(), rank: f(), armor: f(), range: f(), aoe: f(), knock: f(), size: f(), ranged: new Uint8Array(nT), heavy: new Uint8Array(nT) };
+      names.forEach((n, i) => {
+        const u = defs.units[n];
+        for (const k of ['hp', 'speed', 'dmg', 'reach', 'cd', 'aggro', 'radius', 'rank', 'armor', 'range', 'aoe', 'knock', 'size']) T[k][i] = u[k] || 0;
+        T.ranged[i] = u.ranged ? 1 : 0; T.heavy[i] = u.heavy ? 1 : 0;
+      });
+      mult = new Float32Array(nT * nT).fill(1);
+      for (const a in defs.counters) for (const d in defs.counters[a]) mult[ti[a] * nT + ti[d]] = defs.counters[a][d];
+      sim.names = names; sim.ti = ti; sim.T = T;
+    }
+    buildTables();
+    sim.rebuildTables = buildTables;
+
+    // ---------- teren ----------
+    // 0 otwarte, 1 mur (ludzki), 2 osłona (trawa, patyki), 3 mur gniazda
+    const grid = new Uint8Array(COLS * ROWS);
+    const midY = H / 2, wallX = defs.world.wallX, passage = defs.world.passage;
+    const nestC = defs.world.nest;
+    (function buildTerrain() {
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
+        let v = 0;
+        if (r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1) v = 1;
+        else if (Math.abs(cx - wallX) < CELL && Math.abs(cy - midY) > passage / 2) v = 1;
+        else {
+          const dx = cx - nestC[0], dy = cy - nestC[1], d = Math.hypot(dx, dy);
+          if (d > 4.3 * CELL && d < 5.5 * CELL) {
+            let da = Math.atan2(dy, dx) - Math.PI;
+            da = Math.atan2(Math.sin(da), Math.cos(da));
+            if (Math.abs(da) > 0.4) v = 3;
+          }
+        }
+        grid[r * COLS + c] = v;
+      }
+      const patches = 12;
+      for (let k = 0; k < patches; k++) {
+        const west = k < patches / 2;
+        const px = west ? rngMap.range(180, 700) : rngMap.range(900, 1300);
+        const py = rngMap.range(100, H - 100), pr = rngMap.range(2, 4) * CELL;
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+          if (grid[r * COLS + c] !== 0) continue;
+          if (Math.hypot((c + 0.5) * CELL - px, (r + 0.5) * CELL - py) < pr) grid[r * COLS + c] = 2;
+        }
+      }
+    })();
+    sim.grid = grid;
+    function cellAt(x, y) { return ((y / CELL) | 0) * COLS + ((x / CELL) | 0); }
+    function blocked(x, y) {
+      if (x < 0 || y < 0 || x >= W || y >= H) return true;
+      const v = grid[cellAt(x, y)]; return v === 1 || v === 3;
+    }
+    function losClear(x0, y0, x1, y1) {
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
+      for (let k = 1; k < n; k++) if (blocked(x0 + dx * k / n, y0 + dy * k / n)) return false;
+      return true;
+    }
+    function nearestOpen(x, y) {
+      x = Math.min(W - 2, Math.max(2, x)); y = Math.min(H - 2, Math.max(2, y));
+      if (!blocked(x, y)) return [x, y];
+      for (let r = 1; r < 40; r++) for (let a = 0; a < 16; a++) {
+        const px = x + Math.cos(a * Math.PI / 8) * r * 6, py = y + Math.sin(a * Math.PI / 8) * r * 6;
+        if (!blocked(px, py)) return [px, py];
+      }
+      return [x, y];
+    }
+
+    // ---------- pola przepływu (jeden na cel) ----------
+    const fields = new Map();
+    function getField(x, y) {
+      const key = cellAt(x, y);
+      let f = fields.get(key);
+      if (f) return f;
+      f = new Int32Array(COLS * ROWS).fill(-1);
+      const q = [key]; f[key] = 0;
+      const nb = [[1, 0, 10], [-1, 0, 10], [0, 1, 10], [0, -1, 10], [1, 1, 14], [1, -1, 14], [-1, 1, 14], [-1, -1, 14]];
+      const isB = (i) => grid[i] === 1 || grid[i] === 3;
+      for (let h = 0; h < q.length; h++) {
+        const cur = q[h], cx = cur % COLS, cy = (cur / COLS) | 0;
+        for (const [dx, dy, w] of nb) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
+          const ni = ny * COLS + nx;
+          if (isB(ni)) continue;
+          if (dx !== 0 && dy !== 0 && (isB(cy * COLS + nx) || isB(ny * COLS + cx))) continue;
+          const nd = f[cur] + w;
+          if (f[ni] < 0 || nd < f[ni]) { f[ni] = nd; q.push(ni); }
+        }
+      }
+      fields.set(key, f);
+      return f;
+    }
+    const flow = { x: 0, y: 0 };
+    function flowDir(f, px, py) {
+      const cx = (px / CELL) | 0, cy = (py / CELL) | 0;
+      if (cx < 1 || cy < 1 || cx >= COLS - 1 || cy >= ROWS - 1) return false;
+      const d0 = f[cy * COLS + cx]; if (d0 < 0) return false;
+      const v = (i) => { const d = f[i]; return d < 0 ? d0 + 30 : d; };
+      const gx = v(cy * COLS + cx - 1) - v(cy * COLS + cx + 1), gy = v((cy - 1) * COLS + cx) - v((cy + 1) * COLS + cx);
+      const len = Math.hypot(gx, gy); if (len < 1e-6) return false;
+      flow.x = gx / len; flow.y = gy / len; return true;
+    }
+
+    // ---------- mrówki (struktura tablic) ----------
+    let cap = 0;
+    for (const s of SIDES) { const sd = defs.scenario.sides[s]; cap += sd.reserve; for (const c of sd.companies) for (const k in c.units) cap += c.units[k]; }
+    cap += 16;
+    const ax = new Float32Array(cap), ay = new Float32Array(cap), avx = new Float32Array(cap), avy = new Float32Array(cap);
+    const hp = new Float32Array(cap), cdT = new Float32Array(cap), stuck = new Float32Array(cap), heading = new Float32Array(cap);
+    const slotU = new Float32Array(cap), slotV = new Float32Array(cap), shield = new Int32Array(cap);
+    const type = new Uint8Array(cap), side = new Uint8Array(cap), alive = new Uint8Array(cap);
+    const compOf = new Int16Array(cap), target = new Int32Array(cap).fill(-1);
+    let count = 0;
+    Object.assign(sim, { x: ax, y: ay, hp, type, side, alive, heading, comp: compOf, cap });
+    Object.defineProperty(sim, 'count', { get: () => count });
+
+    // ---------- statystyki i zdarzenia ----------
+    const stats = {}; for (const s of SIDES) stats[s] = { start: {}, lost: {}, kills: {} };
+    const events = [], timeline = [];
+    sim.events = events;
+    let tick = 0;
+    Object.defineProperty(sim, 'tick', { get: () => tick });
+    function logEvent(text, s, comp) { events.push({ t: +(tick / HZ).toFixed(1), side: s, comp: comp == null ? -1 : comp, text }); }
+
+    // ---------- kompanie ----------
+    const comps = []; sim.comps = comps;
+    const reserve = { WK: defs.scenario.sides.WK.reserve, LH: defs.scenario.sides.LH.reserve };
+    sim.reserve = reserve;
+    const commanders = { WK: [], LH: [] };
+    function addAnt(t, s, ci, x, y) {
+      const i = count++;
+      ax[i] = x; ay[i] = y; type[i] = t; side[i] = s; compOf[i] = ci; alive[i] = 1; hp[i] = T.hp[t];
+      cdT[i] = rngCombat.next(); target[i] = -1; heading[i] = comps[ci].face;
+      comps[ci].ants.push(i); comps[ci].alive++; comps[ci].dirty = true;
+      if (names[t] === 'dowodca') commanders[SIDES[s]].push(i);
+      return i;
+    }
+    (function buildComps() {
+      SIDES.forEach((sn, s) => {
+        const sd = defs.scenario.sides[sn];
+        sd.companies.forEach((cd, idx) => {
+          const at = nearestOpen(cd.at[0], cd.at[1]);
+          const c = {
+            id: comps.length, side: s, sideName: sn, name: cd.name, role: cd.role, delay: cd.delay || 0,
+            ants: [], alive: 0, initial: 0, ax: at[0], ay: at[1], face: cd.face, fx: Math.cos(cd.face), fy: Math.sin(cd.face),
+            formation: F_LINE, fcols: 0, order: { kind: 'hold', x: at[0], y: at[1] }, eff: null,
+            control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
+            deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: false, acid: 0, acidMax: 0,
+            cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
+            lastCause: ''
+          };
+          comps.push(c);
+          for (const k in cd.units) {
+            const t = ti[k];
+            for (let n = 0; n < cd.units[k]; n++) addAnt(t, s, c.id, at[0], at[1]);
+            c.startBy[k] = cd.units[k]; stats[sn].start[k] = (stats[sn].start[k] || 0) + cd.units[k];
+          }
+          c.initial = c.alive;
+          if (c.role === 'plug') c.fcols = Math.max(4, Math.floor((passage - 6) / SPACING));
+          const nP = c.startBy.plujka || 0; c.acidMax = nP * 6; c.acid = nP * 4;
+          // umiejętność rity: pierwszy typ specjalny, inaczej dowódca
+          let best = null, bestN = 0;
+          for (const k in c.startBy) if (defs.units[k].ability && k !== 'dowodca' && c.startBy[k] > bestN) { best = k; bestN = c.startBy[k]; }
+          if (!best && c.startBy.dowodca) best = 'dowodca';
+          c.abilType = best;
+          repack(c);
+          for (const i of c.ants) { const p = slotWorld(c, i); const o = blocked(p[0], p[1]) ? [c.ax, c.ay] : p; ax[i] = o[0] + rngMap.range(-1, 1); ay[i] = o[1] + rngMap.range(-1, 1); }
+        });
+      });
+      for (const c of comps) c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: true };
+    })();
+    function slotWorld(c, i) {
+      return [c.ax + c.fx * slotU[i] - c.fy * slotV[i], c.ay + c.fy * slotU[i] + c.fx * slotV[i]];
+    }
+    function repack(c) {
+      const list = c.ants.filter((i) => alive[i]);
+      c.ants = list;
+      list.sort((a, b) => (T.rank[type[a]] - T.rank[type[b]]) || (a - b));
+      const n = list.length, s = SPACING;
+      if (c.formation === F_WEDGE) {
+        const rows = Math.ceil(Math.sqrt(n));
+        for (let k = 0; k < n; k++) { const r = Math.floor(Math.sqrt(k)), idx = k - r * r; slotV[list[k]] = (idx - r) * s; slotU[list[k]] = ((rows - 1) / 2 - r) * s * 0.9; }
+      } else {
+        const cols = c.fcols > 0 ? c.fcols : (c.formation === F_LINE ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5))));
+        const rows = Math.ceil(n / cols);
+        for (let k = 0; k < n; k++) {
+          const r = (k / cols) | 0, col = k % cols, rc = r < rows - 1 ? cols : n - (rows - 1) * cols;
+          slotV[list[k]] = (col - (rc - 1) / 2) * s; slotU[list[k]] = ((rows - 1) / 2 - r) * s;
+        }
+      }
+      c.dirty = false; c.repackTick = tick;
+    }
+
+    // ---------- siatka przestrzenna ----------
+    const cellStart = new Int32Array(HC * HR + 1), cursor = new Int32Array(HC * HR), cellItems = new Int32Array(cap);
+    function buildHash() {
+      cellStart.fill(0);
+      for (let i = 0; i < count; i++) if (alive[i]) { const c = ((ay[i] / HASH) | 0) * HC + ((ax[i] / HASH) | 0); cellStart[c + 1]++; }
+      for (let c = 0; c < HC * HR; c++) cellStart[c + 1] += cellStart[c];
+      cursor.set(cellStart.subarray(0, HC * HR));
+      for (let i = 0; i < count; i++) if (alive[i]) { const c = ((ay[i] / HASH) | 0) * HC + ((ax[i] / HASH) | 0); cellItems[cursor[c]++] = i; }
+    }
+    function clampH(v, m) { return v < 0 ? 0 : (v >= m ? m - 1 : v); }
+
+    // ---------- zadawanie obrażeń ----------
+    function kill(d, a, why) {
+      alive[d] = 0; const c = comps[compOf[d]], sn = SIDES[side[d]], tn = names[type[d]];
+      c.alive--; c.lost++; c.lostBy[tn] = (c.lostBy[tn] || 0) + 1; c.deaths.push(tick);
+      stats[sn].lost[tn] = (stats[sn].lost[tn] || 0) + 1;
+      if (a >= 0) { const kn = SIDES[side[a]]; stats[kn].kills[tn] = (stats[kn].kills[tn] || 0) + 1; }
+      if (tn === 'dowodca') {
+        c.cmdDiedAt = tick; const arr = commanders[sn]; arr.splice(arr.indexOf(d), 1);
+        logEvent('Poległ dowódca (' + c.name + ', ' + sn + ')', sn, c.id);
+        for (const o of comps) if (o.side === side[d]) o.cmdDiedAt = Math.max(o.cmdDiedAt, tick);
+      }
+    }
+    function hit(a, d, base, melee) {
+      if (!alive[d]) return;
+      let dmg = base * (1 - P.dmgVariance / 2 + P.dmgVariance * rngCombat.next());
+      if (a >= 0) dmg *= mult[type[a] * nT + type[d]];
+      if (melee) dmg *= 1 - T.armor[type[d]];
+      const g = grid[cellAt(ax[d], ay[d])];
+      if (g === 2) dmg *= P.cover;
+      if (shield[d] > tick) dmg *= P.shieldMult;
+      const dc = comps[compOf[d]];
+      if (dc.closed && names[type[d]] === 'odzwierny') dmg *= P.closedMult;
+      hp[d] -= dmg;
+      if (hp[d] <= 0) kill(d, a, melee ? 'melee' : 'ranged');
+      else if (melee && a >= 0 && T.knock[type[a]] > 0 && !T.heavy[type[d]]) {
+        const dx = ax[d] - ax[a], dy = ay[d] - ay[a], l = Math.hypot(dx, dy) || 1, k = T.knock[type[a]] * (comps[compOf[a]].abilUntil > tick && comps[compOf[a]].abilType === 'taran' ? 2 : 1);
+        avx[d] += dx / l * k; avy[d] += dy / l * k;
+      }
+    }
+    function burst(i) {
+      const u = defs.units.pekacz.burst, x = ax[i], y = ay[i], s = side[i];
+      const r = Math.ceil(u.radius / HASH), cx = (x / HASH) | 0, cy = (y / HASH) | 0;
+      for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
+        const c = yy * HC + xx;
+        for (let k = cellStart[c]; k < cellStart[c + 1]; k++) {
+          const j = cellItems[k];
+          if (!alive[j] || side[j] === s || Math.hypot(ax[j] - x, ay[j] - y) > u.radius) continue;
+          stuck[j] = Math.max(stuck[j], u.stuck);
+          hit(i, j, u.dmg, false);
+        }
+      }
+      kill(i, -1, 'burst');
+    }
+    function acid(i, tx, ty) {
+      const u = T.aoe[type[i]], s = side[i], r = Math.ceil(u / HASH), cx = (tx / HASH) | 0, cy = (ty / HASH) | 0;
+      for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
+        const c = yy * HC + xx;
+        for (let k = cellStart[c]; k < cellStart[c + 1]; k++) {
+          const j = cellItems[k];
+          if (alive[j] && side[j] !== s && Math.hypot(ax[j] - tx, ay[j] - ty) <= u) hit(i, j, T.dmg[type[i]], false);
+        }
+      }
+    }
+
+    // ---------- namierzanie ----------
+    function acquire(i, range, c) {
+      const s = side[i], ty = type[i], r = Math.ceil(range / HASH), cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0, r2 = range * range;
+      let best = -1, bestScore = 1e18;
+      for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
+        const cc = yy * HC + xx;
+        for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
+          const j = cellItems[k];
+          if (!alive[j] || side[j] === s) continue;
+          const dx = ax[j] - ax[i], dy = ay[j] - ay[i], d2 = dx * dx + dy * dy;
+          if (d2 > r2) continue;
+          const m = mult[ty * nT + type[j]];
+          const sc = d2 - (m > 1.4 ? 900 : 0) + (m < 0.6 ? 900 : 0);
+          if (sc < bestScore) { bestScore = sc; best = j; }
+        }
+      }
+      if (best >= 0 && !losClear(ax[i], ay[i], ax[best], ay[best])) return -1;
+      return best;
+    }
+
+    // ---------- polecenia ----------
+    const queue = []; sim.log = [];
+    function command(cmd) { queue.push(cmd); }
+    function applyCommand(cmd) {
+      sim.log.push({ tick, cmd });
+      const list = (cmd.comps || []).map((id) => comps[id]).filter((c) => c && c.alive > 0 && (cmd.side == null || SIDES[c.side] === cmd.side));
+      if (cmd.k === 'order') {
+        for (const c of list) {
+          const p = cmd.kind === 'retreat' ? retreatPoint(c) : nearestOpen(cmd.x, cmd.y);
+          c.order = { kind: cmd.kind, x: p[0], y: p[1] };
+          c.aiUntil = Math.max(c.aiUntil, tick);
+        }
+      } else if (cmd.k === 'formation') {
+        for (const c of list) { c.formation = cmd.f; c.fcols = cmd.cols || 0; c.dirty = true; }
+      } else if (cmd.k === 'ability') {
+        for (const c of list) useAbility(c);
+      }
+    }
+    function retreatPoint(c) { return c.side === 0 ? nearestOpen(110, 480) : nearestOpen(nestC[0] - 20, nestC[1]); }
+    function useAbility(c) {
+      if (tick < c.abilCdUntil || !c.abilType) return false;
+      const u = defs.units[c.abilType], ab = u.ability;
+      if (ab.id === 'close') { c.closed = !c.closed; return true; }
+      c.abilCdUntil = tick + (ab.cd || 0) * HZ;
+      c.abilUntil = tick + (ab.dur || 0) * HZ;
+      if (ab.id === 'order') {
+        for (const o of comps) if (o.side === c.side && o.alive > 0 && Math.hypot(o.ax - c.ax, o.ay - c.ay) < defs.scenario.sides[SIDES[c.side]].auraR) o.control = Math.min(100, o.control + PC.orderBoost);
+      }
+      logEvent(c.name + ': ' + ab.name, SIDES[c.side], c.id);
+      return true;
+    }
+    sim.useAbility = useAbility;
+    sim.abilityReady = (c) => c.abilType && (tick >= c.abilCdUntil || defs.units[c.abilType].ability.id === 'close');
+    sim.command = command;
+    sim.flush = () => { while (queue.length) applyCommand(queue.shift()); };
+
+    // ---------- aktualizacja rot (raz na sekundę): kontrola, rozstrzyganie stanu ----------
+    function nearestEnemyComp(c) {
+      let best = null, bd = 1e18;
+      for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const d = Math.hypot(o.ax - c.ax, o.ay - c.ay); if (d < bd) { bd = d; best = o; } }
+      return best ? { c: best, d: bd } : null;
+    }
+    function updateControl(c) {
+      const sn = SIDES[c.side], auraR = defs.scenario.sides[sn].auraR;
+      c.ants = c.ants.filter((i) => alive[i]);
+      while (c.deaths.length && c.deaths[0] < tick - 6 * HZ) c.deaths.shift();
+      const n = c.alive;
+      let inCmd = false;
+      for (const i of commanders[sn]) if (Math.hypot(ax[i] - c.ax, ay[i] - c.ay) <= auraR) { inCmd = true; break; }
+      c.cmdIn = inCmd;
+      const f = c.deaths.length / Math.max(1, n + c.deaths.length);
+      const eng = c.engCnt / Math.max(1, n); c.engaged = eng; c.engCnt = 0;
+      let friendNear = false;
+      for (const o of comps) if (o !== c && o.side === c.side && o.alive > 0 && Math.hypot(o.ax - c.ax, o.ay - c.ay) < 200) { friendNear = true; break; }
+      const noCmd = sn === 'WK' ? PC.noCmdWK : PC.noCmdLH;
+      const pLoss = PC.lossK * f, pAlarm = PC.alarmK * eng;
+      let pNoCmd = inCmd ? 0 : noCmd, pCut = (!inCmd && !friendNear) ? PC.cutOff : 0;
+      let d = PC.regen + (inCmd ? PC.cmdBonus : 0) - pLoss - pAlarm - pNoCmd - pCut;
+      if (n >= 0.7 * c.initial && friendNear) d += PC.massBonus;
+      const ne = nearestEnemyComp(c);
+      if (c.cstate === CS_LOST && ne && ne.d < 90) d = Math.min(d, 0);
+      c.control = Math.max(0, Math.min(100, c.control + d));
+      // przyczyna dominująca
+      const cmdRecent = tick - c.cmdDiedAt < 15 * HZ;
+      const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff']];
+      cand.sort((a, b) => b[0] - a[0]); c.lastCause = cand[0][0] > 0 ? CAUSE_NAMES[cand[0][1]] : '';
+      const prev = c.cstate;
+      if (c.cstate === CS_FULL) { if (c.control < PC.weakAt) c.cstate = CS_WEAK; }
+      else if (c.cstate === CS_WEAK) { if (c.control >= PC.weakAt + 5) c.cstate = CS_FULL; else if (c.control < PC.lostAt) c.cstate = CS_LOST; }
+      else if (c.control >= PC.recoverAt) c.cstate = CS_WEAK;
+      if (c.cstate !== prev) {
+        const lab = ['pełna kontrola', 'osłabiona kontrola', c.side === 0 ? 'SZAŁ (utrata kontroli)' : 'ODWRÓT (utrata kontroli)'][c.cstate];
+        if (c.cstate > prev) logEvent(c.name + ' (' + sn + '): ' + lab + (c.lastCause ? ', przyczyna: ' + c.lastCause : ''), sn, c.id);
+        else logEvent(c.name + ' (' + sn + ') odzyskała: ' + lab, sn, c.id);
+        c.dirty = true;
+      }
+      c.cdMod = c.cstate === CS_FULL ? 1 : PC.weakCd;
+      c.spMod = c.cstate === CS_FULL ? 1 : PC.weakSpeed;
+      c.berserk = c.cstate === CS_LOST && c.side === 0;
+      // skuteczny rozkaz
+      if (c.cstate === CS_LOST) {
+        if (c.side === 1) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: false }; }
+        else { const e = ne ? ne.c : null; c.eff = { kind: 'attack', x: e ? e.ax : c.order.x, y: e ? e.ay : c.order.y, engage: true }; }
+      } else c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: c.order.kind === 'attack' || c.order.kind === 'hold' };
+      // dominujący typ -> prędkość rity
+      let dom = null, dn = -1;
+      const cnt = {}; for (const i of c.ants) { const k = type[i]; cnt[k] = (cnt[k] || 0) + 1; if (cnt[k] > dn) { dn = cnt[k]; dom = k; } }
+      c.speed = dom == null ? 20 : T.speed[dom]; c.domType = dom == null ? -1 : dom;
+      c.field = getField(c.eff.x, c.eff.y);
+      if (c.dirty || tick - (c.repackTick || 0) > 5 * HZ) repack(c);
+    }
+
+    // ---------- przesuwanie kotwicy rity ----------
+    function updateAnchor(c) {
+      const o = c.eff;
+      const dx = o.x - c.ax, dy = o.y - c.ay, dist = Math.hypot(dx, dy);
+      const abilMul = c.abilUntil > tick && (c.abilType === 'taran' || c.abilType === 'biegacz') && c.domType === ti[c.abilType] ? defs.units[c.abilType].ability.mult : 1;
+      let moved = false;
+      const attackHalt = o.engage && o.kind === 'attack' && c.engaged > 0.2 && !c.berserk;
+      if (dist > 3 && !attackHalt && tick >= c.delayTick) {
+        let dirx = dx / dist, diry = dy / dist;
+        if (!(dist < CELL * 2 && losClear(c.ax, c.ay, o.x, o.y)) && c.field && flowDir(c.field, c.ax, c.ay)) { dirx = flow.x; diry = flow.y; }
+        const step = Math.min(dist, c.speed * c.spMod * abilMul * c.cohesion * DT);
+        const nx = c.ax + dirx * step, ny = c.ay + diry * step;
+        if (!blocked(nx, ny)) { c.ax = nx; c.ay = ny; moved = true; }
+        else if (!blocked(nx, c.ay)) { c.ax = nx; moved = true; }
+        else if (!blocked(c.ax, ny)) { c.ay = ny; moved = true; }
+        if (moved) c.tface = Math.atan2(diry, dirx);
+      }
+      c.moving = moved;
+      if (!moved) {
+        const ne = nearestEnemyComp(c);
+        if (ne && ne.d < 500) c.tface = Math.atan2(ne.c.ay - c.ay, ne.c.ax - c.ax);
+      }
+      if (c.tface != null) {
+        let da = c.tface - c.face; da = Math.atan2(Math.sin(da), Math.cos(da));
+        c.face += Math.max(-0.12, Math.min(0.12, da)); c.fx = Math.cos(c.face); c.fy = Math.sin(c.face);
+      }
+      if (c.errN > 0) { c.err = c.errSum / c.errN; c.errSum = 0; c.errN = 0; c.cohesion = Math.max(0.1, Math.min(1, 1 - (c.err - 8) / 40)); }
+    }
+
+    // ---------- główna pętla mrówek ----------
+    function updateAnts() {
+      const sepK = P.separation;
+      for (let i = 0; i < count; i++) {
+        if (!alive[i]) continue;
+        const c = comps[compOf[i]], ty = type[i], tn = names[ty];
+        cdT[i] -= DT; if (stuck[i] > 0) stuck[i] -= DT;
+        let tgt = target[i];
+        if (tgt >= 0 && !alive[tgt]) tgt = -1;
+        const eff = c.eff, engage = eff.engage;
+        const isPek = tn === 'pekacz', burstMode = isPek && (c.abilUntil > tick || c.berserk);
+        let gx, gy, speed = T.speed[ty] * c.spMod, goalSet = false;
+        // slot
+        const sw = slotWorld(c, i), sdx = sw[0] - ax[i], sdy = sw[1] - ay[i], sd = Math.hypot(sdx, sdy);
+        c.errSum += sd; c.errN++;
+        // ewentualne namierzanie
+        if (isPek) {
+          if (burstMode && ((tick + i) & 3) === 0 && tgt < 0) tgt = acquire(i, defs.units.pekacz.burst.seek, c);
+        } else if (engage && T.ranged[ty]) {
+          if (c.acid > 0 && (tgt < 0 || ((tick + i) & 7) === 0)) {
+            if (tgt >= 0 && Math.hypot(ax[tgt] - ax[i], ay[tgt] - ay[i]) <= T.range[ty] && losClear(ax[i], ay[i], ax[tgt], ay[tgt])) { /* zostaje */ }
+            else tgt = acquire(i, T.range[ty], c);
+          } else if (c.acid <= 0) tgt = -1;
+        } else if (engage) {
+          const ag = eff.kind === 'hold' ? Math.min(T.aggro[ty], 18) : T.aggro[ty];
+          if (tgt < 0 ? ((tick + i) & 3) === 0 : ((tick + i) & 15) === 0) tgt = acquire(i, c.berserk ? 160 : ag, c);
+          if (tgt >= 0 && !c.berserk && sd > 70) tgt = -1;
+        } else tgt = -1;
+        target[i] = tgt;
+        let fighting = false;
+        if (tgt >= 0) {
+          const tx = ax[tgt], ty2 = ay[tgt], dx = tx - ax[i], dy = ty2 - ay[i], d = Math.hypot(dx, dy) || 1;
+          heading[i] = Math.atan2(dy, dx);
+          if (isPek) {
+            if (d <= 7) { burst(i); continue; }
+            gx = tx; gy = ty2; speed *= 1.3; goalSet = true; fighting = true;
+          } else if (T.ranged[ty]) {
+            if (d <= T.range[ty]) {
+              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
+              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid--; cdT[i] = T.cd[ty] * c.cdMod; }
+            }
+          } else {
+            const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
+            if (d <= reach) {
+              fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
+              if (cdT[i] <= 0) { hit(i, tgt, T.dmg[ty], true); cdT[i] = T.cd[ty] * c.cdMod; }
+            } else { gx = tx; gy = ty2; goalSet = true; fighting = true; }
+          }
+          if (fighting) c.engCnt++;
+        }
+        if (!goalSet) {
+          if (sd > 12 && !losClear(ax[i], ay[i], sw[0], sw[1]) && c.field && flowDir(c.field, ax[i], ay[i])) { gx = ax[i] + flow.x * 20; gy = ay[i] + flow.y * 20; }
+          else { gx = sw[0]; gy = sw[1]; }
+        }
+        // prędkość
+        const catchUp = !fighting && sd > 14 ? 1.25 : 1;
+        speed *= catchUp;
+        if (tn === 'odzwierny' && c.closed) speed = 0;
+        if (c.abilUntil > tick && c.abilType === tn && (tn === 'taran' || tn === 'biegacz')) speed *= defs.units[tn].ability.mult;
+        if (stuck[i] > 0) speed = 0;
+        let vx = 0, vy = 0;
+        const ddx = gx - ax[i], ddy = gy - ay[i], dd = Math.hypot(ddx, ddy);
+        if (dd > 1.2 && speed > 0) { const s = Math.min(speed, dd / DT); vx = ddx / dd * s; vy = ddy / dd * s; if (!fighting || tgt < 0) heading[i] = Math.atan2(vy, vx); }
+        vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
+        // rozpychanie
+        let px = 0, py = 0;
+        const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0, rr = T.radius[ty];
+        for (let yy = clampH(cy - 1, HR); yy <= clampH(cy + 1, HR); yy++) for (let xx = clampH(cx - 1, HC); xx <= clampH(cx + 1, HC); xx++) {
+          const cc = yy * HC + xx;
+          for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
+            const j = cellItems[k]; if (j === i || !alive[j]) continue;
+            const ex = ax[i] - ax[j], ey = ay[i] - ay[j], md = rr + T.radius[type[j]], e2 = ex * ex + ey * ey;
+            if (e2 >= md * md) continue;
+            const e = Math.sqrt(e2) || 0.01, push = (md - e) / e;
+            px += ex * push; py += ey * push;
+          }
+        }
+        const pl = Math.hypot(px, py); if (pl > 2) { px = px / pl * 2; py = py / pl * 2; }
+        let nx = ax[i] + vx * DT + px * sepK, ny = ay[i] + vy * DT + py * sepK;
+        if (blocked(nx, ny)) { if (!blocked(nx, ay[i])) ny = ay[i]; else if (!blocked(ax[i], ny)) nx = ax[i]; else { nx = ax[i]; ny = ay[i]; } }
+        ax[i] = nx; ay[i] = ny;
+      }
+    }
+
+    // ---------- wsparcie: tarcze odźwiernych, dopływ ----------
+    function updateShields() {
+      for (const c of comps) {
+        if (!c.closed || c.alive <= 0) continue;
+        for (const i of c.ants) {
+          if (!alive[i] || names[type[i]] !== 'odzwierny') continue;
+          const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0;
+          for (let yy = clampH(cy - 3, HR); yy <= clampH(cy + 3, HR); yy++) for (let xx = clampH(cx - 3, HC); xx <= clampH(cx + 3, HC); xx++) {
+            const cc = yy * HC + xx;
+            for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
+              const j = cellItems[k];
+              if (alive[j] && side[j] === side[i] && names[type[j]] === 'plujka') shield[j] = tick + 12;
+            }
+          }
+        }
+      }
+    }
+    const accum = { WK: 0, LH: 0 };
+    function reinforcements() {
+      for (let s = 0; s < 2; s++) {
+        const sn = SIDES[s];
+        accum[sn] += P.supply[sn] / 100 * P.reinfPerSec * DT;
+        while (accum[sn] >= 1 && reserve[sn] > 0 && count < cap) {
+          let best = null, bd = 0;
+          for (const c of comps) if (c.side === s && c.alive > 0 && c.cstate !== CS_LOST && c.domType === ti.infantry) { const def = c.initial - c.alive; if (def > bd) { bd = def; best = c; } }
+          if (!best) { accum[sn] = Math.min(accum[sn], 1); break; }
+          const sp = defs.scenario.sides[sn].spawn;
+          const p = nearestOpen(sp[0] + rngSpawn.next() * sp[2], sp[1] + rngSpawn.next() * sp[3]);
+          addAnt(ti.infantry, s, best.id, p[0], p[1]); reserve[sn]--; accum[sn] -= 1;
+        }
+        // kwas: dopływ do wspólnej puli rot z plujkami
+        for (const c of comps) if (c.side === s && c.acidMax > 0 && c.alive > 0) {
+          const nP = c.ants.reduce((a, i) => a + (alive[i] && names[type[i]] === 'plujka' ? 1 : 0), 0);
+          c.acidMax = nP * 6; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.acidRefill * DT);
+        }
+      }
+    }
+
+    // ---------- AI (reguły) ----------
+    function dist(a, b) { return Math.hypot(a.ax - b.ax, a.ay - b.ay); }
+    function order(c, kind, x, y, hold) {
+      const p = nearestOpen(x, y);
+      if (c.order.kind === kind && Math.hypot(c.order.x - p[0], c.order.y - p[1]) < 12) return;
+      c.order = { kind, x: p[0], y: p[1] }; c.aiUntil = tick + (hold || 0) * HZ;
+    }
+    function strength(c) { return c.alive * (c.cstate === CS_LOST ? 0.3 : c.cstate === CS_WEAK ? 0.8 : 1); }
+    function aiStep(s) {
+      const sn = SIDES[s], t = tick / HZ, mine = comps.filter((c) => c.side === s && c.alive > 0), foes = comps.filter((c) => c.side !== s && c.alive > 0);
+      if (!foes.length) return;
+      const attacker = defs.scenario.attacker === sn;
+      const gap = [wallX, midY];
+      for (const c of mine) {
+        if (c.cstate === CS_LOST) continue;
+        const foeNear = foes.filter((e) => dist(c, e) < 260).sort((a, b) => dist(c, a) - dist(c, b));
+        const nearestFoe = foeNear[0];
+        if (attacker) {
+          if (t < c.delay) continue;
+          if (c.role === 'raider') {
+            if (tick >= c.aiUntil) {
+              const art = foes.filter((e) => e.acidMax > 0)[0] || foes[0];
+              order(c, 'attack', art.ax, art.ay, 3);
+            }
+            if (nearestFoe && nearestFoe.acidMax > 0 && dist(c, nearestFoe) < 220) useAbility(c);
+          } else if (c.role === 'pekacz') {
+            const tgt = foes.find((e) => e.closed) || nearestFoe;
+            if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
+            if (tgt && dist(c, tgt) < 110) useAbility(c);
+          } else {
+            if (c.alive < 0.3 * c.initial && c.cstate !== CS_FULL) { order(c, 'retreat', 110, midY, 8); }
+            else if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
+            if (c.role === 'taran' && nearestFoe && dist(c, nearestFoe) < 110) useAbility(c);
+          }
+          if (c.abilType === 'dowodca' && mine.some((o) => o.cstate === CS_WEAK && dist(o, c) < defs.scenario.sides[sn].auraR)) useAbility(c);
+        } else {
+          const home = c.home || (c.home = [c.order.x, c.order.y]);
+          const enemyAtGap = foes.filter((e) => Math.hypot(e.ax - gap[0], e.ay - gap[1]) < 220);
+          if (c.role === 'plug') {
+            order(c, 'hold', home[0], home[1], 0);
+            if (enemyAtGap.length && !c.closed) useAbility(c);
+          } else if (c.role === 'artillery') {
+            order(c, 'hold', home[0], home[1], 0);
+          } else {
+            // kontratak na słabszą lub zdezorganizowaną rotę w pobliżu
+            const cand = foeNear.find((e) => strength(e) < 0.9 * strength(c) || e.cstate !== CS_FULL);
+            if (cand && c.cstate === CS_FULL && c.alive > 0.35 * c.initial) order(c, 'attack', cand.ax, cand.ay, 10);
+            else if (tick >= c.aiUntil) order(c, 'hold', home[0], home[1], 0);
+          }
+          if (c.alive < 0.25 * c.initial && c.cstate !== CS_FULL) order(c, 'retreat', nestC[0], nestC[1], 8);
+          if (c.abilType === 'dowodca' && mine.some((o) => o.cstate === CS_WEAK && dist(o, c) < defs.scenario.sides[sn].auraR)) useAbility(c);
+        }
+      }
+    }
+
+    // ---------- warunki końca ----------
+    sim.result = null; let nestTimer = 0;
+    const aliveSide = [0, 0];
+    function checkEnd() {
+      aliveSide[0] = aliveSide[1] = 0;
+      let nestWK = 0, nestLH = 0;
+      for (let i = 0; i < count; i++) if (alive[i]) {
+        aliveSide[side[i]]++;
+        if (Math.hypot(ax[i] - nestC[0], ay[i] - nestC[1]) < defs.world.nestR) { if (side[i] === 0) nestWK++; else nestLH++; }
+      }
+      const startN = [0, 0]; for (const c of comps) startN[c.side] += c.initial;
+      const att = defs.scenario.attacker === 'WK' ? 0 : 1;
+      nestTimer = (nestWK >= 15 && nestLH < 3) ? nestTimer + 1 : 0;
+      let r = null;
+      if (nestTimer >= 8) r = { winner: 'WK', reason: 'Wielka Kolonia zajęła gniazdo' };
+      else if (aliveSide[1] < 0.05 * startN[1]) r = { winner: 'WK', reason: 'zniszczenie obrońców' };
+      else if (aliveSide[0] < 0.05 * startN[0]) r = { winner: 'LH', reason: 'rozbicie atakujących' };
+      else if (tick / HZ >= defs.world.timeLimit) r = { winner: SIDES[1 - att], reason: 'minął czas, obrona utrzymana' };
+      if (r) { r.tick = tick; sim.result = r; logEvent('KONIEC: ' + (r.winner === 'WK' ? 'wygrywa Wielka Kolonia' : 'wygrywa Lake Hodges') + ' (' + r.reason + ')', r.winner); }
+    }
+
+    // ---------- krok symulacji ----------
+    for (const c of comps) c.delayTick = 0;
+    sim.step = function () {
+      if (sim.result) return;
+      while (queue.length) applyCommand(queue.shift());
+      for (let s = 0; s < 2; s++) if (aiSides.has(SIDES[s]) && tick % P.aiPeriod === s * 7) aiStep(s);
+      while (queue.length) applyCommand(queue.shift());
+      buildHash();
+      if (tick % 10 === 0) updateShields();
+      if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) updateControl(c);
+      for (const c of comps) if (c.alive > 0) updateAnchor(c);
+      updateAnts();
+      if (tick % HZ === 10) reinforcements();
+      for (const c of comps) if (c.alive <= 0) c.eff = c.eff || null;
+      if (tick % HZ === HZ - 1) checkEnd();
+      if (tick % (10 * HZ) === 0) timeline.push({ t: tick / HZ, WK: aliveSide[0] || undefined, LH: aliveSide[1] || undefined });
+      tick++;
+    };
+    sim.count_alive = () => { let a = [0, 0]; for (let i = 0; i < count; i++) if (alive[i]) a[side[i]]++; return a; };
+    sim.hash = function () {
+      let h = 2166136261 >>> 0;
+      const mix = (v) => { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; };
+      mix(tick);
+      for (let i = 0; i < count; i++) { mix(alive[i]); if (alive[i]) { mix(Math.round(ax[i] * 16)); mix(Math.round(ay[i] * 16)); mix(Math.round(hp[i] * 16)); } }
+      return h.toString(16);
+    };
+    sim.report = function () {
+      checkEnd.call(null);
+      const out = { seed, passage, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
+      SIDES.forEach((sn, s) => {
+        const surv = {}; for (let i = 0; i < count; i++) if (alive[i] && side[i] === s) { const k = names[type[i]]; surv[k] = (surv[k] || 0) + 1; }
+        out.sides[sn] = {
+          start: stats[sn].start, lost: stats[sn].lost, kills: stats[sn].kills, survivors: surv, reserveLeft: reserve[sn],
+          companies: comps.filter((c) => c.side === s).map((c) => ({ id: c.id, name: c.name, start: c.initial, alive: c.alive, lost: c.lost, lostBy: c.lostBy, control: Math.round(c.control), state: c.cstate }))
+        };
+      });
+      return out;
+    };
+    return sim;
+  }
+  return { create, HZ, DT, CELL, SIDES };
+})();
+if (typeof module !== 'undefined') module.exports = Sim;
+/*SIM-END*/
+</script>
+<script id="ui">
+/*UI-PLACEHOLDER*/
+</script>
+</body>
+</html>
