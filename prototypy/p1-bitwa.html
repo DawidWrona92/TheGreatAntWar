@@ -90,7 +90,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
       <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="160"><span class="v" id="mPassV">160</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="256"><span class="v" id="mPassV">256</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
     <p style="margin-top:12px"><button id="mStart" style="padding:8px 18px;font-weight:600;border-color:var(--acc)">Start</button></p>
@@ -104,7 +104,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
 <script type="application/json" id="defs">
 {
-  "world": { "w": 1600, "h": 960, "passage": 160, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
+  "world": { "w": 1600, "h": 960, "passage": 256, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
   "params": {
     "cover": 0.7,
     "shieldMult": 0.4,
@@ -159,7 +159,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "LH": {
         "name": "Lake Hodges", "regenBonus": 2, "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
         "companies": [
-          { "name": "Odźwierni",   "role": "plug",      "at": [800, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
+          { "name": "Odźwierni",   "role": "plug", "closed": true, "at": [800, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
           { "name": "Plujki",      "role": "artillery", "at": [850, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
           { "name": "Rota północ", "role": "reserve",   "at": [900, 340],  "face": 3.14159, "units": { "infantry": 220 } },
           { "name": "Rota południe", "role": "reserve", "at": [900, 620],  "face": 3.14159, "units": { "infantry": 220 } },
@@ -369,7 +369,7 @@ const Sim = (function () {
             ants: [], alive: 0, initial: 0, ax: at[0], ay: at[1], face: cd.face, fx: Math.cos(cd.face), fy: Math.sin(cd.face),
             formation: F_LINE, fcols: 0, order: { kind: 'hold', x: at[0], y: at[1] }, eff: null,
             control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
-            deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: false, acid: 0, acidMax: 0,
+            deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
             lastCause: ''
           };
@@ -901,7 +901,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 160),
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 256),
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -1209,7 +1209,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const lab = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : CS_LABEL[c.cstate];
       d.querySelector('.stl').innerHTML = '<span class="st st' + c.cstate + '">' + lab + '</span>' + (c.cmdIn ? '' : ' <span title="Poza zasięgiem dowódcy" style="color:var(--bad)">bez dowódcy</span>');
       const ab = d.querySelector('.ab');
-      if (c.abilType) { const a = S.sim.defs.units[c.abilType].ability, rem = Math.max(0, c.abilCdUntil - S.sim.tick) / 20; ab.textContent = a.name + (a.id === 'close' ? (c.closed ? ': zamknięte' : '') : (rem > 0 ? ' ' + rem.toFixed(0) + 's' : ' ✓')); } else ab.textContent = '';
+      if (c.abilType) { const a = S.sim.defs.units[c.abilType].ability, rem = Math.max(0, c.abilCdUntil - S.sim.tick) / 20; ab.textContent = a.name + (a.id === 'close' ? (c.closed ? ': zamknięte' : ': otwarte') : (rem > 0 ? ' ' + rem.toFixed(0) + 's' : ' ✓')); } else ab.textContent = '';
+      if (c.acidMax > 0) ab.textContent = 'kwas ' + Math.round(100 * c.acid / c.acidMax) + '% ' + ab.textContent;
     }
   }
 
@@ -1275,6 +1276,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
     h += '<tr><th>Razem</th><th>' + sum(r.sides.WK.lost) + ' / ' + sum(r.sides.WK.start) + '</th><th>' + sum(r.sides.LH.lost) + ' / ' + sum(r.sides.LH.start) + '</th></tr></table>';
     h += '<h2>Ocalałe roty</h2>';
     for (const s of SIDES) h += '<p><b>' + SIDE_NAME[s] + ':</b> ' + r.sides[s].companies.map((c) => c.name + ' ' + c.alive + '/' + c.start).join(', ') + '. Rezerwa: ' + r.sides[s].reserveLeft + '</p>';
+    h += '<h2>Kto zabijał</h2>';
+    for (const s of SIDES) h += '<p><b>' + SIDE_NAME[s] + ':</b> ' + (Object.entries(r.sides[s].killedBy).sort((a, b) => b[1] - a[1]).map(([k, n]) => nm(k) + ' ' + n).join(', ') || 'nikogo') + '</p>';
     const causes = r.events.filter((e) => /kontrola|SZAŁ|ODWRÓT|dowódca/.test(e.text) && !/odzyskała/.test(e.text) && !/osłabiona/.test(e.text)).slice(0, 12);
     h += '<h2>Przyczyny</h2>' + (causes.length ? causes.map((e) => '<p>' + fmt(e.t) + ' · ' + e.text + '</p>').join('') : '<p>Żadna rota nie straciła kontroli.</p>');
     h += '<p style="margin-top:12px"><button id="eRe" style="border-color:var(--acc)">Jeszcze raz (ten sam seed)</button> <button id="eNew">Nowy seed</button> <button id="eMenu">Menu</button></p>';
