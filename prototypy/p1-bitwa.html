@@ -5,11 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wojna superkolonii: P1 prototyp bitwy</title>
 <style>
-/*UI-STYLE*/
+:root{
+  --bg:#17160f;--panel:#23211a;--panel2:#2d2a21;--line:#443f31;--text:#ece6d6;--dim:#a39b84;
+  --wk:#222;--wkl:#8b8b8b;--lh:#c0392b;--lhl:#ef6a58;--ok:#6fbf4a;--warn:#e6b422;--bad:#e0483a;--acc:#e6b422;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:13px/1.35 system-ui,Segoe UI,Roboto,sans-serif}
+button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:4px 9px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.on{background:#51461f;border-color:var(--acc)}button:disabled{opacity:.4;cursor:default}
+#stage{position:absolute;inset:0}
+#stage canvas{display:block;width:100%;height:100%}
+#topbar{position:absolute;left:0;right:0;top:0;height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;background:rgba(23,22,15,.88);border-bottom:1px solid var(--line);z-index:5}
+#topbar .grow{flex:1}
+.cnt{font-weight:600;padding:2px 8px;border-radius:3px}.cnt.wk{background:#111;color:#ddd;border:1px solid #666}.cnt.lh{background:#5a1a14;color:#ffd7cf;border:1px solid #c0392b}
+#clock{font-variant-numeric:tabular-nums;min-width:48px}
+#ticker{position:absolute;left:10px;top:46px;width:min(460px,60vw);z-index:4;pointer-events:none}
+#ticker div{background:rgba(23,22,15,.82);border-left:3px solid var(--acc);margin-bottom:3px;padding:3px 7px;font-size:12px}
+#ticker div.wk{border-color:#aaa}#ticker div.lh{border-color:var(--lhl)}
+#bottom{position:absolute;left:0;right:0;bottom:0;z-index:5;background:rgba(23,22,15,.92);border-top:1px solid var(--line);padding:6px 8px;display:flex;flex-direction:column;gap:5px}
+#cmdbar{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+#cmdbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+#cards{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.card{min-width:150px;max-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:5px 7px;cursor:pointer;flex:0 0 auto}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}.card.dead{opacity:.35}
+.card .nm{display:flex;justify-content:space-between;gap:6px;font-weight:600}
+.card .sub{color:var(--dim);font-size:11.5px;display:flex;justify-content:space-between}
+.bar{height:6px;background:#111;border-radius:3px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%}
+.st{display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:600}
+.st0{background:#1f3a12;color:#b5ec96}.st1{background:#4a3c08;color:#ffe08a}.st2{background:#5a1612;color:#ffb3a9}
+#side{position:absolute;right:0;top:38px;bottom:0;width:300px;z-index:4;background:rgba(35,33,26,.96);border-left:1px solid var(--line);overflow-y:auto;padding:8px;transition:transform .15s}
+#side.hide{transform:translateX(100%)}
+#side h3{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+#side details{border-top:1px solid var(--line);padding:4px 0}#side summary{cursor:pointer;font-weight:600}
+.row{display:grid;grid-template-columns:1fr 92px 46px;gap:6px;align-items:center;margin:2px 0;font-size:12px}
+.row input[type=range]{width:100%}.row span.v{text-align:right;font-variant-numeric:tabular-nums}
+#diag{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.5;margin:0;white-space:pre}
+textarea{width:100%;height:60px;background:#111;color:var(--text);border:1px solid var(--line);font:11px monospace}
+.overlay{position:absolute;inset:0;z-index:20;background:rgba(10,9,6,.82);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 22px;max-width:760px;width:100%}
+.dlg h1{margin:0 0 4px;font-size:22px}.dlg h2{margin:10px 0 4px;font-size:15px}.dlg p{margin:4px 0;color:var(--dim)}
+.choice{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+.choice button{flex:1;min-width:210px;padding:10px;text-align:left}.choice button.on{background:#3b3412}
+.choice small{display:block;color:var(--dim);margin-top:2px}
+table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}table.rep td,table.rep th{border-bottom:1px solid var(--line);padding:2px 6px;text-align:right}table.rep td:first-child,table.rep th:first-child{text-align:left}
+.hidden{display:none!important}
+#help{position:absolute;left:10px;bottom:118px;z-index:4;background:rgba(23,22,15,.82);padding:5px 9px;border-radius:4px;font-size:11.5px;color:var(--dim);max-width:520px}
+#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:30;background:var(--bg);text-align:center;padding:20px}
+@media(max-width:700px){#side{width:240px}.card{min-width:130px}}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="stage"></div>
+<div id="topbar">
+  <strong>Wojna superkolonii · P1</strong>
+  <span class="cnt wk" id="cntWK">WK 0</span><span class="cnt lh" id="cntLH">LH 0</span>
+  <span id="clock">0:00</span>
+  <button id="bPause" title="Spacja">Pauza</button>
+  <button id="bSlow" title="−">−</button><span id="spd">1×</span><button id="bFast" title="+">+</button>
+  <button id="bRestart" title="Ten sam seed i parametry">Restart</button>
+  <button id="bMenu">Menu</button>
+  <span class="grow"></span>
+  <button id="bPanel">Panel</button>
+  <button id="bHelp">?</button>
+</div>
+<div id="ticker"></div>
+<div id="help" class="hidden"></div>
+<div id="side" class="hide">
+  <h3>Diagnostyka</h3><pre id="diag"></pre>
+  <h3>Parametry na żywo</h3>
+  <div><button id="pSave">Zapisz zestaw</button> <button id="pLoad">Wczytaj</button> <button id="pReset">Domyślne</button></div>
+  <div style="margin-top:4px"><button id="pExport">Eksport JSON</button> <button id="pImport">Import JSON</button></div>
+  <textarea id="pText" class="hidden" spellcheck="false"></textarea>
+  <div id="params"></div>
+</div>
+<div id="bottom">
+  <div id="cmdbar"></div>
+  <div id="cards"></div>
+</div>
+<div id="menu" class="overlay">
+  <div class="dlg">
+    <h1>Wojna superkolonii: prototyp bitwy</h1>
+    <p>Wielka Kolonia atakuje przez przejście, Lake Hodges broni gniazda. Dowodzisz rotami, resztą zajmuje się AI. Zasady: docs/Dokument_0.5.pdf, sekcja 15.2.</p>
+    <div class="choice">
+      <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
+      <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
+    </div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="128"><span class="v" id="mPassV">128</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
+    <p style="margin-top:12px"><button id="mStart" style="padding:8px 18px;font-weight:600;border-color:var(--acc)">Start</button></p>
+    <div id="mHelp"></div>
+  </div>
+</div>
+<div id="end" class="overlay hidden"><div class="dlg" id="endBody"></div></div>
+<div id="err"><div><h2>Nie udało się wczytać PixiJS z CDN</h2><p>Sprawdź połączenie z internetem i odśwież stronę. Prototyp wymaga biblioteki PixiJS 7.4.2 z cdn.jsdelivr.net.</p></div></div>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
 
 <!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
 <script type="application/json" id="defs">
@@ -774,7 +864,429 @@ if (typeof module !== 'undefined') module.exports = Sim;
 /*SIM-END*/
 </script>
 <script id="ui">
-/*UI-PLACEHOLDER*/
+/*UI-BEGIN*/
+(function () {
+  'use strict';
+  if (typeof PIXI === 'undefined') { document.getElementById('err').style.display = 'flex'; return; }
+  const $ = (id) => document.getElementById(id);
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const DEFS0 = JSON.parse($('defs').textContent);
+  const SIDES = ['WK', 'LH'];
+  const SIDE_NAME = { WK: 'Wielka Kolonia', LH: 'Lake Hodges' };
+  const SPEEDS = [0.5, 1, 2, 4, 8];
+  const CS_LABEL = ['pełna', 'osłabiona', null];
+  const q = new URLSearchParams(location.search);
+
+  const S = {
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 128),
+    observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
+    sim: null, defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
+    stepMs: 0, stepMax: 0, renderMs: 0, started: false
+  };
+  if (S.speedIdx < 0) S.speedIdx = 1;
+
+  // ---------- parametry na żywo ----------
+  const getP = (o, p) => p.split('.').reduce((a, k) => a[k], o);
+  const setP = (o, p, v) => { const ks = p.split('.'); const l = ks.pop(); ks.reduce((a, k) => a[k], o)[l] = v; };
+  const TUN = [];
+  (function buildTun() {
+    const U = DEFS0.units;
+    for (const k in U) {
+      const u = U[k], g = 'Jednostka: ' + u.name;
+      TUN.push([g, 'units.' + k + '.hp', 'Zdrowie (od restartu)', 1]);
+      TUN.push([g, 'units.' + k + '.speed', 'Prędkość']);
+      if (k === 'pekacz') { TUN.push([g, 'units.pekacz.burst.dmg', 'Obrażenia wybuchu']); TUN.push([g, 'units.pekacz.burst.stuck', 'Czas oblepienia (s)']); TUN.push([g, 'units.pekacz.burst.radius', 'Promień wybuchu']); }
+      else { TUN.push([g, 'units.' + k + '.dmg', 'Obrażenia']); TUN.push([g, 'units.' + k + '.cd', 'Czas między atakami (s)']); }
+      if (u.armor) TUN.push([g, 'units.' + k + '.armor', 'Pancerz (0-1)', 0, 1]);
+      if (k === 'plujka') TUN.push([g, 'units.plujka.range', 'Zasięg kwasu'], [g, 'units.plujka.aoe', 'Promień plamy']);
+    }
+    const c = 'Kontrola feromonowa';
+    for (const [k, l] of [['regen', 'Regeneracja /s'], ['cmdBonus', 'Bonus dowódcy /s'], ['noCmdWK', 'Brak dowódcy WK /s'], ['noCmdLH', 'Brak dowódcy LH /s'], ['lossK', 'Waga strat'], ['alarmK', 'Waga alarmu'], ['weakAt', 'Próg osłabienia'], ['lostAt', 'Próg utraty'], ['weakCd', 'Spowolnienie ataku przy osłabieniu'], ['orderBoost', 'Rozkaz dowódcy: +kontrola']])
+      TUN.push([c, 'params.control.' + k, l]);
+    TUN.push(['Zaopatrzenie', 'params.supply.WK', 'Zaopatrzenie WK (%)', 0, 100], ['Zaopatrzenie', 'params.supply.LH', 'Zaopatrzenie LH (%)', 0, 100],
+      ['Zaopatrzenie', 'params.supply.reinfPerSec', 'Maks. uzupełnienia /s'], ['Zaopatrzenie', 'params.supply.acidRefill', 'Dopływ kwasu'],
+      ['Teren i walka', 'params.cover', 'Mnożnik obrażeń w osłonie', 0, 1], ['Teren i walka', 'params.shieldMult', 'Tarcza odźwiernych', 0, 1],
+      ['Teren i walka', 'params.closedMult', 'Zamknięty odźwierny', 0, 1], ['Teren i walka', 'params.dmgVariance', 'Rozrzut obrażeń', 0, 1]);
+  })();
+  const DEF_VALS = {}; TUN.forEach((t) => { DEF_VALS[t[1]] = getP(DEFS0, t[1]); });
+
+  function applyParam(path, v, live) {
+    setP(S.defs, path, v);
+    if (live && S.sim) { setP(S.sim.defs, path, v); S.sim.rebuildTables(); }
+  }
+  function buildParamPanel() {
+    const host = $('params'); host.innerHTML = '';
+    let cur = null, det = null;
+    for (const [g, path, label, restart, max] of TUN) {
+      if (g !== cur) { det = document.createElement('details'); det.innerHTML = '<summary>' + g + '</summary>'; host.appendChild(det); cur = g; }
+      const d0 = DEF_VALS[path], hi = max != null ? max : Math.max(d0 * 3, 1), step = hi <= 1 ? 0.01 : (hi <= 10 ? 0.05 : (hi <= 100 ? 0.5 : 1));
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = '<span>' + label + '</span><input type="range" min="0" max="' + hi + '" step="' + step + '"><span class="v"></span>';
+      const inp = row.querySelector('input'), val = row.querySelector('.v');
+      inp.value = getP(S.defs, path); val.textContent = (+inp.value).toFixed(step < 0.1 ? 2 : 1);
+      inp.addEventListener('input', () => { val.textContent = (+inp.value).toFixed(step < 0.1 ? 2 : 1); applyParam(path, +inp.value, !restart); });
+      det.appendChild(row);
+    }
+  }
+  const collect = () => { const o = {}; TUN.forEach((t) => { o[t[1]] = getP(S.defs, t[1]); }); return o; };
+  function loadSet(o) { for (const p in o) if (p in DEF_VALS && isFinite(o[p])) applyParam(p, +o[p], true); buildParamPanel(); }
+  $('pSave').onclick = () => { try { localStorage.setItem('p1.params', JSON.stringify(collect())); flash('Zestaw zapisany'); } catch (e) { flash('Zapis niedostępny w tej przeglądarce'); } };
+  $('pLoad').onclick = () => { try { const t = localStorage.getItem('p1.params'); if (t) { loadSet(JSON.parse(t)); flash('Zestaw wczytany'); } else flash('Brak zapisanego zestawu'); } catch (e) { flash('Odczyt niedostępny'); } };
+  $('pReset').onclick = () => { loadSet(DEF_VALS); flash('Przywrócono domyślne'); };
+  $('pExport').onclick = () => { const t = $('pText'); t.classList.remove('hidden'); t.value = JSON.stringify(collect(), null, 1); t.select(); };
+  $('pImport').onclick = () => { const t = $('pText'); if (t.classList.contains('hidden')) { t.classList.remove('hidden'); t.value = ''; t.focus(); flash('Wklej JSON i kliknij Import jeszcze raz'); return; } try { loadSet(JSON.parse(t.value)); flash('Zestaw zaimportowany'); } catch (e) { flash('Niepoprawny JSON'); } };
+
+  // ---------- Pixi ----------
+  try { PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.NEAREST; } catch (e) { PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST; }
+  const app = new PIXI.Application({ resizeTo: $('stage'), background: 0x17160f, antialias: false, resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
+  $('stage').appendChild(app.view);
+  const world = new PIXI.Container(); app.stage.addChild(world);
+  const gGround = new PIXI.Graphics(), gOver = new PIXI.Graphics(), labels = new PIXI.Container();
+  let terrainSpr = null, antsPC = null, sprites = [], shown = null, atlas = null;
+  const cam = { x: 0, y: 0, z: 1 };
+  const TYPES = Object.keys(DEFS0.units);
+  const COL = { WK: { b: '#161616', d: '#050505', h: '#4c4c4c', a: '#8a8a8a' }, LH: { b: '#b3261e', d: '#6a120e', h: '#ee5b49', a: '#f6b26a' } };
+
+  function pixBlob(c, cx, cy, rx, ry, col) {
+    c.fillStyle = col;
+    for (let y = -ry; y <= ry; y++) { const w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry + 0.01)))); c.fillRect(cx - w, cy + y, 2 * w + 1, 1); }
+  }
+  function drawAnt(c, ox, oy, t, s) {
+    const k = COL[s]; c.save(); c.translate(ox, oy);
+    c.fillStyle = k.d;
+    const leg = (x, dy) => { c.fillRect(x, 8 - dy, 1, 1); c.fillRect(x - 1, 8 - dy - 1, 1, 1); c.fillRect(x, 8 + dy, 1, 1); c.fillRect(x - 1, 8 + dy + 1, 1, 1); };
+    const lg = t === 'biegacz' ? 6 : 4;
+    c.fillStyle = k.d; for (const x of [10, 13, 16]) { c.fillRect(x, 8 - lg, 1, lg * 2 + 1); }
+    let abR = 5, abY = 3, hd = 3, th = 3;
+    if (t === 'biegacz') { abR = 5; abY = 2; hd = 2; th = 2; }
+    if (t === 'pekacz') { abR = 7; abY = 6; }
+    if (t === 'taran') { hd = 4; th = 4; abR = 5; abY = 4; }
+    if (t === 'dowodca') { abR = 6; abY = 4; hd = 4; th = 3; }
+    pixBlob(c, 5, 8, abR, abY, k.b); pixBlob(c, 5 - 1, 8 - 1, Math.max(1, abR - 2), Math.max(1, abY - 2), k.h);
+    pixBlob(c, 13, 8, 3, th, k.b); pixBlob(c, 20, 8, hd, hd, k.b);
+    c.fillStyle = k.h; c.fillRect(19, 7 - hd + 2, 2, 1);
+    c.fillStyle = k.d; c.fillRect(22, 5, 2, 1); c.fillRect(22, 11, 2, 1); // czułki
+    if (t === 'pekacz') pixBlob(c, 4, 8, 4, 3, '#e8c84a');
+    if (t === 'taran') { c.fillStyle = '#9aa0a6'; c.fillRect(11, 4, 3, 9); c.fillRect(21, 5, 2, 7); }
+    if (t === 'odzwierny') { c.fillStyle = s === 'LH' ? '#e8c9a0' : '#8c8c8c'; c.fillRect(21, 2, 3, 13); c.fillStyle = k.d; c.fillRect(21, 2, 1, 13); }
+    if (t === 'plujka') { c.fillStyle = k.b; c.fillRect(0, 6, 2, 1); c.fillStyle = '#7bd34a'; c.fillRect(0, 5, 2, 2); }
+    if (t === 'dowodca') { c.fillStyle = '#f2c230'; c.fillRect(12, 6, 4, 5); c.fillRect(22, 2, 1, 2); c.fillRect(22, 13, 1, 2); c.fillRect(20, 3, 1, 2); c.fillRect(20, 12, 1, 2); }
+    if (t === 'biegacz') { c.fillStyle = k.a; c.fillRect(16, 7, 2, 2); }
+    c.restore();
+  }
+  function makeAtlas() {
+    const cv = document.createElement('canvas'); cv.width = 24 * TYPES.length; cv.height = 16 * 2;
+    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
+    const base = PIXI.BaseTexture.from(cv, { scaleMode: PIXI.SCALE_MODES.NEAREST });
+    const tex = {};
+    SIDES.forEach((s, si) => TYPES.forEach((t, ti) => { drawAnt(c, ti * 24, si * 16, t, s); tex[s + t] = new PIXI.Texture(base, new PIXI.Rectangle(ti * 24, si * 16, 24, 16)); }));
+    base.update();
+    return tex;
+  }
+  function makeTerrain(sim) {
+    const cv = document.createElement('canvas'); cv.width = sim.W; cv.height = sim.H; const c = cv.getContext('2d');
+    const C = sim.CELL, nz = (x, y) => { let h = Math.imul(x * 374761393 + y * 668265263, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
+    for (let r = 0; r < sim.ROWS; r++) for (let col = 0; col < sim.COLS; col++) {
+      const v = sim.grid[r * sim.COLS + col], n = nz(col, r), x = col * C, y = r * C;
+      if (v === 0) { const l = 176 + n * 22; c.fillStyle = 'rgb(' + (l + 14) + ',' + (l - 6) + ',' + (l - 52) + ')'; }
+      else if (v === 2) { const l = n * 30; c.fillStyle = 'rgb(' + (74 + l) + ',' + (118 + l) + ',' + (52 + l * 0.5) + ')'; }
+      else if (v === 1) { const l = 128 + n * 26; c.fillStyle = 'rgb(' + l + ',' + l + ',' + (l - 6) + ')'; }
+      else { const l = n * 22; c.fillStyle = 'rgb(' + (92 + l) + ',' + (62 + l) + ',' + (36 + l) + ')'; }
+      c.fillRect(x, y, C, C);
+      if (v === 0 && n > 0.93) { c.fillStyle = 'rgba(90,70,40,.35)'; c.fillRect(x + n * 9, y + n * 7, 2, 2); }
+      if (v === 2) { c.fillStyle = 'rgba(40,80,30,.7)'; for (let k = 0; k < 3; k++) c.fillRect(x + ((n * 13 * (k + 1)) % 14), y + ((n * 29 * (k + 2)) % 14), 1, 4); if (n > 0.8) { c.strokeStyle = '#6b4a24'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x + 2, y + 12); c.lineTo(x + 14, y + 4); c.stroke(); } }
+      if (v === 1) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x, y + C - 1, C, 1); c.fillRect(x + C - 1, y, 1, C); }
+    }
+    const nc = sim.defs.world.nest; c.fillStyle = 'rgba(70,45,20,.35)'; c.beginPath(); c.arc(nc[0], nc[1], sim.defs.world.nestR, 0, 7); c.fill();
+    c.strokeStyle = 'rgba(40,25,10,.8)'; c.lineWidth = 2; c.beginPath(); c.arc(nc[0], nc[1], sim.defs.world.nestR, 0, 7); c.stroke();
+    // znaczniki przejścia
+    const wx = sim.defs.world.wallX, my = sim.H / 2, hw = sim.defs.world.passage / 2;
+    c.fillStyle = '#e6b422'; for (const yy of [my - hw, my + hw]) for (let k = -2; k < 2; k++) { c.save(); c.translate(wx - 18 + (yy < my ? 0 : 0), yy + (yy < my ? 0 : -6)); c.fillRect(k * 10, 0, 6, 6); c.restore(); }
+    return PIXI.Texture.from(cv);
+  }
+  function setupScene(sim) {
+    world.removeChildren(); gGround.clear(); labels.removeChildren();
+    if (!atlas) atlas = makeAtlas();
+    terrainSpr = new PIXI.Sprite(makeTerrain(sim));
+    antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: true, position: true, rotation: true, uvs: true, tint: true }, 16384, false);
+    sprites = []; shown = new Uint8Array(sim.cap);
+    const dflt = atlas.WKinfantry;
+    for (let i = 0; i < sim.cap; i++) {
+      const sp = new PIXI.Sprite(i < sim.count ? atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]]] : dflt);
+      sp.anchor.set(0.5); const sz = i < sim.count ? sim.T.size[sim.type[i]] : sim.T.size[sim.ti.infantry];
+      sp.scale.set(sz * 0.62); sp.alpha = 0; sprites.push(sp); antsPC.addChild(sp);
+    }
+    world.addChild(terrainSpr, gGround, antsPC, gOver, labels);
+    sim.comps.forEach((c) => {
+      const t = new PIXI.Text(c.name, { fontFamily: 'system-ui, sans-serif', fontSize: 12, fill: c.side === 0 ? 0xffffff : 0xffd7cf, stroke: 0x000000, strokeThickness: 3 });
+      t.anchor.set(0.5, 1); c._label = t; labels.addChild(t);
+    });
+  }
+  function fitCamera() {
+    const w = app.screen.width, h = app.screen.height - 150, z = Math.min(w / S.sim.W, h / S.sim.H);
+    cam.z = z; cam.x = (w - S.sim.W * z) / 2; cam.y = 40 + (h - S.sim.H * z) / 2; applyCam();
+  }
+  function applyCam() { world.scale.set(cam.z); world.position.set(cam.x, cam.y); }
+  const toWorld = (sx, sy) => [(sx - cam.x) / cam.z, (sy - cam.y) / cam.z];
+
+  // ---------- bitwa: start / restart ----------
+  function startBattle() {
+    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
+    S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
+    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar();
+    $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
+    if (q.get('autoselect')) for (const c of S.sim.comps) if (SIDES[c.side] === S.side) S.selected.add(c.id);
+  }
+  const ownComps = () => S.sim.comps.filter((c) => SIDES[c.side] === S.side);
+
+  // ---------- polecenia ----------
+  function issue(cmd) {
+    if (S.observe || !S.sim || S.over) return;
+    cmd.side = S.side; cmd.comps = [...S.selected].filter((id) => S.sim.comps[id].alive > 0);
+    if (!cmd.comps.length) return;
+    S.sim.command(cmd);
+    if (S.paused) S.sim.flush();
+  }
+  const orderAt = (kind, wx, wy) => issue({ k: 'order', kind, x: wx, y: wy });
+  const doFormation = (f) => issue({ k: 'formation', f });
+  const doAbility = () => issue({ k: 'ability' });
+  const doHold = () => { const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0); if (!cs.length) return; for (const c of cs) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };
+  function issue1(id, cmd) { cmd.side = S.side; cmd.comps = [id]; S.sim.command(cmd); if (S.paused) S.sim.flush(); }
+  const doRetreat = () => issue({ k: 'order', kind: 'retreat', x: 0, y: 0 });
+
+  // ---------- zaznaczanie ----------
+  function selectIn(x0, y0, x1, y1, add) {
+    const sim = S.sim, set = new Set(), mine = SIDES.indexOf(S.side);
+    const lx = Math.min(x0, x1), hx = Math.max(x0, x1), ly = Math.min(y0, y1), hy = Math.max(y0, y1);
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine && sim.x[i] >= lx && sim.x[i] <= hx && sim.y[i] >= ly && sim.y[i] <= hy) set.add(sim.comp[i]);
+    if (!add) S.selected.clear();
+    set.forEach((id) => S.selected.add(id));
+  }
+  function clickSelect(wx, wy, add) {
+    const sim = S.sim, mine = SIDES.indexOf(S.side), r = 12 / cam.z + 4;
+    let best = -1, bd = r * r;
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const d = (sim.x[i] - wx) ** 2 + (sim.y[i] - wy) ** 2; if (d < bd) { bd = d; best = i; } }
+    if (best < 0) { if (!add) S.selected.clear(); return; }
+    const id = sim.comp[best];
+    if (add) { S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); } else { S.selected.clear(); S.selected.add(id); }
+  }
+  const box = { on: false, x0: 0, y0: 0, x1: 0, y1: 0 };
+  const view = app.view;
+  view.addEventListener('contextmenu', (e) => e.preventDefault());
+  view.addEventListener('pointerdown', (e) => {
+    if (!S.sim || !S.started) return;
+    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    if (e.button === 0) {
+      if (S.pending) { const [wx, wy] = toWorld(sx, sy); orderAt(S.pending, wx, wy); S.pending = null; buildCmdBar(); return; }
+      box.on = true; box.x0 = box.x1 = sx; box.y0 = box.y1 = sy; view.setPointerCapture(e.pointerId);
+    } else if (e.button === 2) {
+      const [wx, wy] = toWorld(sx, sy); orderAt(e.shiftKey ? 'move' : 'attack', wx, wy); markers.push({ x: wx, y: wy, t: 1, kind: e.shiftKey ? 'move' : 'attack' });
+    } else if (e.button === 1) { pan.on = true; pan.x = e.clientX; pan.y = e.clientY; view.setPointerCapture(e.pointerId); e.preventDefault(); }
+  });
+  const pan = { on: false, x: 0, y: 0 }, markers = [];
+  view.addEventListener('pointermove', (e) => {
+    const r = view.getBoundingClientRect();
+    if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
+    if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
+  });
+  view.addEventListener('pointerup', (e) => {
+    if (box.on) {
+      box.on = false;
+      const moved = Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5, add = e.shiftKey;
+      const a = toWorld(box.x0, box.y0), b = toWorld(box.x1, box.y1);
+      if (moved) selectIn(a[0], a[1], b[0], b[1], add); else clickSelect(b[0], b[1], add);
+      buildCards();
+    }
+    pan.on = false;
+  });
+  view.addEventListener('wheel', (e) => {
+    e.preventDefault(); const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const [wx, wy] = toWorld(sx, sy), nz = Math.max(0.4, Math.min(8, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+    cam.z = nz; cam.x = sx - wx * nz; cam.y = sy - wy * nz; applyCam();
+  }, { passive: false });
+  const keys = {};
+  window.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA/.test(e.target.tagName) && e.target.type !== 'range') return;
+    keys[e.code] = true;
+    if (!S.started) return;
+    const m = /^Digit([1-9])$/.exec(e.code);
+    if (m) {
+      e.preventDefault();
+      if (e.ctrlKey || e.altKey || e.metaKey) { S.groups[m[1]] = [...S.selected]; flash('Grupa ' + m[1] + ': ' + S.groups[m[1]].length + ' rot'); }
+      else if (S.groups[m[1]]) {
+        S.selected = new Set(S.groups[m[1]].filter((id) => S.sim.comps[id].alive > 0));
+        if (S.lastGroup === m[1] && S.selected.size) { const cs = [...S.selected].map((id) => S.sim.comps[id]); cam.x = app.screen.width / 2 - cs[0].ax * cam.z; cam.y = app.screen.height / 2 - cs[0].ay * cam.z; applyCam(); }
+        S.lastGroup = m[1]; buildCards();
+      }
+      return;
+    }
+    switch (e.code) {
+      case 'Space': e.preventDefault(); togglePause(); break;
+      case 'Equal': case 'NumpadAdd': changeSpeed(1); break;
+      case 'Minus': case 'NumpadSubtract': changeSpeed(-1); break;
+      case 'KeyZ': doFormation(0); break; case 'KeyX': doFormation(1); break; case 'KeyC': doFormation(2); break;
+      case 'KeyH': doHold(); break; case 'KeyV': doRetreat(); break; case 'KeyQ': doAbility(); break;
+      case 'KeyM': S.pending = 'move'; buildCmdBar(); break;
+      case 'Escape': S.pending = null; S.selected.clear(); buildCards(); buildCmdBar(); break;
+      case 'Slash': toggleHelp(); break;
+    }
+  });
+  window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+  // ---------- panele ----------
+  function flash(t) { const d = document.createElement('div'); d.textContent = t; $('ticker').appendChild(d); setTimeout(() => d.remove(), 3500); }
+  function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
+  function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
+  function toggleHelp() { $('help').classList.toggle('hidden'); }
+  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz, Shift+PPM: sam ruch, M + klik: ruch · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · Q: umiejętność · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera';
+  $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
+  $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
+  $('bRestart').onclick = () => { if (S.started) startBattle(); };
+  $('bMenu').onclick = () => { $('menu').classList.remove('hidden'); };
+  $('bPanel').onclick = () => { $('side').classList.toggle('hide'); };
+  $('bHelp').onclick = toggleHelp;
+  $('cWK').onclick = () => { S.side = 'WK'; $('cWK').classList.add('on'); $('cLH').classList.remove('on'); };
+  $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); };
+  $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
+  $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); };
+  $('mObs').onchange = () => { S.observe = $('mObs').checked; };
+  $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
+  function syncMenu() { $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+
+  function buildCmdBar() {
+    const b = $('cmdbar'); b.innerHTML = '';
+    const add = (label, fn, title, on) => { const x = document.createElement('button'); x.textContent = label; x.title = title || ''; if (on) x.classList.add('on'); x.onclick = fn; b.appendChild(x); return x; };
+    const sep = () => { const s = document.createElement('span'); s.className = 'sep'; b.appendChild(s); };
+    if (S.observe) { b.textContent = 'Tryb obserwatora: AI steruje obiema stronami.'; return; }
+    add('Linia (Z)', () => doFormation(0)); add('Kolumna (X)', () => doFormation(1)); add('Klin (C)', () => doFormation(2)); sep();
+    add('Stój (H)', doHold); add('Ruch (M)', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie: marsz bez walki', S.pending === 'move'); add('Odwrót (V)', doRetreat); sep();
+    add('Umiejętność (Q)', doAbility, 'Umiejętność jednostki specjalnej w rocie'); sep();
+    const hint = document.createElement('span'); hint.style.color = 'var(--dim)'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: atak-marsz'; b.appendChild(hint);
+  }
+  function buildCards() {
+    const host = $('cards'); host.innerHTML = ''; if (!S.sim) return;
+    for (const c of S.sim.comps) {
+      if (S.observe ? false : SIDES[c.side] !== S.side) continue;
+      if (S.observe && c.side !== 0) continue;
+      const d = document.createElement('div'); d.className = 'card'; d.dataset.id = c.id;
+      d.onclick = (e) => { if (e.shiftKey) { S.selected.has(c.id) ? S.selected.delete(c.id) : S.selected.add(c.id); } else { S.selected.clear(); S.selected.add(c.id); } buildCards(); };
+      d.innerHTML = '<div class="nm"><span></span><span class="n"></span></div><div class="bar"><i></i></div><div class="sub"><span class="stl"></span><span class="ab"></span></div>';
+      host.appendChild(d);
+    }
+    updateCards();
+  }
+  function updateCards() {
+    if (!S.sim) return;
+    for (const d of $('cards').children) {
+      const c = S.sim.comps[+d.dataset.id];
+      d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0);
+      d.querySelector('.nm span').textContent = c.name; d.querySelector('.n').textContent = c.alive + '/' + c.initial;
+      const bar = d.querySelector('.bar i'); bar.style.width = c.control + '%'; bar.style.background = c.cstate === 0 ? 'var(--ok)' : (c.cstate === 1 ? 'var(--warn)' : 'var(--bad)');
+      const lab = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : CS_LABEL[c.cstate];
+      d.querySelector('.stl').innerHTML = '<span class="st st' + c.cstate + '">' + lab + '</span>' + (c.cmdIn ? '' : ' <span title="Poza zasięgiem dowódcy" style="color:var(--bad)">bez dowódcy</span>');
+      const ab = d.querySelector('.ab');
+      if (c.abilType) { const a = S.sim.defs.units[c.abilType].ability, rem = Math.max(0, c.abilCdUntil - S.sim.tick) / 20; ab.textContent = a.name + (a.id === 'close' ? (c.closed ? ': zamknięte' : '') : (rem > 0 ? ' ' + rem.toFixed(0) + 's' : ' ✓')); } else ab.textContent = '';
+    }
+  }
+
+  // ---------- rysowanie klatki ----------
+  const HEX = { WK: 0x222222, LH: 0xc0392b };
+  function render() {
+    const sim = S.sim; if (!sim) return;
+    const p = antsPC.children, cnt = sim.count;
+    for (let i = 0; i < cnt; i++) {
+      const sp = p[i];
+      if (sim.alive[i]) {
+        if (!shown[i]) { shown[i] = 1; sp.texture = atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]]]; sp.alpha = 1; }
+        sp.x = sim.x[i]; sp.y = sim.y[i]; sp.rotation = sim.heading[i];
+      } else if (shown[i]) { shown[i] = 0; sp.alpha = 0; }
+    }
+    gGround.clear(); gOver.clear();
+    // zasięg dowódców na ziemi
+    for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.names[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s) {
+      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 / cam.z, s === 'WK' ? 0x111111 : 0xe0483a, 0.45).drawCircle(sim.x[i], sim.y[i], R).endFill();
+    }
+    for (const c of sim.comps) {
+      const lb = c._label; if (c.alive <= 0) { lb.visible = false; continue; }
+      lb.visible = true; lb.scale.set(1 / cam.z * 0.9); lb.position.set(c.ax, c.ay - Math.sqrt(c.alive) * 2.6 - 14 / cam.z);
+      // wskaźnik kontroli: trzy segmenty + pasek
+      const w = 34 / cam.z, h = 5 / cam.z, x = c.ax - w / 2, y = c.ay - Math.sqrt(c.alive) * 2.6 - 10 / cam.z;
+      const cols = [0x6fbf4a, 0xe6b422, 0xe0483a];
+      gOver.beginFill(0x000000, 0.7).drawRect(x - 1 / cam.z, y - 1 / cam.z, w + 2 / cam.z, h + 2 / cam.z).endFill();
+      for (let k = 0; k < 3; k++) gOver.beginFill(cols[k], c.cstate === k ? 1 : 0.25).drawRect(x + k * w / 3, y, w / 3 - 0.5 / cam.z, h).endFill();
+      gOver.beginFill(0xffffff, 0.95).drawRect(x + (1 - c.control / 100) * w - 0.5 / cam.z, y - 2 / cam.z, 1.5 / cam.z, h + 4 / cam.z).endFill();
+      if (S.selected.has(c.id)) {
+        const rad = Math.sqrt(c.alive) * 3.3 + 10;
+        gOver.lineStyle(2 / cam.z, 0xe6b422, 0.95).drawCircle(c.ax, c.ay, rad);
+        const o = c.order; gOver.lineStyle(1.2 / cam.z, 0xe6b422, 0.6).moveTo(c.ax, c.ay).lineTo(o.x, o.y).drawCircle(o.x, o.y, 4 / cam.z);
+      }
+    }
+    for (let k = markers.length - 1; k >= 0; k--) { const m = markers[k]; m.t -= 0.02; if (m.t <= 0) { markers.splice(k, 1); continue; } gOver.lineStyle(2 / cam.z, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t).drawCircle(m.x, m.y, (1.2 - m.t) * 28 + 4); }
+    // ramka zaznaczania rysowana na warstwie ekranu
+    drawBox();
+  }
+  const boxG = new PIXI.Graphics(); app.stage.addChild(boxG);
+  function drawBox() { boxG.clear(); if (box.on && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5) boxG.lineStyle(1, 0xe6b422, 0.9).beginFill(0xe6b422, 0.08).drawRect(Math.min(box.x0, box.x1), Math.min(box.y0, box.y1), Math.abs(box.x1 - box.x0), Math.abs(box.y1 - box.y0)).endFill(); }
+
+  // ---------- zdarzenia na pasku ----------
+  let lastEv = 0;
+  function pumpEvents() {
+    const ev = S.sim.events;
+    while (lastEv < ev.length) {
+      const e = ev[lastEv++], d = document.createElement('div'); d.className = e.side === 'WK' ? 'wk' : 'lh'; d.textContent = fmt(e.t) + '  ' + e.text;
+      $('ticker').appendChild(d); setTimeout(() => d.remove(), 9000);
+      while ($('ticker').children.length > 6) $('ticker').firstChild.remove();
+    }
+  }
+  const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+
+  // ---------- ekran końcowy ----------
+  function showEnd() {
+    S.over = true; const r = S.sim.report(), res = r.result, mine = S.observe ? null : (res.winner === S.side);
+    const types = Object.keys(S.sim.defs.units); const nm = (k) => S.sim.defs.units[k].name;
+    let h = '<h1>' + (mine == null ? 'Wygrywa ' + SIDE_NAME[res.winner] : (mine ? 'Zwycięstwo' : 'Porażka')) + '</h1><p>' + SIDE_NAME[res.winner] + ': ' + res.reason + '. Czas bitwy: ' + fmt(r.seconds) + '.</p>';
+    h += '<h2>Straty</h2><table class="rep"><tr><th>Jednostka</th><th>Wielka Kolonia: poległo / start</th><th>Lake Hodges: poległo / start</th></tr>';
+    for (const k of types) { const a = r.sides.WK, b = r.sides.LH; if (!(a.start[k] || b.start[k] || a.lost[k] || b.lost[k])) continue; h += '<tr><td>' + nm(k) + '</td><td>' + (a.lost[k] || 0) + ' / ' + (a.start[k] || 0) + '</td><td>' + (b.lost[k] || 0) + ' / ' + (b.start[k] || 0) + '</td></tr>'; }
+    const sum = (o) => Object.values(o).reduce((x, y) => x + y, 0);
+    h += '<tr><th>Razem</th><th>' + sum(r.sides.WK.lost) + ' / ' + sum(r.sides.WK.start) + '</th><th>' + sum(r.sides.LH.lost) + ' / ' + sum(r.sides.LH.start) + '</th></tr></table>';
+    h += '<h2>Ocalałe roty</h2>';
+    for (const s of SIDES) h += '<p><b>' + SIDE_NAME[s] + ':</b> ' + r.sides[s].companies.map((c) => c.name + ' ' + c.alive + '/' + c.start).join(', ') + '. Rezerwa: ' + r.sides[s].reserveLeft + '</p>';
+    const causes = r.events.filter((e) => /kontrola|SZAŁ|ODWRÓT|dowódca/.test(e.text) && !/odzyskała/.test(e.text) && !/osłabiona/.test(e.text)).slice(0, 12);
+    h += '<h2>Przyczyny</h2>' + (causes.length ? causes.map((e) => '<p>' + fmt(e.t) + ' · ' + e.text + '</p>').join('') : '<p>Żadna rota nie straciła kontroli.</p>');
+    h += '<p style="margin-top:12px"><button id="eRe" style="border-color:var(--acc)">Jeszcze raz (ten sam seed)</button> <button id="eNew">Nowy seed</button> <button id="eMenu">Menu</button></p>';
+    $('endBody').innerHTML = h; $('end').classList.remove('hidden');
+    $('eRe').onclick = startBattle; $('eNew').onclick = () => { S.seed++; $('mSeed').value = S.seed; startBattle(); }; $('eMenu').onclick = () => { $('end').classList.add('hidden'); $('menu').classList.remove('hidden'); };
+    window.__lastReport = r;
+  }
+
+  // ---------- pętla ----------
+  let hudT = 0, diagT = 0;
+  app.ticker.add(() => {
+    const dt = Math.min(app.ticker.deltaMS, 100) / 1000;
+    if (S.started && S.sim) {
+      const pxs = 600 * dt;
+      let dx = 0, dy = 0; if (keys.ArrowLeft || keys.KeyA) dx += 1; if (keys.ArrowRight || keys.KeyD) dx -= 1; if (keys.ArrowUp || keys.KeyW) dy += 1; if (keys.ArrowDown || keys.KeyS) dy -= 1;
+      if ((dx || dy) && $('menu').classList.contains('hidden')) { cam.x += dx * pxs; cam.y += dy * pxs; applyCam(); }
+      if (!S.paused && !S.over && $('menu').classList.contains('hidden')) {
+        S.acc += dt * SPEEDS[S.speedIdx]; let n = 0;
+        while (S.acc >= Sim.DT && n < 10 && !S.sim.result) { const t0 = performance.now(); S.sim.step(); const ms = performance.now() - t0; S.stepMs = S.stepMs * 0.9 + ms * 0.1; if (ms > S.stepMax) S.stepMax = ms; S.acc -= Sim.DT; n++; }
+        if (n >= 10) S.acc = 0;
+        if (S.sim.result && !S.over) { pumpEvents(); showEnd(); }
+      }
+      const t1 = performance.now(); render(); S.renderMs = S.renderMs * 0.9 + (performance.now() - t1) * 0.1;
+      hudT += dt; diagT += dt;
+      if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); }
+      if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash(); }
+    }
+  });
+
+  window.__P1 = { S, startBattle, app, cam, SIDES };
+  buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
+  try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
+  if (q.get('autostart')) startBattle();
+})();
+/*UI-END*/
 </script>
 </body>
 </html>
