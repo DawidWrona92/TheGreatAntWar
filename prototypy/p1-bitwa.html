@@ -90,7 +90,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
       <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="128"><span class="v" id="mPassV">128</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość przejścia</span><input type="range" id="mPass" min="32" max="320" step="16" value="160"><span class="v" id="mPassV">160</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
     <p style="margin-top:12px"><button id="mStart" style="padding:8px 18px;font-weight:600;border-color:var(--acc)">Start</button></p>
@@ -104,12 +104,12 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <!-- Definicje jednostek, zasobów i scenariusza: wspólne dla P1-P3 (sekcja 15.1). -->
 <script type="application/json" id="defs">
 {
-  "world": { "w": 1600, "h": 960, "passage": 128, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
+  "world": { "w": 1600, "h": 960, "passage": 160, "timeLimit": 900, "wallX": 800, "nest": [1440, 480], "nestR": 64 },
   "params": {
     "cover": 0.7,
     "shieldMult": 0.4,
     "closedMult": 0.55,
-    "cdScale": 2.5,
+    "cdScale": 4,
     "dmgVariance": 0.3,
     "separation": 0.5,
     "control": {
@@ -117,7 +117,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
       "massBonus": 2, "cutOff": 2, "orderBoost": 25
     },
-    "supply": { "WK": 60, "LH": 60, "reinfPerSec": 8, "acidRefill": 0.06 },
+    "supply": { "WK": 60, "LH": 60, "reinfPerSec": 8, "acidRefill": 0.06, "acidStart": 1.6, "acidCap": 6 },
     "aiPeriod": 20
   },
   "units": {
@@ -131,7 +131,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
                    "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
     "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 5,   "cd": 1.1, "aggro": 20, "radius": 3.2, "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
                    "ability": { "id": "close", "name": "Zamknij wejście" } },
-    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 2.2, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 2.0, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
+    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 2.0, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
     "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 6,   "cd": 1.0, "aggro": 24, "radius": 3.0, "rank": 5,   "armor": 0.2, "size": 1.0,
                    "ability": { "id": "order", "name": "Rozkaz", "cd": 40 } }
   },
@@ -159,8 +159,8 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "LH": {
         "name": "Lake Hodges", "regenBonus": 2, "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
         "companies": [
-          { "name": "Odźwierni",   "role": "plug",      "at": [830, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
-          { "name": "Plujki",      "role": "artillery", "at": [880, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
+          { "name": "Odźwierni",   "role": "plug",      "at": [800, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
+          { "name": "Plujki",      "role": "artillery", "at": [850, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
           { "name": "Rota północ", "role": "reserve",   "at": [900, 340],  "face": 3.14159, "units": { "infantry": 220 } },
           { "name": "Rota południe", "role": "reserve", "at": [900, 620],  "face": 3.14159, "units": { "infantry": 220 } },
           { "name": "Odwód",       "role": "reserve",   "at": [1040, 480], "face": 3.14159, "units": { "infantry": 200, "dowodca": 1 } }
@@ -380,8 +380,8 @@ const Sim = (function () {
             c.startBy[k] = cd.units[k]; stats[sn].start[k] = (stats[sn].start[k] || 0) + cd.units[k];
           }
           c.initial = c.alive;
-          if (c.role === 'plug') c.fcols = Math.max(4, Math.floor((passage - 6) / SPACING));
-          const nP = c.startBy.plujka || 0; c.acidMax = nP * 6; c.acid = nP * 4;
+          if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / SPACING) + 1);
+          const nP = c.startBy.plujka || 0; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
           // umiejętność rity: pierwszy typ specjalny, inaczej dowódca
           let best = null, bestN = 0;
           for (const k in c.startBy) if (defs.units[k].ability && k !== 'dowodca' && c.startBy[k] > bestN) { best = k; bestN = c.startBy[k]; }
@@ -429,6 +429,7 @@ const Sim = (function () {
     // ---------- zadawanie obrażeń ----------
     function kill(d, a, why) {
       alive[d] = 0; const c = comps[compOf[d]], sn = SIDES[side[d]], tn = names[type[d]];
+      if (c.closed) c.dirty = true; // zamknięty szyk od razu zamyka luki po poległych
       c.alive--; c.lost++; c.lostBy[tn] = (c.lostBy[tn] || 0) + 1; c.deaths.push(tick);
       stats[sn].lost[tn] = (stats[sn].lost[tn] || 0) + 1;
       if (a >= 0) { const kn = SIDES[side[a]], an = names[type[a]]; stats[kn].kills[tn] = (stats[kn].kills[tn] || 0) + 1; stats[kn].killedBy[an] = (stats[kn].killedBy[an] || 0) + 1; }
@@ -615,7 +616,8 @@ const Sim = (function () {
         const ne = nearestEnemyComp(c);
         if (ne && ne.d < 500) c.tface = Math.atan2(ne.c.ay - c.ay, ne.c.ax - c.ax);
       }
-      if (c.tface != null) {
+      // zamknięty szyk (plug) nie obraca się za wrogiem: jego geometria ma zamykać przejście
+      if (c.tface != null && !c.closed) {
         let da = c.tface - c.face; da = Math.atan2(Math.sin(da), Math.cos(da));
         c.face += Math.max(-0.12, Math.min(0.12, da)); c.fx = Math.cos(c.face); c.fy = Math.sin(c.face);
       }
@@ -623,6 +625,7 @@ const Sim = (function () {
     }
 
     // ---------- główna pętla mrówek ----------
+    const fixedBuf = new Int32Array(48);
     function updateAnts() {
       const sepK = P.separation;
       for (let i = 0; i < count; i++) {
@@ -647,7 +650,7 @@ const Sim = (function () {
           } else if (c.acid <= 0) tgt = -1;
         } else if (engage) {
           // w odwrocie rota odpiera tylko to, co jest tuż przy niej
-          const ag = eff.kind === 'retreat' ? T.reach[ty] + 5 : (eff.kind === 'hold' ? Math.min(T.aggro[ty], 18) : T.aggro[ty]);
+          const ag = (eff.kind === 'retreat' || (c.closed && tn === 'odzwierny')) ? T.reach[ty] + 5 : (eff.kind === 'hold' ? Math.min(T.aggro[ty], 18) : T.aggro[ty]);
           if (tgt < 0 ? ((tick + i) & 3) === 0 : ((tick + i) & 15) === 0) tgt = acquire(i, c.berserk ? 160 : ag, c);
           if (tgt >= 0 && !c.berserk && sd > 70) tgt = -1;
         } else tgt = -1;
@@ -663,7 +666,7 @@ const Sim = (function () {
           } else if (T.ranged[ty]) {
             if (d <= T.range[ty]) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
-              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid--; cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
+              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             }
           } else {
             const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
@@ -681,7 +684,6 @@ const Sim = (function () {
         // prędkość
         const catchUp = !fighting && sd > 14 ? 1.25 : 1;
         speed *= catchUp;
-        if (tn === 'odzwierny' && c.closed) speed = 0;
         if (c.abilUntil > tick && c.abilType === tn && (tn === 'taran' || tn === 'biegacz')) speed *= defs.units[tn].ability.mult;
         if (stuck[i] > 0) speed = 0;
         let vx = 0, vy = 0;
@@ -689,25 +691,37 @@ const Sim = (function () {
         if (dd > 1.2 && speed > 0) { const s = Math.min(speed, dd / DT); vx = ddx / dd * s; vy = ddy / dd * s; if (!fighting || tgt < 0) heading[i] = Math.atan2(vy, vx); }
         vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
         // rozpychanie
-        let px = 0, py = 0;
+        let px = 0, py = 0, nf = 0;
         const fixed = tn === 'odzwierny' && c.closed;
-        if (fixed) { avx[i] = 0; avy[i] = 0; vx = 0; vy = 0; }
+        if (fixed) { avx[i] = 0; avy[i] = 0; }
         const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0, rr = T.radius[ty];
         for (let yy = clampH(cy - 1, HR); yy <= clampH(cy + 1, HR); yy++) for (let xx = clampH(cx - 1, HC); xx <= clampH(cx + 1, HC); xx++) {
           const cc = yy * HC + xx;
           for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
             const j = cellItems[k]; if (j === i || !alive[j]) continue;
             const ex = ax[i] - ax[j], ey = ay[i] - ay[j], md = rr + T.radius[type[j]], e2 = ex * ex + ey * ey;
+            const jf = names[type[j]] === 'odzwierny' && comps[compOf[j]].closed;
+            if (jf && nf < 48 && e2 < 400) fixedBuf[nf++] = j;
             if (e2 >= md * md) continue;
             const e = Math.sqrt(e2) || 0.01, push = (md - e) / e;
             // zamknięty odźwierny nie ustępuje, więc to inni są odpychani podwójnie
-            const jf = names[type[j]] === 'odzwierny' && comps[compOf[j]].closed;
             const w = fixed ? 0 : (jf ? 2 : 1);
             px += ex * push * w; py += ey * push * w;
           }
         }
         const pl = Math.hypot(px, py); if (pl > 2) { px = px / pl * 2; py = py / pl * 2; }
         let nx = ax[i] + vx * DT + px * sepK, ny = ay[i] + vy * DT + py * sepK;
+        // zamknięty plug jest twardą przeszkodą: ruch do wnętrza jego mrówek jest odrzucany,
+        // więc nawet sprint pod naciskiem tłumu nie przeciśnie się przez szyk
+        if (nf > 0 && !fixed) {
+          for (let pass = 0; pass < 2; pass++) for (let k = 0; k < nf; k++) {
+            const j = fixedBuf[k], md = rr + T.radius[type[j]];
+            let dx = nx - ax[j], dy = ny - ay[j], d = Math.hypot(dx, dy);
+            if (d < md) { if (d < 1e-3) { dx = ax[i] - ax[j]; dy = ay[i] - ay[j]; d = Math.hypot(dx, dy) || 1; } nx = ax[j] + dx / d * md; ny = ay[j] + dy / d * md; }
+          }
+          for (let k = 0; k < nf; k++) { const j = fixedBuf[k], md = rr + T.radius[type[j]] - 0.05; if (Math.hypot(nx - ax[j], ny - ay[j]) < md) { nx = ax[i]; ny = ay[i]; break; } }
+        }
+        nx = Math.fround(nx); ny = Math.fround(ny); // pozycje są Float32: bez tego mrówka mogła wylądować na krawędzi muru
         if (blocked(nx, ny)) { if (!blocked(nx, ay[i])) ny = ay[i]; else if (!blocked(ax[i], ny)) nx = ax[i]; else { nx = ax[i]; ny = ay[i]; } }
         ax[i] = nx; ay[i] = ny;
       }
@@ -734,7 +748,7 @@ const Sim = (function () {
     function reinforcements() {
       for (let s = 0; s < 2; s++) {
         const sn = SIDES[s];
-        accum[sn] += P.supply[sn] / 100 * P.reinfPerSec * DT;
+        accum[sn] += P.supply[sn] / 100 * P.supply.reinfPerSec * DT;
         while (accum[sn] >= 1 && reserve[sn] > 0 && count < cap) {
           let best = null, bd = 0;
           for (const c of comps) if (c.side === s && c.alive > 0 && c.cstate !== CS_LOST && c.domType === ti.infantry) { const def = c.initial - c.alive; if (def > bd) { bd = def; best = c; } }
@@ -746,7 +760,7 @@ const Sim = (function () {
         // kwas: dopływ do wspólnej puli rot z plujkami
         for (const c of comps) if (c.side === s && c.acidMax > 0 && c.alive > 0) {
           const nP = c.ants.reduce((a, i) => a + (alive[i] && names[type[i]] === 'plujka' ? 1 : 0), 0);
-          c.acidMax = nP * 6; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.acidRefill * DT);
+          c.acidMax = nP * P.supply.acidCap; c.acid = Math.min(c.acidMax, c.acid + nP * P.supply[sn] / 100 * P.supply.acidRefill * DT);
         }
       }
     }
@@ -791,7 +805,7 @@ const Sim = (function () {
           const enemyAtGap = foes.filter((e) => Math.hypot(e.ax - gap[0], e.ay - gap[1]) < 220);
           if (c.role === 'plug') {
             order(c, 'hold', home[0], home[1], 0);
-            if (enemyAtGap.length && !c.closed) useAbility(c);
+            if (!c.closed) useAbility(c); // obrońca zamyka wejście od początku bitwy
           } else if (c.role === 'artillery') {
             order(c, 'hold', home[0], home[1], 0);
           } else {
@@ -887,7 +901,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 128),
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 160),
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -913,7 +927,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     for (const [k, l] of [['regen', 'Regeneracja /s'], ['cmdBonus', 'Bonus dowódcy /s'], ['noCmdWK', 'Brak dowódcy WK /s'], ['noCmdLH', 'Brak dowódcy LH /s'], ['lossK', 'Waga strat'], ['alarmK', 'Waga alarmu'], ['weakAt', 'Próg osłabienia'], ['lostAt', 'Próg utraty'], ['weakCd', 'Spowolnienie ataku przy osłabieniu'], ['orderBoost', 'Rozkaz dowódcy: +kontrola']])
       TUN.push([c, 'params.control.' + k, l]);
     TUN.push(['Zaopatrzenie', 'params.supply.WK', 'Zaopatrzenie WK (%)', 0, 100], ['Zaopatrzenie', 'params.supply.LH', 'Zaopatrzenie LH (%)', 0, 100],
-      ['Zaopatrzenie', 'params.supply.reinfPerSec', 'Maks. uzupełnienia /s'], ['Zaopatrzenie', 'params.supply.acidRefill', 'Dopływ kwasu'],
+      ['Zaopatrzenie', 'params.supply.reinfPerSec', 'Maks. uzupełnienia /s'], ['Zaopatrzenie', 'params.supply.acidRefill', 'Dopływ kwasu'], ['Zaopatrzenie', 'params.supply.acidStart', 'Kwas na start (strzałów na plujkę, od restartu)', 1], ['Zaopatrzenie', 'params.supply.acidCap', 'Pojemność kwasu (strzałów na plujkę)'],
       ['Teren i walka', 'params.cover', 'Mnożnik obrażeń w osłonie', 0, 1], ['Teren i walka', 'params.shieldMult', 'Tarcza odźwiernych', 0, 1],
       ['Teren i walka', 'params.closedMult', 'Zamknięty odźwierny', 0, 1], ['Teren i walka', 'params.dmgVariance', 'Rozrzut obrażeń', 0, 1]);
   })();
@@ -1281,8 +1295,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
         S.acc += dt * SPEEDS[S.speedIdx]; let n = 0;
         while (S.acc >= Sim.DT && n < 10 && !S.sim.result) { const t0 = performance.now(); S.sim.step(); const ms = performance.now() - t0; S.stepMs = S.stepMs * 0.9 + ms * 0.1; if (ms > S.stepMax) S.stepMax = ms; S.acc -= Sim.DT; n++; }
         if (n >= 10) S.acc = 0;
-        if (S.sim.result && !S.over) { pumpEvents(); showEnd(); }
       }
+      if (S.sim.result && !S.over) { pumpEvents(); showEnd(); }
       const t1 = performance.now(); render(); S.renderMs = S.renderMs * 0.9 + (performance.now() - t1) * 0.1;
       hudT += dt; diagT += dt;
       if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); }
