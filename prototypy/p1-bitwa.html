@@ -109,6 +109,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "cover": 0.7,
     "shieldMult": 0.4,
     "closedMult": 0.55,
+    "cdScale": 2.5,
     "dmgVariance": 0.3,
     "separation": 0.5,
     "control": {
@@ -126,7 +127,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 4.5, "cd": 0.8, "aggro": 40, "radius": 1.9, "rank": 2.5, "armor": 0,   "size": 0.5,
                    "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 } },
     "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 5,   "cd": 1.0, "aggro": 0,  "radius": 2.6, "rank": 3,   "armor": 0,   "size": 0.7,
-                   "burst": { "radius": 24, "dmg": 4.0, "stuck": 6, "seek": 120 },
+                   "burst": { "radius": 20, "dmg": 1.2, "stuck": 6, "seek": 120 },
                    "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
     "odzwierny": { "name": "Odźwierny",  "hp": 45, "speed": 11, "dmg": 1.6, "reach": 5,   "cd": 1.1, "aggro": 20, "radius": 3.2, "rank": 0,   "armor": 0.5, "size": 0.9, "heavy": true,
                    "ability": { "id": "close", "name": "Zamknij wejście" } },
@@ -144,19 +145,19 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "attacker": "WK",
     "sides": {
       "WK": {
-        "name": "Wielka Kolonia", "supply": 60, "reserve": 500, "auraR": 150, "spawn": [60, 200, 160, 560],
+        "name": "Wielka Kolonia", "regenBonus": 0, "supply": 60, "reserve": 500, "auraR": 150, "spawn": [60, 200, 160, 560],
         "companies": [
-          { "name": "1. rota",   "role": "assault", "at": [230, 480], "face": 0, "units": { "infantry": 300, "dowodca": 1 }, "delay": 0 },
-          { "name": "2. rota",   "role": "assault", "at": [230, 290], "face": 0, "units": { "infantry": 300 }, "delay": 6 },
-          { "name": "3. rota",   "role": "assault", "at": [230, 670], "face": 0, "units": { "infantry": 300 }, "delay": 6 },
-          { "name": "4. rota",   "role": "assault", "at": [60, 480],  "face": 0, "units": { "infantry": 300 }, "delay": 25 },
+          { "name": "1. rota",   "role": "assault", "at": [230, 480], "face": 0, "units": { "infantry": 250, "dowodca": 1 }, "delay": 0 },
+          { "name": "2. rota",   "role": "assault", "at": [230, 290], "face": 0, "units": { "infantry": 250 }, "delay": 6 },
+          { "name": "3. rota",   "role": "assault", "at": [230, 670], "face": 0, "units": { "infantry": 250 }, "delay": 6 },
+          { "name": "4. rota",   "role": "assault", "at": [60, 480],  "face": 0, "units": { "infantry": 250 }, "delay": 25 },
           { "name": "Tarany",    "role": "taran",   "at": [140, 480], "face": 0, "units": { "taran": 100 }, "delay": 0 },
           { "name": "Pękacze",   "role": "pekacz",  "at": [140, 330], "face": 0, "units": { "pekacz": 150, "dowodca": 1 }, "delay": 10 },
           { "name": "Biegacze",  "role": "raider",  "at": [140, 640], "face": 0, "units": { "biegacz": 200 }, "delay": 18 }
         ]
       },
       "LH": {
-        "name": "Lake Hodges", "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
+        "name": "Lake Hodges", "regenBonus": 2, "supply": 60, "reserve": 250, "auraR": 110, "spawn": [1410, 450, 60, 60],
         "companies": [
           { "name": "Odźwierni",   "role": "plug",      "at": [830, 480],  "face": 3.14159, "units": { "odzwierny": 120 } },
           { "name": "Plujki",      "role": "artillery", "at": [880, 480],  "face": 3.14159, "units": { "plujka": 150, "dowodca": 1 } },
@@ -338,7 +339,7 @@ const Sim = (function () {
     Object.defineProperty(sim, 'count', { get: () => count });
 
     // ---------- statystyki i zdarzenia ----------
-    const stats = {}; for (const s of SIDES) stats[s] = { start: {}, lost: {}, kills: {} };
+    const stats = {}; for (const s of SIDES) stats[s] = { start: {}, lost: {}, kills: {}, killedBy: {} };
     const events = [], timeline = [];
     sim.events = events;
     let tick = 0;
@@ -430,7 +431,7 @@ const Sim = (function () {
       alive[d] = 0; const c = comps[compOf[d]], sn = SIDES[side[d]], tn = names[type[d]];
       c.alive--; c.lost++; c.lostBy[tn] = (c.lostBy[tn] || 0) + 1; c.deaths.push(tick);
       stats[sn].lost[tn] = (stats[sn].lost[tn] || 0) + 1;
-      if (a >= 0) { const kn = SIDES[side[a]]; stats[kn].kills[tn] = (stats[kn].kills[tn] || 0) + 1; }
+      if (a >= 0) { const kn = SIDES[side[a]], an = names[type[a]]; stats[kn].kills[tn] = (stats[kn].kills[tn] || 0) + 1; stats[kn].killedBy[an] = (stats[kn].killedBy[an] || 0) + 1; }
       if (tn === 'dowodca') {
         c.cmdDiedAt = tick; const arr = commanders[sn]; arr.splice(arr.indexOf(d), 1);
         logEvent('Poległ dowódca (' + c.name + ', ' + sn + ')', sn, c.id);
@@ -550,7 +551,7 @@ const Sim = (function () {
       for (const i of commanders[sn]) if (Math.hypot(ax[i] - c.ax, ay[i] - c.ay) <= auraR) { inCmd = true; break; }
       c.cmdIn = inCmd;
       const f = c.deaths.length / Math.max(1, n + c.deaths.length);
-      const eng = c.engCnt / Math.max(1, n); c.engaged = eng; c.engCnt = 0;
+      const eng = Math.min(1, c.engCnt / (Math.max(1, n) * HZ)); c.engaged = eng; c.engCnt = 0;
       let friendNear = false;
       for (const o of comps) if (o !== c && o.side === c.side && o.alive > 0 && Math.hypot(o.ax - c.ax, o.ay - c.ay) < 200) { friendNear = true; break; }
       const noCmd = sn === 'WK' ? PC.noCmdWK : PC.noCmdLH;
@@ -558,6 +559,7 @@ const Sim = (function () {
       let pNoCmd = inCmd ? 0 : noCmd, pCut = (!inCmd && !friendNear) ? PC.cutOff : 0;
       let d = PC.regen + (inCmd ? PC.cmdBonus : 0) - pLoss - pAlarm - pNoCmd - pCut;
       if (n >= 0.7 * c.initial && friendNear) d += PC.massBonus;
+      d += defs.scenario.sides[sn].regenBonus || 0;
       const ne = nearestEnemyComp(c);
       if (c.cstate === CS_LOST && ne && ne.d < 90) d = Math.min(d, 0);
       c.control = Math.max(0, Math.min(100, c.control + d));
@@ -580,9 +582,9 @@ const Sim = (function () {
       c.berserk = c.cstate === CS_LOST && c.side === 0;
       // skuteczny rozkaz
       if (c.cstate === CS_LOST) {
-        if (c.side === 1) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: false }; }
+        if (c.side === 1) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: true }; }
         else { const e = ne ? ne.c : null; c.eff = { kind: 'attack', x: e ? e.ax : c.order.x, y: e ? e.ay : c.order.y, engage: true }; }
-      } else c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: c.order.kind === 'attack' || c.order.kind === 'hold' };
+      } else c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: c.order.kind === 'attack' || c.order.kind === 'hold' || c.order.kind === 'retreat' };
       // dominujący typ -> prędkość rity
       let dom = null, dn = -1;
       const cnt = {}; for (const i of c.ants) { const k = type[i]; cnt[k] = (cnt[k] || 0) + 1; if (cnt[k] > dn) { dn = cnt[k]; dom = k; } }
@@ -638,16 +640,18 @@ const Sim = (function () {
         // ewentualne namierzanie
         if (isPek) {
           if (burstMode && ((tick + i) & 3) === 0 && tgt < 0) tgt = acquire(i, defs.units.pekacz.burst.seek, c);
-        } else if (engage && T.ranged[ty]) {
+        } else if (engage && T.ranged[ty] && eff.kind !== 'retreat') {
           if (c.acid > 0 && (tgt < 0 || ((tick + i) & 7) === 0)) {
             if (tgt >= 0 && Math.hypot(ax[tgt] - ax[i], ay[tgt] - ay[i]) <= T.range[ty] && losClear(ax[i], ay[i], ax[tgt], ay[tgt])) { /* zostaje */ }
             else tgt = acquire(i, T.range[ty], c);
           } else if (c.acid <= 0) tgt = -1;
         } else if (engage) {
-          const ag = eff.kind === 'hold' ? Math.min(T.aggro[ty], 18) : T.aggro[ty];
+          // w odwrocie rota odpiera tylko to, co jest tuż przy niej
+          const ag = eff.kind === 'retreat' ? T.reach[ty] + 5 : (eff.kind === 'hold' ? Math.min(T.aggro[ty], 18) : T.aggro[ty]);
           if (tgt < 0 ? ((tick + i) & 3) === 0 : ((tick + i) & 15) === 0) tgt = acquire(i, c.berserk ? 160 : ag, c);
           if (tgt >= 0 && !c.berserk && sd > 70) tgt = -1;
         } else tgt = -1;
+        if (eff.kind === 'retreat' && T.ranged[ty]) tgt = -1;
         target[i] = tgt;
         let fighting = false;
         if (tgt >= 0) {
@@ -659,13 +663,13 @@ const Sim = (function () {
           } else if (T.ranged[ty]) {
             if (d <= T.range[ty]) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
-              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid--; cdT[i] = T.cd[ty] * c.cdMod; }
+              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid--; cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             }
           } else {
             const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
             if (d <= reach) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i];
-              if (cdT[i] <= 0) { hit(i, tgt, T.dmg[ty], true); cdT[i] = T.cd[ty] * c.cdMod; }
+              if (cdT[i] <= 0) { hit(i, tgt, T.dmg[ty], true); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             } else { gx = tx; gy = ty2; goalSet = true; fighting = true; }
           }
           if (fighting) c.engCnt++;
@@ -686,6 +690,8 @@ const Sim = (function () {
         vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
         // rozpychanie
         let px = 0, py = 0;
+        const fixed = tn === 'odzwierny' && c.closed;
+        if (fixed) { avx[i] = 0; avy[i] = 0; vx = 0; vy = 0; }
         const cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0, rr = T.radius[ty];
         for (let yy = clampH(cy - 1, HR); yy <= clampH(cy + 1, HR); yy++) for (let xx = clampH(cx - 1, HC); xx <= clampH(cx + 1, HC); xx++) {
           const cc = yy * HC + xx;
@@ -694,7 +700,10 @@ const Sim = (function () {
             const ex = ax[i] - ax[j], ey = ay[i] - ay[j], md = rr + T.radius[type[j]], e2 = ex * ex + ey * ey;
             if (e2 >= md * md) continue;
             const e = Math.sqrt(e2) || 0.01, push = (md - e) / e;
-            px += ex * push; py += ey * push;
+            // zamknięty odźwierny nie ustępuje, więc to inni są odpychani podwójnie
+            const jf = names[type[j]] === 'odzwierny' && comps[compOf[j]].closed;
+            const w = fixed ? 0 : (jf ? 2 : 1);
+            px += ex * push * w; py += ey * push * w;
           }
         }
         const pl = Math.hypot(px, py); if (pl > 2) { px = px / pl * 2; py = py / pl * 2; }
@@ -850,7 +859,7 @@ const Sim = (function () {
       SIDES.forEach((sn, s) => {
         const surv = {}; for (let i = 0; i < count; i++) if (alive[i] && side[i] === s) { const k = names[type[i]]; surv[k] = (surv[k] || 0) + 1; }
         out.sides[sn] = {
-          start: stats[sn].start, lost: stats[sn].lost, kills: stats[sn].kills, survivors: surv, reserveLeft: reserve[sn],
+          start: stats[sn].start, lost: stats[sn].lost, kills: stats[sn].kills, killedBy: stats[sn].killedBy, survivors: surv, reserveLeft: reserve[sn],
           companies: comps.filter((c) => c.side === s).map((c) => ({ id: c.id, name: c.name, start: c.initial, alive: c.alive, lost: c.lost, lostBy: c.lostBy, control: Math.round(c.control), state: c.cstate }))
         };
       });
