@@ -965,79 +965,135 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('stage').appendChild(app.view);
   const world = new PIXI.Container(); app.stage.addChild(world);
   const gGround = new PIXI.Graphics(), gOver = new PIXI.Graphics(), labels = new PIXI.Container();
-  let terrainSpr = null, antsPC = null, sprites = [], shown = null, atlas = null;
+  let terrainSpr = null, antsPC = null, sprites = [], shown = null, dirOf = null, atlas = null;
   const cam = { x: 0, y: 0, z: 1 };
-  const TYPES = Object.keys(DEFS0.units);
-  const COL = { WK: { b: '#161616', d: '#050505', h: '#4c4c4c', a: '#8a8a8a' }, LH: { b: '#b3261e', d: '#6a120e', h: '#ee5b49', a: '#f6b26a' } };
-
-  function pixBlob(c, cx, cy, rx, ry, col) {
-    c.fillStyle = col;
-    for (let y = -ry; y <= ry; y++) { const w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry + 0.01)))); c.fillRect(cx - w, cy + y, 2 * w + 1, 1); }
+  /*ISO-BEGIN*/
+  // ---------- widok izometryczny 2:1 (kod do ponownego użycia w P2 i P3) ----------
+  // Rzut: x ekranu = ox + (x - y) * 0.5, y ekranu = (x + y) * 0.25. Światło z lewej góry: lewe ściany jaśniejsze od prawych,
+  // cień pada w prawo-dół. Trzy tony na materiał, bez czystej czerni i bez gradientów (zasady skilla retro-rts-sprites).
+  const ISO = {
+    pad: 24, wallH: 7,
+    ox: 960 * 0.5 + 24,
+    sx(x, y) { return this.ox + (x - y) * 0.5; },
+    sy(x, y) { return (x + y) * 0.25 + this.pad; },
+    // odwrotność: współrzędne kontenera -> świat
+    wx(cx, cy) { const u = (cx - this.ox) * 2, v = (cy - this.pad) * 4; return (u + v) / 2; },
+    wy(cx, cy) { const u = (cx - this.ox) * 2, v = (cy - this.pad) * 4; return (v - u) / 2; }
+  };
+  const PAL = {
+    WK: { body: '#1d1d20', hi: '#5a5a62', dark: '#0e0e10', leg: '#34343a', acc: '#9aa0a6' },
+    LH: { body: '#b3261e', hi: '#f07a66', dark: '#6a120e', leg: '#8e1d17', acc: '#f2c27a' }
+  };
+  const DIRS = 16, CELLW = 32, CELLH = 24, AX = 16, AY = 15;
+  function disc(c, cx, cy, r, col) {
+    c.fillStyle = col; const R = Math.max(1, Math.round(r));
+    for (let y = -R; y <= R; y++) { const w = Math.round(Math.sqrt(Math.max(0, r * r + 0.3 - y * y))); if (w > 0) c.fillRect(Math.round(cx) - w + 1, Math.round(cy) + y, 2 * w - 1, 1); }
   }
-  function drawAnt(c, ox, oy, t, s) {
-    const k = COL[s]; c.save(); c.translate(ox, oy);
-    c.fillStyle = k.d;
-    const leg = (x, dy) => { c.fillRect(x, 8 - dy, 1, 1); c.fillRect(x - 1, 8 - dy - 1, 1, 1); c.fillRect(x, 8 + dy, 1, 1); c.fillRect(x - 1, 8 + dy + 1, 1, 1); };
-    const lg = t === 'biegacz' ? 6 : 4;
-    c.fillStyle = k.d; for (const x of [10, 13, 16]) { c.fillRect(x, 8 - lg, 1, lg * 2 + 1); }
-    let abR = 5, abY = 3, hd = 3, th = 3;
-    if (t === 'biegacz') { abR = 5; abY = 2; hd = 2; th = 2; }
-    if (t === 'pekacz') { abR = 7; abY = 6; }
-    if (t === 'taran') { hd = 4; th = 4; abR = 5; abY = 4; }
-    if (t === 'dowodca') { abR = 6; abY = 4; hd = 4; th = 3; }
-    pixBlob(c, 5, 8, abR, abY, k.b); pixBlob(c, 5 - 1, 8 - 1, Math.max(1, abR - 2), Math.max(1, abY - 2), k.h);
-    pixBlob(c, 13, 8, 3, th, k.b); pixBlob(c, 20, 8, hd, hd, k.b);
-    c.fillStyle = k.h; c.fillRect(19, 7 - hd + 2, 2, 1);
-    c.fillStyle = k.d; c.fillRect(22, 5, 2, 1); c.fillRect(22, 11, 2, 1); // czułki
-    if (t === 'pekacz') pixBlob(c, 4, 8, 4, 3, '#e8c84a');
-    if (t === 'taran') { c.fillStyle = '#9aa0a6'; c.fillRect(11, 4, 3, 9); c.fillRect(21, 5, 2, 7); }
-    if (t === 'odzwierny') { c.fillStyle = s === 'LH' ? '#e8c9a0' : '#8c8c8c'; c.fillRect(21, 2, 3, 13); c.fillStyle = k.d; c.fillRect(21, 2, 1, 13); }
-    if (t === 'plujka') { c.fillStyle = k.b; c.fillRect(0, 6, 2, 1); c.fillStyle = '#7bd34a'; c.fillRect(0, 5, 2, 2); }
-    if (t === 'dowodca') { c.fillStyle = '#f2c230'; c.fillRect(12, 6, 4, 5); c.fillRect(22, 2, 1, 2); c.fillRect(22, 13, 1, 2); c.fillRect(20, 3, 1, 2); c.fillRect(20, 12, 1, 2); }
-    if (t === 'biegacz') { c.fillStyle = k.a; c.fillRect(16, 7, 2, 2); }
-    c.restore();
-  }
-  function makeAtlas() {
-    const cv = document.createElement('canvas'); cv.width = 24 * TYPES.length; cv.height = 16 * 2;
-    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
-    const base = PIXI.BaseTexture.from(cv, { scaleMode: PIXI.SCALE_MODES.NEAREST });
-    const tex = {};
-    SIDES.forEach((s, si) => TYPES.forEach((t, ti) => { drawAnt(c, ti * 24, si * 16, t, s); tex[s + t] = new PIXI.Texture(base, new PIXI.Rectangle(ti * 24, si * 16, 24, 16)); }));
-    base.update();
-    return tex;
-  }
-  function makeTerrain(sim) {
-    const cv = document.createElement('canvas'); cv.width = sim.W; cv.height = sim.H; const c = cv.getContext('2d');
-    const C = sim.CELL, nz = (x, y) => { let h = Math.imul(x * 374761393 + y * 668265263, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
-    for (let r = 0; r < sim.ROWS; r++) for (let col = 0; col < sim.COLS; col++) {
-      const v = sim.grid[r * sim.COLS + col], n = nz(col, r), x = col * C, y = r * C;
-      if (v === 0) { const l = 176 + n * 22; c.fillStyle = 'rgb(' + (l + 14) + ',' + (l - 6) + ',' + (l - 52) + ')'; }
-      else if (v === 2) { const l = n * 30; c.fillStyle = 'rgb(' + (74 + l) + ',' + (118 + l) + ',' + (52 + l * 0.5) + ')'; }
-      else if (v === 1) { const l = 128 + n * 26; c.fillStyle = 'rgb(' + l + ',' + l + ',' + (l - 6) + ')'; }
-      else { const l = n * 22; c.fillStyle = 'rgb(' + (92 + l) + ',' + (62 + l) + ',' + (36 + l) + ')'; }
-      c.fillRect(x, y, C, C);
-      if (v === 0 && n > 0.93) { c.fillStyle = 'rgba(90,70,40,.35)'; c.fillRect(x + n * 9, y + n * 7, 2, 2); }
-      if (v === 2) { c.fillStyle = 'rgba(40,80,30,.7)'; for (let k = 0; k < 3; k++) c.fillRect(x + ((n * 13 * (k + 1)) % 14), y + ((n * 29 * (k + 2)) % 14), 1, 4); if (n > 0.8) { c.strokeStyle = '#6b4a24'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x + 2, y + 12); c.lineTo(x + 14, y + 4); c.stroke(); } }
-      if (v === 1) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x, y + C - 1, C, 1); c.fillRect(x + C - 1, y, 1, C); }
+  function ball(c, cx, cy, r, p) { disc(c, cx, cy, r, p.dark); disc(c, cx - 0.4, cy - 0.4, r - 0.7, p.body); if (r >= 1.8) disc(c, cx - r * 0.35, cy - r * 0.4, Math.max(0.8, r * 0.38), p.hi); }
+  function drawIsoAnt(c, ox, oy, type, side, dir) {
+    const p = PAL[side], th = dir * Math.PI * 2 / DIRS, ca = Math.cos(th), sa = Math.sin(th);
+    const m = { infantry: 1.45, taran: 1.8, biegacz: 1.35, pekacz: 1.55, odzwierny: 1.7, plujka: 1.4, dowodca: 1.9 }[type] || 1.45;
+    // punkt lokalny (a wzdłuż kierunku, b w bok, z wysokość) -> piksel
+    const P = (a, b, z) => { const dx = a * ca - b * sa, dy = a * sa + b * ca; return [ox + AX + m * (dx - dy) * 0.5, oy + AY + m * (dx + dy) * 0.25 - z, dx + dy]; };
+    // cień rzucany: elipsa w prawo-dół
+    c.fillStyle = 'rgba(40,28,12,0.32)';
+    const sh = P(0, 0, 0), rw = 5.2 * m * 0.62, rh = 2.2 * m * 0.62;
+    for (let y = -Math.ceil(rh); y <= Math.ceil(rh); y++) { const w = Math.round(rw * Math.sqrt(Math.max(0, 1 - (y * y) / (rh * rh + 0.01)))); c.fillRect(Math.round(sh[0] + 1) - w, Math.round(sh[1] + 1) + y, 2 * w + 1, 1); }
+    const slim = type === 'biegacz', swell = type === 'pekacz', big = type === 'taran' || type === 'dowodca';
+    const abR = swell ? 3.6 : (slim ? 1.7 : 2.4), thR = slim ? 1.2 : 1.6, hdR = big ? 2.2 : (slim ? 1.3 : 1.7);
+    const abA = swell ? -5.2 : -4.2, hdA = 3.9;
+    const abZ = type === 'plujka' ? 5.4 : 2.6;
+    // nogi (trzy pary), pod ciałem
+    c.fillStyle = p.leg;
+    const reach = slim ? 5.4 : 4.2;
+    for (const a of [-1.2, 0.2, 1.6]) for (const b of [-1, 1]) {
+      const s = P(a, 0, 2.4), k = P(a + 0.8, b * reach * 0.8, 3.6), f = P(a + (a > 0 ? 1.8 : (a < 0 ? -1.8 : 0.4)), b * reach * 1.15, 0);
+      for (const [u, v] of [[s, k], [k, f]]) { const n = 6; for (let i = 0; i <= n; i++) c.fillRect(Math.round(u[0] + (v[0] - u[0]) * i / n), Math.round(u[1] + (v[1] - u[1]) * i / n), 1, 1); }
     }
-    const nc = sim.defs.world.nest; c.fillStyle = 'rgba(70,45,20,.35)'; c.beginPath(); c.arc(nc[0], nc[1], sim.defs.world.nestR, 0, 7); c.fill();
-    c.strokeStyle = 'rgba(40,25,10,.8)'; c.lineWidth = 2; c.beginPath(); c.arc(nc[0], nc[1], sim.defs.world.nestR, 0, 7); c.stroke();
-    // znaczniki przejścia
+    // części ciała od najdalszej do najbliższej kamery
+    const parts = [
+      { pt: P(abA, 0, abZ), r: abR, kind: 'ab' }, { pt: P(0, 0, 3.0), r: thR, kind: 'th' }, { pt: P(hdA, 0, 3.2), r: hdR, kind: 'hd' }
+    ].sort((u, v) => u.pt[2] - v.pt[2]);
+    for (const q of parts) {
+      ball(c, q.pt[0], q.pt[1], q.r, p);
+      if (q.kind === 'ab' && swell) disc(c, q.pt[0] - 0.4, q.pt[1] - 0.2, 1.7, '#e8c84a');
+      if (q.kind === 'ab' && type === 'plujka') { const t = P(abA - 1.6, 0, abZ + 1.2); disc(c, t[0], t[1], 1, '#7bd34a'); }
+      if (q.kind === 'th' && type === 'dowodca') { c.fillStyle = '#f2c230'; c.fillRect(Math.round(q.pt[0]) - 1, Math.round(q.pt[1]) - 2, 3, 2); }
+      if (q.kind === 'th' && type === 'taran') { c.fillStyle = p.acc; c.fillRect(Math.round(q.pt[0]) - 1, Math.round(q.pt[1]) - 2, 3, 1); }
+      if (q.kind === 'hd' && type === 'taran') { disc(c, q.pt[0] + (ca - sa) * 0.6, q.pt[1] - 1, 1.3, p.acc); }
+    }
+    // odźwierny: płaska głowa-czop prostopadle do kierunku
+    if (type === 'odzwierny') {
+      for (const b of [-3, -1.5, 0, 1.5, 3]) { const q = P(hdA + 1.2, b, 3.2); disc(c, q[0], q[1], 1.5, side === 'LH' ? '#d9b27c' : '#8c8c94'); }
+      const q = P(hdA + 1.4, 0, 3.4); disc(c, q[0] - 0.5, q[1] - 0.5, 1, side === 'LH' ? '#f0d9b0' : '#b8b8c0');
+    }
+    // czułki
+    c.fillStyle = p.dark;
+    const hp = P(hdA, 0, 3.2);
+    for (const b of [-1, 1]) { const a1 = P(hdA + 2.4, b * 1.6, 4.4), a2 = P(hdA + 3.6, b * 2.6, 5.4); c.fillRect(Math.round(a1[0]), Math.round(a1[1]), 1, 1); c.fillRect(Math.round(a2[0]), Math.round(a2[1]), 1, 1); }
+    if (type === 'dowodca') { c.fillStyle = '#f2c230'; for (const b of [-1, 1]) { const a3 = P(hdA + 3.8, b * 2.8, 5.8); c.fillRect(Math.round(a3[0]), Math.round(a3[1]), 1, 1); } }
+  }
+  const TYPE_LIST = Object.keys(DEFS0.units);
+  function makeAntAtlas() {
+    const cv = document.createElement('canvas'); cv.width = CELLW * DIRS; cv.height = CELLH * TYPE_LIST.length * 2;
+    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
+    const base = PIXI.BaseTexture.from(cv, { scaleMode: PIXI.SCALE_MODES.NEAREST }), tex = {};
+    SIDES.forEach((s, si) => TYPE_LIST.forEach((t, ti) => { const row = (si * TYPE_LIST.length + ti) * CELLH; for (let d = 0; d < DIRS; d++) { drawIsoAnt(c, d * CELLW, row, t, s, d); tex[s + t + d] = new PIXI.Texture(base, new PIXI.Rectangle(d * CELLW, row, CELLW, CELLH)); } }));
+    base.update(); tex.cv = cv; return tex;
+  }
+  // kafel 16x8 piksele: szerokości wierszy 4,8,12,16,16,12,8,4 składają się bez szczelin
+  const ROWW = [4, 8, 12, 16, 16, 12, 8, 4];
+  function tile(c, cx, top, col) { c.fillStyle = col; for (let j = 0; j < 8; j++) c.fillRect(cx - ROWW[j] / 2, top + j, ROWW[j], 1); }
+  function isoBox(c, cx, top, h, cTop, cL, cR) {
+    for (let px = 0; px < 8; px++) { const yb = top + 4 + (px >> 1); c.fillStyle = cL; c.fillRect(cx - 8 + px, yb - h + 1, 1, h); }
+    for (let px = 8; px < 16; px++) { const yb = top + 7 - ((px - 8) >> 1); c.fillStyle = cR; c.fillRect(cx - 8 + px, yb - h + 1, 1, h); }
+    tile(c, cx, top - h, cTop);
+  }
+  function makeIsoTerrain(sim) {
+    const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, wallH = ISO.wallH;
+    const cw = Math.ceil((sim.W + sim.H) * 0.5 + ISO.pad * 2), ch = Math.ceil((sim.W + sim.H) * 0.25 + ISO.pad * 2 + 12);
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
+    const nz = (x, y, s) => { let h = Math.imul(x * 374761393 + y * 668265263 + s * 2246822519, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
+    const nest = sim.defs.world.nest, nestR = sim.defs.world.nestR;
+    const SAND = ['#cdb27c', '#c7ab74', '#d2b985', '#c2a56e'], DARKSAND = ['#a98a5a', '#a2835a', '#b0925f', '#9c7e52'];
+    const GRASS = ['#6d9a46', '#628f3f', '#76a24c', '#5a8639'];
+    for (let d = 0; d < rows + cols - 1; d++) for (let r = Math.max(0, d - cols + 1); r <= Math.min(rows - 1, d); r++) {
+      const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C) + 0, top = ISO.sy(col * C, r * C) - ISO.pad + ISO.pad;
+      const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
+      if (v === 1) { tile(c, cx, top, '#9a9a94'); isoBox(c, cx, top, wallH, k % 2 ? '#b4b4ad' : '#aeaea7', '#8f8f89', '#72726d'); }
+      else if (v === 3) { tile(c, cx, top, DARKSAND[k]); isoBox(c, cx, top, 6, '#93673a', '#76502d', '#573a20'); }
+      else if (v === 2) {
+        tile(c, cx, top, GRASS[k]);
+        c.fillStyle = '#4a7430'; for (let t = 0; t < 3; t++) { const px = cx - 5 + Math.floor(nz(col, r, 5 + t) * 10), py = top + 1 + Math.floor(nz(col, r, 9 + t) * 5); c.fillRect(px, py, 1, 2); }
+        c.fillStyle = '#9bc35f'; { const px = cx - 4 + Math.floor(nz(col, r, 20) * 8), py = top + 2 + Math.floor(nz(col, r, 21) * 4); c.fillRect(px, py, 1, 1); }
+        if (n > 0.86) { c.fillStyle = '#6b4a24'; c.fillRect(cx - 4, top + 5, 6, 1); c.fillStyle = '#8a6334'; c.fillRect(cx - 4, top + 4, 5, 1); }
+      } else {
+        tile(c, cx, top, dn < nestR + 14 ? DARKSAND[k] : SAND[k]);
+        if (n > 0.9) { c.fillStyle = 'rgba(110,86,50,0.7)'; c.fillRect(cx - 3 + Math.floor(n * 10) % 6, top + 2 + (k % 3), 2, 1); }
+        else if (n < 0.06) { c.fillStyle = '#e4cf9f'; c.fillRect(cx - 2, top + 3, 2, 1); }
+      }
+    }
+    // gniazdo: kopiec w trzech tonach i ciemne wejście od strony zachodniej
+    const rings = [[nestR, 'rgba(120,86,48,0.28)'], [nestR * 0.72, 'rgba(120,86,48,0.3)'], [nestR * 0.42, 'rgba(70,46,24,0.4)']];
+    for (const [rr, col] of rings) { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(nest[0], nest[1]), ISO.sy(nest[0], nest[1]), rr * 0.7071, rr * 0.3536, 0, 0, 7); c.fill(); }
+    const ex = ISO.sx(nest[0] - 78, nest[1]), ey = ISO.sy(nest[0] - 78, nest[1]);
+    c.fillStyle = '#2b1b0d'; c.beginPath(); c.ellipse(ex, ey, 9, 4, 0, 0, 7); c.fill();
+    // znaczniki przejścia: pasy ostrzegawcze na końcach muru
     const wx = sim.defs.world.wallX, my = sim.H / 2, hw = sim.defs.world.passage / 2;
-    c.fillStyle = '#e6b422'; for (const yy of [my - hw, my + hw]) for (let k = -2; k < 2; k++) { c.save(); c.translate(wx - 18 + (yy < my ? 0 : 0), yy + (yy < my ? 0 : -6)); c.fillRect(k * 10, 0, 6, 6); c.restore(); }
+    for (const yy of [my - hw, my + hw]) for (let t = 0; t < 4; t++) { c.fillStyle = t % 2 ? '#2a2a2a' : '#e6b422'; c.fillRect(Math.round(ISO.sx(wx, yy + (yy < my ? -2 : 2))) - 6 + t * 3, Math.round(ISO.sy(wx, yy + (yy < my ? -2 : 2))) - wallH - 1, 3, 2); }
     return PIXI.Texture.from(cv);
   }
+  /*ISO-END*/
+
   function setupScene(sim) {
     world.removeChildren(); gGround.clear(); labels.removeChildren();
-    if (!atlas) atlas = makeAtlas();
-    terrainSpr = new PIXI.Sprite(makeTerrain(sim));
-    antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: true, position: true, rotation: true, uvs: true, tint: true }, 16384, false);
-    sprites = []; shown = new Uint8Array(sim.cap);
-    const dflt = atlas.WKinfantry;
+    if (!atlas) atlas = makeAntAtlas();
+    terrainSpr = new PIXI.Sprite(makeIsoTerrain(sim));
+    antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: false, position: true, rotation: false, uvs: true, tint: true }, 16384, false);
+    sprites = []; shown = new Uint8Array(sim.cap); dirOf = new Uint8Array(sim.cap).fill(255);
     for (let i = 0; i < sim.cap; i++) {
-      const sp = new PIXI.Sprite(i < sim.count ? atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]]] : dflt);
-      sp.anchor.set(0.5); const sz = i < sim.count ? sim.T.size[sim.type[i]] : sim.T.size[sim.ti.infantry];
-      sp.scale.set(sz * 0.62); sp.alpha = 0; sprites.push(sp); antsPC.addChild(sp);
+      const sp = new PIXI.Sprite(atlas.WKinfantry0);
+      sp.anchor.set(AX / CELLW, AY / CELLH); sp.alpha = 0; sprites.push(sp); antsPC.addChild(sp);
     }
     world.addChild(terrainSpr, gGround, antsPC, gOver, labels);
     sim.comps.forEach((c) => {
@@ -1046,11 +1102,12 @@ if (typeof module !== 'undefined') module.exports = Sim;
     });
   }
   function fitCamera() {
-    const w = app.screen.width, h = app.screen.height - 150, z = Math.min(w / S.sim.W, h / S.sim.H);
-    cam.z = z; cam.x = (w - S.sim.W * z) / 2; cam.y = 40 + (h - S.sim.H * z) / 2; applyCam();
+    const w = app.screen.width, h = app.screen.height - 150, cw = (S.sim.W + S.sim.H) * 0.5 + ISO.pad * 2, ch = (S.sim.W + S.sim.H) * 0.25 + ISO.pad * 2 + 12, z = Math.min(w / cw, h / ch);
+    cam.z = z; cam.x = (w - cw * z) / 2; cam.y = 40 + (h - ch * z) / 2; applyCam();
   }
   function applyCam() { world.scale.set(cam.z); world.position.set(cam.x, cam.y); }
-  const toWorld = (sx, sy) => [(sx - cam.x) / cam.z, (sy - cam.y) / cam.z];
+  const toContainer = (sx, sy) => [(sx - cam.x) / cam.z, (sy - cam.y) / cam.z];
+  const toWorld = (sx, sy) => { const [cx, cy] = toContainer(sx, sy); return [ISO.wx(cx, cy), ISO.wy(cx, cy)]; };
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
@@ -1078,17 +1135,18 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const doRetreat = () => issue({ k: 'order', kind: 'retreat', x: 0, y: 0 });
 
   // ---------- zaznaczanie ----------
+  // zaznaczanie działa na rzutowanych pozycjach mrówek (współrzędne kontenera), więc ramka na ekranie jest prostokątem
   function selectIn(x0, y0, x1, y1, add) {
     const sim = S.sim, set = new Set(), mine = SIDES.indexOf(S.side);
     const lx = Math.min(x0, x1), hx = Math.max(x0, x1), ly = Math.min(y0, y1), hy = Math.max(y0, y1);
-    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine && sim.x[i] >= lx && sim.x[i] <= hx && sim.y[i] >= ly && sim.y[i] <= hy) set.add(sim.comp[i]);
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const px = ISO.sx(sim.x[i], sim.y[i]), py = ISO.sy(sim.x[i], sim.y[i]); if (px >= lx && px <= hx && py >= ly && py <= hy) set.add(sim.comp[i]); }
     if (!add) S.selected.clear();
     set.forEach((id) => S.selected.add(id));
   }
-  function clickSelect(wx, wy, add) {
-    const sim = S.sim, mine = SIDES.indexOf(S.side), r = 12 / cam.z + 4;
+  function clickSelect(cx, cy, add) {
+    const sim = S.sim, mine = SIDES.indexOf(S.side), r = 10 / cam.z + 3;
     let best = -1, bd = r * r;
-    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const d = (sim.x[i] - wx) ** 2 + (sim.y[i] - wy) ** 2; if (d < bd) { bd = d; best = i; } }
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 4 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
     if (best < 0) { if (!add) S.selected.clear(); return; }
     const id = sim.comp[best];
     if (add) { S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); } else { S.selected.clear(); S.selected.add(id); }
@@ -1116,7 +1174,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (box.on) {
       box.on = false;
       const moved = Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5, add = e.shiftKey;
-      const a = toWorld(box.x0, box.y0), b = toWorld(box.x1, box.y1);
+      const a = toContainer(box.x0, box.y0), b = toContainer(box.x1, box.y1);
       if (moved) selectIn(a[0], a[1], b[0], b[1], add); else clickSelect(b[0], b[1], add);
       buildCards();
     }
@@ -1138,7 +1196,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (e.ctrlKey || e.altKey || e.metaKey) { S.groups[m[1]] = [...S.selected]; flash('Grupa ' + m[1] + ': ' + S.groups[m[1]].length + ' rot'); }
       else if (S.groups[m[1]]) {
         S.selected = new Set(S.groups[m[1]].filter((id) => S.sim.comps[id].alive > 0));
-        if (S.lastGroup === m[1] && S.selected.size) { const cs = [...S.selected].map((id) => S.sim.comps[id]); cam.x = app.screen.width / 2 - cs[0].ax * cam.z; cam.y = app.screen.height / 2 - cs[0].ay * cam.z; applyCam(); }
+        if (S.lastGroup === m[1] && S.selected.size) { const cs = [...S.selected].map((id) => S.sim.comps[id]); cam.x = app.screen.width / 2 - ISO.sx(cs[0].ax, cs[0].ay) * cam.z; cam.y = app.screen.height / 2 - ISO.sy(cs[0].ax, cs[0].ay) * cam.z; applyCam(); }
         S.lastGroup = m[1]; buildCards();
       }
       return;
@@ -1218,36 +1276,38 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const HEX = { WK: 0x222222, LH: 0xc0392b };
   function render() {
     const sim = S.sim; if (!sim) return;
-    const p = antsPC.children, cnt = sim.count;
+    const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2);
     for (let i = 0; i < cnt; i++) {
       const sp = p[i];
       if (sim.alive[i]) {
-        if (!shown[i]) { shown[i] = 1; sp.texture = atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]]]; sp.alpha = 1; }
-        sp.x = sim.x[i]; sp.y = sim.y[i]; sp.rotation = sim.heading[i];
+        const d = ((Math.round(sim.heading[i] * K) % DIRS) + DIRS) % DIRS, nm = SIDES[sim.side[i]] + sim.names[sim.type[i]];
+        if (!shown[i] || dirOf[i] !== d) { shown[i] = 1; dirOf[i] = d; sp.texture = atlas[nm + d]; sp.alpha = 1; }
+        sp.x = ISO.sx(sim.x[i], sim.y[i]); sp.y = ISO.sy(sim.x[i], sim.y[i]);
       } else if (shown[i]) { shown[i] = 0; sp.alpha = 0; }
     }
     gGround.clear(); gOver.clear();
+    const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), R * 0.7071, R * 0.3536);
     // zasięg dowódców na ziemi
     for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.names[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s) {
-      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 / cam.z, s === 'WK' ? 0x111111 : 0xe0483a, 0.45).drawCircle(sim.x[i], sim.y[i], R).endFill();
+      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 / cam.z, s === 'WK' ? 0x111111 : 0xe0483a, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
     }
     for (const c of sim.comps) {
       const lb = c._label; if (c.alive <= 0) { lb.visible = false; continue; }
-      lb.visible = true; lb.scale.set(1 / cam.z * 0.9); lb.position.set(c.ax, c.ay - Math.sqrt(c.alive) * 2.6 - 14 / cam.z);
-      // wskaźnik kontroli: trzy segmenty + pasek
-      const w = 34 / cam.z, h = 5 / cam.z, x = c.ax - w / 2, y = c.ay - Math.sqrt(c.alive) * 2.6 - 10 / cam.z;
+      const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 1.1 + 12;
+      lb.visible = true; lb.scale.set(1 / cam.z * 0.9); lb.position.set(sx, sy - up - 12 / cam.z);
+      // wskaźnik kontroli: trzy segmenty i znacznik wartości
+      const w = 34 / cam.z, h = 5 / cam.z, x = sx - w / 2, y = sy - up - 8 / cam.z;
       const cols = [0x6fbf4a, 0xe6b422, 0xe0483a];
       gOver.beginFill(0x000000, 0.7).drawRect(x - 1 / cam.z, y - 1 / cam.z, w + 2 / cam.z, h + 2 / cam.z).endFill();
       for (let k = 0; k < 3; k++) gOver.beginFill(cols[k], c.cstate === k ? 1 : 0.25).drawRect(x + k * w / 3, y, w / 3 - 0.5 / cam.z, h).endFill();
       gOver.beginFill(0xffffff, 0.95).drawRect(x + (1 - c.control / 100) * w - 0.5 / cam.z, y - 2 / cam.z, 1.5 / cam.z, h + 4 / cam.z).endFill();
       if (S.selected.has(c.id)) {
         const rad = Math.sqrt(c.alive) * 3.3 + 10;
-        gOver.lineStyle(2 / cam.z, 0xe6b422, 0.95).drawCircle(c.ax, c.ay, rad);
-        const o = c.order; gOver.lineStyle(1.2 / cam.z, 0xe6b422, 0.6).moveTo(c.ax, c.ay).lineTo(o.x, o.y).drawCircle(o.x, o.y, 4 / cam.z);
+        gOver.lineStyle(2 / cam.z, 0xe6b422, 0.95); ell(gOver, c.ax, c.ay, rad);
+        const o = c.order; gOver.lineStyle(1.2 / cam.z, 0xe6b422, 0.6).moveTo(sx, sy).lineTo(ISO.sx(o.x, o.y), ISO.sy(o.x, o.y)); ell(gOver, o.x, o.y, 8);
       }
     }
-    for (let k = markers.length - 1; k >= 0; k--) { const m = markers[k]; m.t -= 0.02; if (m.t <= 0) { markers.splice(k, 1); continue; } gOver.lineStyle(2 / cam.z, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t).drawCircle(m.x, m.y, (1.2 - m.t) * 28 + 4); }
-    // ramka zaznaczania rysowana na warstwie ekranu
+    for (let k = markers.length - 1; k >= 0; k--) { const m = markers[k]; m.t -= 0.02; if (m.t <= 0) { markers.splice(k, 1); continue; } gOver.lineStyle(2 / cam.z, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t); ell(gOver, m.x, m.y, (1.2 - m.t) * 56 + 8); }
     drawBox();
   }
   const boxG = new PIXI.Graphics(); app.stage.addChild(boxG);
@@ -1307,7 +1367,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, app, cam, SIDES };
+  window.__P1 = { S, startBattle, app, cam, SIDES, get atlas() { return atlas; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

@@ -35,6 +35,6 @@ Wnioski z liczb:
 ## Nie zweryfikowane
 - Czy to jest fajne: czy dowodzenie rotami bawi, czy unikaty są czytelne w ruchu, czy po trzech bitwach da się powiedzieć, dlaczego się wygrało. Wymaga gry człowieka.
 - Wydajność 50 klatek/s przy 4000 mrówek w Chrome na typowym PC. Zmierzono tylko krok symulacji w Node: ok. 3900 mrówek, mediana 22 ms, p99 63 ms przy budżecie 50 ms (20 Hz), czyli krok bywa blisko budżetu w największym tłoku. Renderer w piaskownicy jest programowy (kilka klatek/s), więc FPS tu nic nie mówi.
-- Prototyp wymienia w 15.1 plik `wojna-superkolonii-prototyp-a-feromony.html` jako źródło kodu izometrii. Nie było go w sesji, więc rysowanie jest od zera, bez izometrii (widok z góry).
+- Plik `wojna-superkolonii-prototyp-a-feromony.html` z 15.1 nie był dostępny, a użytkownik ocenił go jako słabej jakości, więc rysowanie izometryczne napisano od nowa (blok `ISO-BEGIN`/`ISO-END` w `p1-bitwa.html`, do skopiowania do P2 i P3): rzut 2:1, kafle 16x8 px, mury jako niskie krawężniki, mrówki w 16 kierunkach generowane proceduralnie w trzech tonach z cieniem rzucanym. Podgląd: `docs/wyniki/p1-widok-izometryczny.png`.
 - Grafika zastępcza jest tymczasowa; AI jest proste (WK nie omija strefy kwasu, co jest główną przyczyną ich strat).
 - Dźwięk, kampania, ekonomia, lotnictwo, wnętrze gniazda, splot i beczki są poza zakresem P1.
