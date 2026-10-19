@@ -21,28 +21,32 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 10. Rota ma kotwicę (środek szyku), kierunek, szyk (linia, kolumna, klin) i sloty. Kotwica jedzie po polu przepływu (jedno na cel); mrówki idą do swoich slotów, a gdy slot jest za przeszkodą, podążają za polem przepływu.
 11. Szyk układa się wg rangi typu (przód: taran i odźwierny; tył: plujki i dowódca) i rzadko, z odstępem zależnym od ciała (taran i ciężka elita mają większy). Plug ma ciasny odstęp, żeby zamykać przejście bez szczelin.
 12. Rozkazy: atak-marsz (walczy po drodze), ruch (nie walczy), stój (broni się w promieniu 18), odwrót (broni się tylko w zasięgu kontaktu), szyk, umiejętność. Rozkazy można wydawać w pauzie.
-13. Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu o wektor od środka grupy do celu); pojedyncza rota idzie dokładnie w kliknięty punkt. Obrót całego układu jak w Total War nie jest zrobiony.
-14. Rota ma nazwę zależną od typu (Rota wojowników, Rota taranów...), z numerem porządkowym (`#n`) tylko do odróżnienia w interfejsie.
+13. Rozkaz z formowaniem: przeciągnięcie PPM przy wydawaniu rozkazu ustawia kierunek, w którym rota ma stanąć po dotarciu na miejsce, a kółko myszy w trakcie przeciągania zmienia szerokość szyku (a przez to głębokość: te same mrówki w mniejszej liczbie szerszych lub węższych rzędów). Podgląd to prostokąt szyku ze strzałką. Rozkaz niesie `face` i `cols`; po dotarciu kotwica obraca się do `face` i trzyma ten kierunek. Pozwala to na manewry typu oskrzydlenie pod Kannami.
+14. Wizualizacja rozkazów: dla zaznaczonych rot rysowana jest linia od roty do celu: biała to ruch, czerwona to atak, jasnoniebieska to odwrót, żółty pierścień to stój; w miejscu docelowym widać prostokąt szyku i strzałkę kierunku, jeśli podano `face`.
+15. Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu od środka grupy do celu, a przy przeciąganiu także obrót o różnicę między kierunkiem wskazanym a średnim kierunkiem rot); pojedyncza rota idzie dokładnie w kliknięty punkt.
+16. Rota ma nazwę zależną od typu (Rota wojowników, Rota taranów...), z numerem porządkowym (`#n`) tylko do odróżnienia w interfejsie.
 
 **Dowodzenie i morale**
-15. Morale to kontrola feromonowa 0-100 w trzech stanach: pełna (≥ 60), osłabiona (25-60), utracona (< 25, powrót od 45). Utrata kontroli: Wielka Kolonia wpada w szał (atakuje najbliższego wroga, ignorując rozkazy), Lake Hodges się wycofuje.
-16. Kontrola rośnie od regeneracji, bonusu za dowódcę w zasięgu i za zwartą masę, a maleje od strat w ostatnich 6 s (ułamek roty), alarmu w walce, braku dowódcy w zasięgu (silniej u Wielkiej Kolonii), odcięcia od innych rot, zmęczenia i śmierci kapitana.
-17. Dowódca ma własną rotę (gwardię). Gwardia to elita: statystyki bazowe razy mnożniki elitarności (zdrowie, obrażenia, tempo ataku, pancerz). Typ gwardii jest dowolny i wybierany przy rekrutacji (w prezentacji domyślnie ciężka). Dowódca nie siedzi w zwykłych rotach.
-18. Zasięg dowódcy (promień aury) jest rysowany na ziemi. Umiejętność dowódcy (Rozkaz) podnosi kontrolę rot w aurze.
-19. Każda rota bez dowódcy ma kapitana: mrówkę najbliżej środka szyku. Jego śmierć zbija kontrolę o `captain.shock` i na `captain.dur` sekund obniża regenerację; potem awansuje następca. To odpowiednik śmierci princepsa.
-20. Zmęczenie roty 0-100: rośnie w marszu i walce, spada na odpoczynku. Obniża tempo ataku, prędkość, obrażenia i kontrolę.
+17. Morale to kontrola feromonowa 0-100 w trzech stanach: pełna (≥ 60), osłabiona (25-60), utracona (< 25, powrót od 45). Utrata kontroli: Wielka Kolonia wpada w szał (atakuje najbliższego wroga, ignorując rozkazy), Lake Hodges się wycofuje.
+18. Kontrola rośnie od regeneracji, bonusu za dowódcę w zasięgu i za zwartą masę, a maleje od strat w ostatnich 6 s (ułamek roty), alarmu w walce, braku dowódcy w zasięgu (silniej u Wielkiej Kolonii), odcięcia od innych rot, zmęczenia i śmierci kapitana.
+19. Dowódca ma własną rotę (gwardię). Gwardia to elita: statystyki bazowe razy mnożniki elitarności (zdrowie, obrażenia, tempo ataku, pancerz). Typ gwardii jest dowolny i wybierany przy rekrutacji (w prezentacji domyślnie ciężka). Dowódca nie siedzi w zwykłych rotach.
+20. Zasięg dowódcy (promień aury) jest rysowany na ziemi. Umiejętność dowódcy (Rozkaz) podnosi kontrolę rot w aurze.
+21. Każda rota bez dowódcy ma kapitana: mrówkę najbliżej środka szyku. Jego śmierć zbija kontrolę o `captain.shock` i na `captain.dur` sekund obniża regenerację; potem awansuje następca. To odpowiednik śmierci princepsa.
+22. Zmęczenie roty 0-100: rośnie w marszu i walce, spada na odpoczynku. Obniża tempo ataku, prędkość, obrażenia i kontrolę.
 
 **Walka i frakcje**
-21. Piechota jest wspólna. Specjalne: Taran (odporny na masę, odrzuca), Biegacz (szybki, poluje na plujki), Pękacz (jednorazowy, oblepia), Odźwierny (plug, zamykany), Plujka (kwas, ograniczona amunicja), dowódca. Ciężki wojownik jest wspólny dla obu stron i jest podstawą ciężkiej gwardii.
-22. Kontry to mnożniki obrażeń (tabela poniżej). Elita dziedziczy kontry typu bazowego.
-23. Kwas to wspólna pula roty plujek: start `acidStart` strzałów na plujkę, napływ zależny od suwaka zaopatrzenia. Uzupełnienia (wojownicy z rezerwy) wchodzą w tempie zależnym od suwaka zaopatrzenia i trafiają do roty z największym niedoborem.
-24. Plug zamyka przejście od startu. Szerokość przejścia (32-320) zmienia przebieg bitwy.
-25. Tempo walki ustawia jeden mnożnik `cdScale` (czas między atakami), niezależny od balansu między typami.
-26. Przebieg jest deterministyczny: ziarno, stały krok 20 Hz, osobne strumienie losowe (mapa, uzupełnienia, walka), kolejka poleceń. Ten sam dziennik poleceń daje ten sam stan.
+23. Piechota jest wspólna. Specjalne: Taran (odporny na masę, odrzuca), Biegacz (szybki, poluje na plujki), Pękacz (jednorazowy, oblepia), Odźwierny (plug, zamykany), Plujka (kwas, ograniczona amunicja), dowódca. Ciężki wojownik jest wspólny dla obu stron i jest podstawą ciężkiej gwardii.
+24. Kontry to mnożniki obrażeń (tabela poniżej). Elita dziedziczy kontry typu bazowego.
+25. Kwas to wspólna pula roty plujek: start `acidStart` strzałów na plujkę, napływ zależny od suwaka zaopatrzenia. Uzupełnienia (wojownicy z rezerwy) wchodzą w tempie zależnym od suwaka zaopatrzenia i trafiają do roty z największym niedoborem.
+26. Plug zamyka główny przesmyk od startu. Szerokość przesmyku (32-320) zmienia przebieg bitwy. Mapa to „dno lasu” 2000 x 1200: pień z głównym przesmykiem i wąską bocznicą, kilka głazów, korzeni i kłód oraz plamy mchu (osłona) i gniazdo z wejściem od zachodu. Przeszkody są danymi w JSON.
+27. Tempo walki ustawia jeden mnożnik `cdScale` (czas między atakami), niezależny od balansu między typami.
+28. Przebieg jest deterministyczny: ziarno, stały krok 20 Hz, osobne strumienie losowe (mapa, uzupełnienia, walka), kolejka poleceń. Ten sam dziennik poleceń daje ten sam stan.
 
 **Interfejs**
-27. Nad rotą zawsze widać tylko chorągiew z literą typu. Po zaznaczeniu lub najechaniu pojawia się panel: nazwa, liczebność (aktualnie/max), pasek zdrowia podzielony na mrówki (cała = pełne, ranna = połowa, martwa = puste), pasek morale ze znacznikami progów i pasek zmęczenia.
-28. Parametry są w jednym obiekcie i można je zmieniać suwakami na żywo, zapisać i wczytać.
+29. 0. Plujka jest jednostką dystansową (zasięg 80, plama kwasu o promieniu 10, ograniczona amunicja). Pocisk leci łukiem ponad własnymi mrówkami (własne ciała nie blokują strzału), a przy wyborze celu liczy się tylko to, czy teren (pień, głaz, korzenie) przesłania linię. Pociski i plamy to efekty prezentacji (`sim.fx`), niewpływające na stan gry. Wybuchy pękaczy są rysowane jako pierścień.
+30. Nad rotą zawsze widać tylko chorągiew z literą typu. Po zaznaczeniu lub najechaniu pojawia się panel: nazwa, liczebność (aktualnie/max), pasek zdrowia podzielony na mrówki (cała = pełne, ranna = połowa, martwa = puste), pasek morale ze znacznikami progów i pasek zmęczenia.
+31. Interfejs w stylu Warhammera na drewnianych panelach (tekstura desek generowana w kodzie): na dole wąskie karty rot (liczebność, ikona typu, pasek zdrowia, morale, zmęczenie), w lewym dolnym rogu portret zaznaczonej roty, po prawej siatka umiejętności 3x3 (obecnie 5 umiejętności i 4 puste pola na kolejne) z klawiszami Q, E, R, F, G, nad kartami pasek rozkazów (szyki, stój, ruch, odwrót).
+32. Parametry są w jednym obiekcie i można je zmieniać suwakami na żywo, zapisać i wczytać.
 
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
@@ -51,15 +55,31 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 ### Świat
 | Parametr | Wartość |
 |---|---|
-| `world.w` | 1600 |
-| `world.h` | 960 |
+| `world.w` | 2000 |
+| `world.h` | 1200 |
 | `world.passage` | 192 |
 | `world.timeLimit` | 900 |
-| `world.wallX` | 800 |
-| `world.nest` | [1440, 480] |
+| `world.gap` | [1000, 600] |
+| `world.nest` | [1800, 600] |
 | `world.nestR` | 64 |
+| `world.retreatWK` | [110, 600] |
 
-Siatka terenu 16x16 jednostek: 0 otwarte, 1 mur (ludzki), 2 osłona, 3 mur gniazda. Mur biegnie pionowo w `x = wallX` na całej wysokości z jednym przejściem o szerokości `passage` wyśrodkowanym w `y = h/2`. Gniazdo to pierścień murów z wejściem od zachodu. Osłony to 12 losowych plam (ziarno `map`).
+Mapa „dno lasu” 2000 x 1200. Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie; blokują 1, 3, 4 i 5. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica (ok. 65 jednostek). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
+
+Przeszkody:
+| Typ | Promień | Położenie |
+|---|---|---|
+| wood | 24 | [[1010, 0], [1000, 140]] |
+| wood | 24 | [[1000, 205], [985, 300], [1015, 420], 'gapTop'] |
+| wood | 24 | ['gapBottom', [1020, 820], [985, 1000], [1005, 1200]] |
+| stone | 62 | [520, 330] |
+| root | 72 | [570, 880] |
+| wood | 14 | [[640, 520], [705, 700]] |
+| stone | 55 | [560, 1090] |
+| stone | 66 | [1350, 320] |
+| stone | 72 | [1390, 900] |
+| wood | 14 | [[1500, 470], [1570, 740]] |
+| root | 60 | [1650, 200] |
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
@@ -97,7 +117,7 @@ Dodatkowo: Taran odrzuca (`knock` 45), Pękacz ma `burst` (promień 22, obrażen
 | `params.closedMult` | 0.7 |
 | `params.cdScale` | 1.5 |
 | `params.dmgVariance` | 0.3 |
-| `params.collision.passes` | 3 |
+| `params.collision.passes` | 6 |
 | `params.collision.fightMass` | 8 |
 | `params.captain.shock` | 20 |
 | `params.captain.dur` | 15 |
@@ -142,33 +162,33 @@ Rola steruje AI. Opóźnienie to sekundy do pierwszego rozkazu (tylko strona ata
 Wielka Kolonia (atakuje, rezerwa 150, promień aury 260):
 | Rola | Skład | Pozycja | Opóźnienie |
 |---|---|---|---|
-| assault | infantry 100 | (340, 480) | 0 |
-| assault | infantry 100 | (340, 250) | 5 |
-| assault | infantry 100 | (340, 710) | 5 |
-| command | @guard 50, dowodca 1 | (235, 480) | 16 |
-| assault | infantry 100 | (235, 250) | 22 |
-| assault | infantry 100 | (235, 710) | 22 |
-| taran | taran 50 | (135, 400) | 0 |
-| taran | taran 50 | (135, 560) | 2 |
-| pekacz | pekacz 60 | (135, 240) | 10 |
-| pekacz | pekacz 60 | (135, 720) | 12 |
-| raider | biegacz 80 | (45, 320) | 18 |
-| raider | biegacz 80 | (45, 640) | 22 |
-| assault | infantry 100 | (45, 480) | 26 |
-| command | @guard 50, dowodca 1 | (235, 880) | 24 |
+| assault | infantry 100 | (340, 600) | 0 |
+| assault | infantry 100 | (340, 370) | 5 |
+| assault | infantry 100 | (340, 830) | 5 |
+| command | @guard 50, dowodca 1 | (235, 600) | 0 |
+| assault | infantry 100 | (235, 370) | 22 |
+| assault | infantry 100 | (235, 830) | 22 |
+| taran | taran 50 | (135, 520) | 0 |
+| taran | taran 50 | (135, 680) | 2 |
+| pekacz | pekacz 60 | (135, 360) | 10 |
+| pekacz | pekacz 60 | (135, 840) | 12 |
+| raider | biegacz 80 | (45, 440) | 18 |
+| raider | biegacz 80 | (45, 760) | 22 |
+| assault | infantry 100 | (45, 600) | 26 |
+| command | @guard 50, dowodca 1 | (235, 1000) | 0 |
 
 Lake Hodges (broni, rezerwa 150, promień aury 170, bonus regeneracji 2):
 | Rola | Skład | Pozycja | Opóźnienie |
 |---|---|---|---|
-| plug | odzwierny 60 | (800, 480) |  |
-| artillery | plujka 60 | (865, 400) |  |
-| artillery | plujka 60 | (865, 570) |  |
-| reserve | infantry 180 | (940, 270) |  |
-| reserve | infantry 180 | (940, 690) |  |
-| reserve | infantry 180 | (1070, 370) |  |
-| reserve | infantry 180 | (1070, 600) |  |
-| reserve | @guard 50, dowodca 1 | (950, 480) |  |
-| reserve | @guard 50, dowodca 1 | (1170, 485) |  |
+| plug | odzwierny 60 | (1000, 600) |  |
+| artillery | plujka 60 | (1065, 520) |  |
+| artillery | plujka 60 | (1065, 690) |  |
+| reserve | infantry 180 | (1140, 390) |  |
+| reserve | infantry 180 | (1140, 810) |  |
+| reserve | infantry 180 | (1270, 490) |  |
+| reserve | infantry 180 | (1270, 720) |  |
+| reserve | @guard 50, dowodca 1 | (1150, 600) |  |
+| reserve | @guard 50, dowodca 1 | (1370, 605) |  |
 
 ## 3. Struktury danych
 
@@ -247,7 +267,8 @@ function apply_command(cmd):
     list = [companies[id] for id in cmd.comps if alive and (cmd.side is null or c.side == cmd.side)]
     case cmd.k of
       'order':     for c in list: p = (cmd.kind == retreat) ? retreat_point(c) : nearest_open(cmd.x, cmd.y)
-                                  c.order = {cmd.kind, p.x, p.y}
+                                  c.order = {cmd.kind, p.x, p.y, face = cmd.face or null}
+                                  if cmd.cols is set and c is not the plug: c.fcols = cmd.cols; c.dirty = true
       'formation': for c in list: c.formation = cmd.f; c.fcols = cmd.cols or 0; c.dirty = true
       'ability':   for c in list: use_ability(c)
 
@@ -371,7 +392,9 @@ function update_anchor(c):
         try move anchor by dir*step (przy murze próbuj osobno osie x i y)
         if moved: c.targetFace = angle(dir)
     c.moving = moved
-    if not moved: c.targetFace = angle to nearest enemy company if within 500
+    if not moved:
+        if c.order.face is set and c.eff.kind == c.order.kind and dist <= 3: c.targetFace = c.order.face   // kierunek wskazany przez gracza
+        else: c.targetFace = angle to nearest enemy company if within 500
     if c.targetFace set and not c.closed: rotate c.face towards it by at most 0.12 rad per step
     // spójność: średnia odległość mrówek od slotów spowalnia kotwicę
     c.cohesion = clamp(1 - (avg_slot_error - 8) / 40, 0.1, 1)
@@ -492,10 +515,12 @@ function kill(d, a):
     if kind(d) == commander: remove from commander list; log event; cmdDiedAt = tick for all companies of the side
 
 function burst(i):     // Pękacz: obszar, oblepienie, ginie
+    push_fx({kind: burst, pos[i], radius})                  // tylko prezentacja, bez wpływu na stan
     for j in enemies within burst.radius of pos[i]: stuck[j] = max(stuck[j], burst.stuck); hit(i, j, burst.dmg, melee = false)
     kill(i, -1)
 
 function acid_blast(i, p):   // Plujka: plama o promieniu aoe, ignoruje pancerz
+    push_fx({kind: acid, from pos[i], to p, radius: aoe})   // pocisk leci łukiem ponad swoimi; tylko prezentacja
     for j in enemies within aoe of p: hit(i, j, T.dmg[type[i]], melee = false)
 
 function update_shields():   // co 10 kroków

@@ -1,249 +1,61 @@
 {
- "opis": "AI przeciw AI, szeroko\u015b\u0107 192, 6 ziaren, zaopatrzenie obu stron r\u00f3wne 0 albo 100",
- "sup0": {
-  "192": {
-   "runs": 6,
-   "winsWK": 6,
-   "winRateWK": 1,
-   "reasons": {
-    "Wielka Kolonia zaj\u0119\u0142a gniazdo": 4,
-    "zniszczenie obro\u0144c\u00f3w": 2
-   },
-   "seconds": {
-    "min": 389,
-    "median": 532,
-    "p90": 785,
-    "max": 785
-   },
-   "lostWK": {
-    "min": 924,
-    "median": 929,
-    "p90": 958,
-    "max": 958
-   },
-   "lostLH": {
-    "min": 919,
-    "median": 936,
-    "p90": 952,
-    "max": 952
-   },
-   "stepMeanMs": 2.05,
-   "stepMaxMs": 89.6
-  }
+ "opis": "AI przeciw AI, szeroko\u015b\u0107 192, 6 ziaren; zaopatrzenie WK 100 i LH 0 oraz odwrotnie (bazowo 60/60: patrz p1-szerokosc-przejscia.json)",
+ "WK100_LH0": {
+  "runs": 6,
+  "winsWK": 6,
+  "winRateWK": 1,
+  "reasons": {
+   "zniszczenie obro\u0144c\u00f3w": 4,
+   "Wielka Kolonia zaj\u0119\u0142a gniazdo": 2
+  },
+  "seconds": {
+   "min": 362,
+   "median": 421,
+   "p90": 518,
+   "max": 518
+  },
+  "lostWK": {
+   "min": 883,
+   "median": 1056,
+   "p90": 1123,
+   "max": 1123
+  },
+  "lostLH": {
+   "min": 917,
+   "median": 953,
+   "p90": 953,
+   "max": 953
+  },
+  "stepMeanMs": 5.17,
+  "stepMaxMs": 81
  },
- "sup100": {
-  "192": {
-   "runs": 6,
-   "winsWK": 5,
-   "winRateWK": 0.83,
-   "reasons": {
-    "Wielka Kolonia zaj\u0119\u0142a gniazdo": 5,
-    "min\u0105\u0142 czas, obrona utrzymana": 1
-   },
-   "seconds": {
-    "min": 313,
-    "median": 506,
-    "p90": 901,
-    "max": 901
-   },
-   "lostWK": {
-    "min": 1051,
-    "median": 1093,
-    "p90": 1130,
-    "max": 1130
-   },
-   "lostLH": {
-    "min": 963,
-    "median": 1007,
-    "p90": 1061,
-    "max": 1061
-   },
-   "stepMeanMs": 2.25,
-   "stepMaxMs": 75.2
-  }
- },
- "runs0": [
-  {
-   "seed": 1,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 532,
-   "lostWK": 936,
-   "lostLH": 928,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.095485452631577,
-   "stepMaxMs": 89.640792,
-   "hash": "3698bbdb",
-   "controlLost": 31
+ "WK0_LH100": {
+  "runs": 6,
+  "winsWK": 1,
+  "winRateWK": 0.17,
+  "reasons": {
+   "rozbicie atakuj\u0105cych": 5,
+   "Wielka Kolonia zaj\u0119\u0142a gniazdo": 1
   },
-  {
-   "seed": 2,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 457,
-   "lostWK": 926,
-   "lostLH": 919,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.325864503391682,
-   "stepMaxMs": 74.547878,
-   "hash": "ded2a270",
-   "controlLost": 31
+  "seconds": {
+   "min": 340,
+   "median": 421,
+   "p90": 541,
+   "max": 541
   },
-  {
-   "seed": 3,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 785,
-   "lostWK": 958,
-   "lostLH": 936,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 1.5647659426751432,
-   "stepMaxMs": 59.769107,
-   "hash": "214bf7b1",
-   "controlLost": 32
+  "lostWK": {
+   "min": 943,
+   "median": 1029,
+   "p90": 1031,
+   "max": 1031
   },
-  {
-   "seed": 4,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "zniszczenie obro\u0144c\u00f3w",
-   "seconds": 389,
-   "lostWK": 924,
-   "lostLH": 952,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.4772399080976917,
-   "stepMaxMs": 54.022491,
-   "hash": "a3f7284d",
-   "controlLost": 29
+  "lostLH": {
+   "min": 719,
+   "median": 824,
+   "p90": 886,
+   "max": 886
   },
-  {
-   "seed": 5,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "zniszczenie obro\u0144c\u00f3w",
-   "seconds": 550,
-   "lostWK": 929,
-   "lostLH": 952,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 1.8909939360909072,
-   "stepMaxMs": 48.276688,
-   "hash": "80b44e3a",
-   "controlLost": 30
-  },
-  {
-   "seed": 6,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 469,
-   "lostWK": 925,
-   "lostLH": 936,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 1.9426699067164142,
-   "stepMaxMs": 63.804501,
-   "hash": "8910f0a0",
-   "controlLost": 31
-  }
- ],
- "runs100": [
-  {
-   "seed": 1,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 490,
-   "lostWK": 1081,
-   "lostLH": 991,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.415195293163269,
-   "stepMaxMs": 60.13698,
-   "hash": "3588f17c",
-   "controlLost": 28
-  },
-  {
-   "seed": 2,
-   "passage": 192,
-   "winner": "LH",
-   "reason": "min\u0105\u0142 czas, obrona utrzymana",
-   "seconds": 901,
-   "lostWK": 1130,
-   "lostLH": 963,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 1.5690982810765823,
-   "stepMaxMs": 75.173834,
-   "hash": "5658e79d",
-   "controlLost": 34
-  },
-  {
-   "seed": 3,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 548,
-   "lostWK": 1090,
-   "lostLH": 1007,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.2648309595802862,
-   "stepMaxMs": 59.601243,
-   "hash": "d40a08f6",
-   "controlLost": 35
-  },
-  {
-   "seed": 4,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 313,
-   "lostWK": 1051,
-   "lostLH": 987,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 3.074544372843443,
-   "stepMaxMs": 55.287826,
-   "hash": "205d410",
-   "controlLost": 33
-  },
-  {
-   "seed": 5,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 506,
-   "lostWK": 1098,
-   "lostLH": 1061,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.119517798418966,
-   "stepMaxMs": 44.290576,
-   "hash": "adb66854",
-   "controlLost": 34
-  },
-  {
-   "seed": 6,
-   "passage": 192,
-   "winner": "WK",
-   "reason": "Wielka Kolonia zaj\u0119\u0142a gniazdo",
-   "seconds": 500,
-   "lostWK": 1093,
-   "lostLH": 1012,
-   "startWK": 1082,
-   "startLH": 1002,
-   "stepMeanMs": 2.0696815935999946,
-   "stepMaxMs": 33.294431,
-   "hash": "e9556be2",
-   "controlLost": 29
-  }
- ]
+  "stepMeanMs": 5.13,
+  "stepMaxMs": 83
+ }
 }

@@ -26,9 +26,14 @@ sec = f'''## 2. Dane
 ### Świat
 | Parametr | Wartość |
 |---|---|
-{chr(10).join(f"| `world.{k}` | {v} |" for k, v in W.items())}
+{chr(10).join(f"| `world.{k}` | {v} |" for k, v in W.items() if k != 'map')}
 
-Siatka terenu 16x16 jednostek: 0 otwarte, 1 mur (ludzki), 2 osłona, 3 mur gniazda. Mur biegnie pionowo w `x = wallX` na całej wysokości z jednym przejściem o szerokości `passage` wyśrodkowanym w `y = h/2`. Gniazdo to pierścień murów z wejściem od zachodu. Osłony to 12 losowych plam (ziarno `map`).
+Mapa „dno lasu” 2000 x 1200. Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie; blokują 1, 3, 4 i 5. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica (ok. 65 jednostek). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
+
+Przeszkody:
+| Typ | Promień | Położenie |
+|---|---|---|
+{chr(10).join(f"| {o['type']} | {o['r']} | {o.get('at') or o.get('line')} |" for o in W['map']['obstacles'])}
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
