@@ -65,8 +65,29 @@ const { openPage, ROOT } = require('./browser-lib');
     assert.strictEqual(await page.evaluate(() => __P1.S.sim.comps[0].order.kind), 'retreat');
     await page.keyboard.press('KeyH');
     assert.strictEqual(await page.evaluate(() => __P1.S.sim.comps[0].order.kind), 'hold');
-    await page.keyboard.press('KeyQ');
-    ok('formacje (Z/X/C), odwrót (V), stój (H) i umiejętność (Q) zmieniają stan rot');
+    ok('formacje (Z/X/C), odwrót (V) i stój (H) zmieniają stan rot');
+
+    // umiejętności: siatka po prawej, klik wywołuje umiejętność zaznaczonych rot
+    const abOk = await page.evaluate(() => { const S = __P1.S; S.selected.clear(); const g = S.sim.comps.find((c) => c.side === 0 && /^Gwardia/.test(c.name)); S.selected.add(g.id); return g.id; });
+    await page.waitForTimeout(300);
+    const cell = await page.$('#abGrid .ab:not(.off):not(.lock)'); assert.ok(cell, 'brak aktywnej umiejętności dla zaznaczonej gwardii');
+    const before2 = await page.evaluate((id) => __P1.S.sim.comps[id].abilCdUntil, abOk); await cell.click(); await page.waitForTimeout(300);
+    assert.ok(await page.evaluate((id) => __P1.S.sim.comps[id].abilCdUntil, abOk) > before2, 'klik w umiejętność nie zadziałał');
+    const g2 = await page.evaluate(() => { const S = __P1.S; S.selected.clear(); const gs = S.sim.comps.filter((c) => c.side === 0 && /^Gwardia/.test(c.name)); S.selected.add(gs[1].id); return [gs[1].id, gs[1].abilCdUntil]; });
+    await page.keyboard.press('KeyQ'); await page.waitForTimeout(300);
+    assert.ok(await page.evaluate((id) => __P1.S.sim.comps[id].abilCdUntil, g2[0]) > g2[1], 'klawisz Q nie uruchomił umiejętności');
+    assert.strictEqual(await page.$$eval('#abGrid .ab', (els) => els.length), 9, 'siatka umiejętności ma mieć 9 pól');
+    ok('siatka umiejętności 3x3: klik uruchamia umiejętność roty, są 9 pól (5 umiejętności + miejsca na kolejne)');
+
+    // przeciągnięcie PPM ustawia kierunek szyku, kółko w trakcie przeciągania zmienia szerokość
+    await page.evaluate(() => { const S = __P1.S; S.selected.clear(); S.selected.add(0); });
+    const colsBefore = await page.evaluate(() => __P1.S.sim.comps[0].fcols);
+    await page.mouse.move(600, 380); await page.mouse.down({ button: 'right' }); await page.mouse.move(690, 340, { steps: 6 });
+    await page.mouse.wheel(0, -100); await page.mouse.wheel(0, -100); await page.mouse.up({ button: 'right' }); await page.waitForTimeout(300);
+    const od = await page.evaluate(() => { const c = __P1.S.sim.comps[0]; return { face: c.order.face, cols: c.fcols }; });
+    assert.ok(od.face != null && isFinite(od.face), 'przeciągnięcie nie ustawiło kierunku');
+    assert.ok(od.cols > (colsBefore || 0) && od.cols >= 4, 'kółko w trakcie przeciągania nie zmieniło szerokości: ' + JSON.stringify(od));
+    ok('przeciągnięcie PPM: kierunek szyku i szerokość (kółko)', 'kierunek ' + od.face.toFixed(2) + ' rad, kolumny ' + od.cols);
 
     // grupy: Ctrl+1 zapisuje, 1 przywołuje
     await page.evaluate(() => { __P1.S.selected.clear(); __P1.S.selected.add(0); __P1.S.selected.add(1); });

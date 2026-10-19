@@ -108,6 +108,29 @@ test('w walce nikt się nie mija: ciało w kontakcie z wrogiem stoi w miejscu (n
   return moves.length + ' pomiarów mrówek w kontakcie: mediana przesunięcia na krok ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2) + ', p99 ' + p99.toFixed(2) + ' (odrzut taranów wlicza się)';
 });
 
+test('rozkaz z kierunkiem i szerokością: rota po dotarciu staje zwrócona w wskazaną stronę, w szyku o zadanej liczbie kolumn', () => {
+  const { Sim, defs } = loadP1(); const sim = Sim.create({ defs, seed: 1, passage: 192, aiSides: [] });
+  const c = sim.comps.find((q) => q.side === 0 && q.name === 'Rota wojowników');
+  sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: c.ax + 240, y: c.ay + 60, face: Math.PI / 2, cols: 25 });
+  for (let k = 0; k < 20 * 20; k++) sim.step();   // 20 s: rota już dotarła, jeszcze zanim bez dowódcy straci kontrolę
+  let da = c.face - Math.PI / 2; da = Math.atan2(Math.sin(da), Math.cos(da));
+  assert.ok(Math.abs(da) < 0.15, 'rota nie obróciła się w wskazaną stronę: różnica ' + da.toFixed(2) + ' rad');
+  assert.strictEqual(c.fcols, 25);
+  // szyk jest wyraźnie szeroki wzdłuż osi prostopadłej do kierunku (kierunek = w dół, więc szerokość wzdłuż x)
+  const xs = c.ants.filter((i) => sim.alive[i]).map((i) => sim.x[i]), w = Math.max(...xs) - Math.min(...xs);
+  assert.ok(w > 24 * 9, 'szyk nie jest szeroki: ' + w.toFixed(0));
+  return 'kierunek: różnica ' + da.toFixed(3) + ' rad, szerokość szyku ' + w.toFixed(0) + ' jedn. przy 25 kolumnach';
+});
+
+test('plujka jest jednostką dystansową: pociski kwasu są zapisywane jako efekty, lecą ponad swoimi i mają cel poza zasięgiem kontaktu', () => {
+  const sim = make(1, 192); let shot = null;
+  for (let k = 0; k < 20 * 300 && !shot; k++) { sim.step(); shot = sim.fx.find((e) => e.k === 'acid'); }
+  assert.ok(shot, 'w 300 s żadna plujka nie strzeliła');
+  const d = Math.hypot(shot.x1 - shot.x0, shot.y1 - shot.y0);
+  assert.ok(d > 20 && d <= sim.T.range[sim.ti.plujka] + 1, 'dystans strzału ' + d.toFixed(0) + ' poza zasięgiem plujki');
+  return 'pierwszy strzał kwasu po ' + (shot.t / 20).toFixed(1) + ' s, dystans ' + d.toFixed(0) + ' (zasięg ' + sim.T.range[sim.ti.plujka] + ')';
+});
+
 test('zmęczenie rośnie w marszu i walce, obniża tempo ataku i kontrolę, spada na odpoczynku', () => {
   const sim = run(make(1, 256), 90);
   const f = sim.comps.map((c) => c.fatigue);

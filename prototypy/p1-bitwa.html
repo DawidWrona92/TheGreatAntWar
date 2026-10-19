@@ -22,17 +22,41 @@ button:hover{border-color:var(--acc)}button.on{background:#51461f;border-color:v
 #ticker{position:absolute;left:10px;top:46px;width:min(460px,60vw);z-index:4;pointer-events:none}
 #ticker div{background:rgba(23,22,15,.82);border-left:3px solid var(--acc);margin-bottom:3px;padding:3px 7px;font-size:12px}
 #ticker div.wk{border-color:#aaa}#ticker div.lh{border-color:var(--lhl)}
-#bottom{position:absolute;left:0;right:0;bottom:0;z-index:5;background:rgba(23,22,15,.92);border-top:1px solid var(--line);padding:6px 8px;display:flex;flex-direction:column;gap:5px}
-#cmdbar{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-#cmdbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}
-#cards{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.card{min-width:150px;max-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:5px 7px;cursor:pointer;flex:0 0 auto}
-.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}.card.dead{opacity:.35}
-.card .nm{display:flex;justify-content:space-between;gap:6px;font-weight:600}
-.card .sub{color:var(--dim);font-size:11.5px;display:flex;justify-content:space-between}
-.bar{height:6px;background:#111;border-radius:3px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%}
-.st{display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:600}
-.st0{background:#1f3a12;color:#b5ec96}.st1{background:#4a3c08;color:#ffe08a}.st2{background:#5a1612;color:#ffb3a9}
+#bottom{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:6px;padding:0 6px 6px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+/* drewniane tło interfejsu: tekstura desek generowana w JS i podstawiana jako --wood */
+.wood{background-color:#6b4a2a;background-image:var(--wood);background-size:256px 256px;border:3px solid #2a1a0c;border-radius:8px;box-shadow:inset 0 0 0 2px rgba(255,214,150,.18),inset 0 -12px 20px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.6)}
+#portrait{width:176px;padding:8px 8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto}
+#portFrame{width:108px;height:108px;border-radius:50%;border:5px solid #c9a24b;background:radial-gradient(#5d4a31,#241709);box-shadow:inset 0 0 14px #000,0 0 0 2px #2a1a0c;overflow:hidden;position:relative}
+#portFrame canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+#portBadge{position:absolute;right:-2px;bottom:-2px;background:#2a1a0c;color:#ffd98a;border:2px solid #c9a24b;border-radius:10px;padding:0 6px;font-size:11px;font-weight:700}
+#portName{font-weight:700;text-align:center;font-size:13px;color:#f6e7c4;text-shadow:0 1px 0 #000;line-height:1.15}
+#portSub{font-size:11.5px;color:#e2d2ac;text-align:center;text-shadow:0 1px 0 #000}
+#center{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+#orders{display:flex;gap:4px;padding:5px 8px;align-self:center;flex-wrap:wrap;justify-content:center;align-items:center}
+#orders .sep{width:2px;height:22px;background:rgba(30,18,8,.7);margin:0 4px}
+.wbtn{font:inherit;color:#f6e7c4;background:linear-gradient(#5b4125,#3b2915);border:2px solid #24160a;border-radius:5px;padding:3px 9px;cursor:pointer;text-shadow:0 1px 0 #000;box-shadow:inset 0 1px 0 rgba(255,220,160,.2)}
+.wbtn:hover{border-color:#c9a24b}.wbtn.on{border-color:#e6b422;background:linear-gradient(#7a5a1c,#4f3a10)}
+#orders .hint{color:#f6e7c4;font-size:11.5px;opacity:.85;text-shadow:0 1px 0 #000;margin-left:6px}
+#cards{display:flex;gap:4px;overflow-x:auto;padding:7px 8px 5px}
+.card{width:68px;height:106px;flex:0 0 auto;border:2px solid #24160a;border-radius:5px;background:linear-gradient(#41301b,#2a1d10);position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:2px 2px 3px;box-shadow:inset 0 0 0 1px rgba(255,220,160,.12)}
+.card.elite{border-color:#c9a24b}.card.sel{border-color:#ffe08a;box-shadow:0 0 0 2px #e6b422,0 0 10px rgba(230,180,34,.7)}.card.dead{opacity:.3}
+.card .n{font-size:12px;font-weight:700;color:#f6e7c4;text-shadow:0 1px 0 #000;line-height:1.1}
+.card canvas{width:60px;height:45px;border-radius:3px;background:radial-gradient(#5b4829,#2b2012)}
+.card .g{font-size:10px;color:#ffd98a;position:absolute;left:3px;top:15px;font-weight:700;text-shadow:0 1px 0 #000}
+.card .ab1{position:absolute;right:3px;top:15px;font-size:11px;color:#ffd98a;text-shadow:0 1px 0 #000}
+.card .bars{width:100%;margin-top:3px}
+.bar{height:6px;background:#140d06;border-radius:3px;overflow:hidden;margin:2px 0}.bar i{display:block;height:100%}
+.card .stl{font-size:9.5px;font-weight:700;margin-top:1px}
+.st0{color:#b5ec96}.st1{color:#ffe08a}.st2{color:#ffb3a9}
+#abilities{width:196px;padding:8px;flex:0 0 auto}
+#abilities h4{margin:0 0 5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#f6e7c4;text-shadow:0 1px 0 #000;text-align:center}
+#abGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.ab{aspect-ratio:1;border:2px solid #24160a;border-radius:6px;background:linear-gradient(#563d23,#352413);position:relative;cursor:pointer;color:#f6e7c4;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;padding:0;font-family:inherit;text-shadow:0 1px 0 #000;line-height:1.1}
+.ab .ic{font-size:24px;line-height:1}.ab .hk{position:absolute;left:3px;top:1px;font-size:10px;color:#ffd98a;font-weight:700}
+.ab .cd{position:absolute;inset:0;background:rgba(0,0,0,.62);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+.ab.lock{opacity:.3;cursor:default}.ab.off{opacity:.45;cursor:default}.ab.act{border-color:#e6b422;box-shadow:0 0 8px rgba(230,180,34,.8)}
+.ab:not(.off):not(.lock):hover{border-color:#c9a24b}
 #side{position:absolute;right:0;top:38px;bottom:0;width:300px;z-index:4;background:rgba(35,33,26,.96);border-left:1px solid var(--line);overflow-y:auto;padding:8px;transition:transform .15s}
 #side.hide{transform:translateX(100%)}
 #side h3{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
@@ -49,7 +73,7 @@ textarea{width:100%;height:60px;background:#111;color:var(--text);border:1px sol
 .choice small{display:block;color:var(--dim);margin-top:2px}
 table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}table.rep td,table.rep th{border-bottom:1px solid var(--line);padding:2px 6px;text-align:right}table.rep td:first-child,table.rep th:first-child{text-align:left}
 .hidden{display:none!important}
-#help{position:absolute;left:10px;bottom:118px;z-index:4;background:rgba(23,22,15,.82);padding:5px 9px;border-radius:4px;font-size:11.5px;color:var(--dim);max-width:520px}
+#help{position:absolute;left:10px;bottom:190px;z-index:4;background:rgba(23,22,15,.82);padding:5px 9px;border-radius:4px;font-size:11.5px;color:var(--dim);max-width:520px}
 #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:30;background:var(--bg);text-align:center;padding:20px}
 @media(max-width:700px){#side{width:240px}.card{min-width:130px}}
 </style>
@@ -79,8 +103,12 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
   <div id="params"></div>
 </div>
 <div id="bottom">
-  <div id="cmdbar"></div>
-  <div id="cards"></div>
+  <div id="portrait" class="wood"><div id="portFrame"><canvas id="portCv" width="216" height="216"></canvas><span id="portBadge" class="hidden"></span></div><div id="portName">Zaznacz rotę</div><div id="portSub"></div></div>
+  <div id="center">
+    <div id="orders" class="wood"></div>
+    <div id="cards" class="wood"></div>
+  </div>
+  <div id="abilities" class="wood"><h4>Umiejętności</h4><div id="abGrid"></div></div>
 </div>
 <div id="menu" class="overlay">
   <div class="dlg">
@@ -398,6 +426,9 @@ const Sim = (function () {
     // ---------- statystyki i zdarzenia ----------
     const stats = {}; for (const s of SIDES) stats[s] = { start: {}, lost: {}, kills: {}, killedBy: {} };
     const events = [], timeline = [];
+    // efekty tylko do prezentacji (pociski kwasu, wybuchy); nie wpływają na stan gry ani skrót
+    const fx = []; let fxN = 0; sim.fx = fx;
+    function addFx(e) { e.id = fxN++; e.t = tick; fx.push(e); if (fx.length > 600) fx.splice(0, 300); }
     sim.events = events;
     let tick = 0;
     Object.defineProperty(sim, 'tick', { get: () => tick });
@@ -530,6 +561,7 @@ const Sim = (function () {
     }
     function burst(i) {
       const u = defs.units.pekacz.burst, x = ax[i], y = ay[i], s = side[i];
+      addFx({ k: 'burst', x, y, r: u.radius });
       const r = Math.ceil(u.radius / HASH), cx = (x / HASH) | 0, cy = (y / HASH) | 0;
       for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
         const c = yy * HC + xx;
@@ -543,6 +575,7 @@ const Sim = (function () {
       kill(i, -1, 'burst');
     }
     function acid(i, tx, ty) {
+      addFx({ k: 'acid', x0: ax[i], y0: ay[i], x1: tx, y1: ty, r: T.aoe[type[i]] });
       const u = T.aoe[type[i]], s = side[i], r = Math.ceil(u / HASH), cx = (tx / HASH) | 0, cy = (ty / HASH) | 0;
       for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
         const c = yy * HC + xx;
@@ -582,7 +615,9 @@ const Sim = (function () {
       if (cmd.k === 'order') {
         for (const c of list) {
           const p = cmd.kind === 'retreat' ? retreatPoint(c) : nearestOpen(cmd.x, cmd.y);
-          c.order = { kind: cmd.kind, x: p[0], y: p[1] };
+          // kierunek (rad) i liczba kolumn szyku po dotarciu na miejsce: rozkaz ruchu z przeciągnięciem myszy
+          c.order = { kind: cmd.kind, x: p[0], y: p[1], face: cmd.face != null ? cmd.face : null };
+          if (cmd.cols != null && c.role !== 'plug') { c.fcols = cmd.cols; c.dirty = true; }
           c.aiUntil = Math.max(c.aiUntil, tick);
         }
       } else if (cmd.k === 'formation') {
@@ -693,7 +728,8 @@ const Sim = (function () {
       c.moving = moved;
       if (!moved) {
         const ne = nearestEnemyComp(c);
-        if (ne && ne.d < 500) c.tface = Math.atan2(ne.c.ay - c.ay, ne.c.ax - c.ax);
+        if (c.order.face != null && o.kind === c.order.kind && dist <= 3) c.tface = c.order.face;   // kierunek wskazany przez gracza
+        else if (ne && ne.d < 500) c.tface = Math.atan2(ne.c.ay - c.ay, ne.c.ax - c.ax);
       }
       // zamknięty szyk (plug) nie obraca się za wrogiem: jego geometria ma zamykać przejście
       if (c.tface != null && !c.closed) {
@@ -1282,7 +1318,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const mk = (txt, size, fill) => { const t = new PIXI.Text(txt, { fontFamily: 'system-ui, sans-serif', fontSize: size, fontWeight: '600', fill, stroke: 0x000000, strokeThickness: 3 }); t.anchor.set(0.5, 1); labels.addChild(t); return t; };
     sim.comps.forEach((c) => {
       let dom = 'dowodca', dn = 0; for (const k in c.startBy) if (k !== 'dowodca' && c.startBy[k] > dn) { dn = c.startBy[k]; dom = k; }
-      c._kind = sim.kinds[sim.ti[dom]]; c._elite = sim.kinds[sim.ti[dom]] !== dom;
+      c._kind = sim.kinds[sim.ti[dom]]; c._elite = sim.kinds[sim.ti[dom]] !== dom; c._domName = dom;
       c._label = mk(c.name + ' #' + c.num, 13, c.side === 0 ? 0xffffff : 0xffd7cf); c._cnt = mk('', 13, 0xe6e0c8); c._flag = mk(GLYPH[c._kind] || '?', 11, 0xffffff);
       c._flag.anchor.set(0.5, 0.5);
     });
@@ -1320,19 +1356,29 @@ if (typeof module !== 'undefined') module.exports = Sim;
     S.sim.command(cmd);
     if (S.paused) S.sim.flush();
   }
-  // Kilka zaznaczonych rot jedzie razem z zachowaniem wzajemnego rozmieszczenia (przesunięcie całego układu);
-  // pojedyncza rota idzie dokładnie tam, gdzie wskazano.
-  function orderAt(kind, wx, wy) {
+  // Rozkaz ruchu z formowaniem: przeciągnięcie PPM ustawia kierunek szyku po dotarciu, kółko myszy zmienia szerokość (a więc i głębokość).
+  // Kilka zaznaczonych rot jedzie razem: układ zachowuje wzajemne rozmieszczenie i obraca się o ten sam kąt co kierunek wskazany myszą.
+  // Pojedyncza rota idzie dokładnie w wskazany punkt.
+  const selComps = () => [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0);
+  const autoCols = (c) => { const n = c.alive; return c.fcols > 0 ? c.fcols : (c.formation === 0 ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5)))); };
+  function planOrders(kind, wx, wy, opt) {
+    const cs = selComps(), face = opt && opt.face != null ? opt.face : null, steps = opt ? opt.steps || 0 : 0, k = Math.pow(1.15, steps), out = [];
+    if (!cs.length) return out;
+    let mx = 0, my = 0, sa = 0, ca = 0; for (const c of cs) { mx += c.ax; my += c.ay; sa += Math.sin(c.face); ca += Math.cos(c.face); } mx /= cs.length; my /= cs.length;
+    const rot = face != null && cs.length > 1 ? face - Math.atan2(sa, ca) : 0, cr = Math.cos(rot), sr = Math.sin(rot);
+    for (const c of cs) {
+      const ox = c.ax - mx, oy = c.ay - my, x = cs.length === 1 ? wx : wx + ox * cr - oy * sr, y = cs.length === 1 ? wy : wy + ox * sr + oy * cr;
+      let cols = null; if (steps !== 0 && c.formation !== 2 && c.role !== 'plug') cols = Math.max(3, Math.min(Math.max(3, c.alive), Math.round(autoCols(c) * k)));
+      out.push({ c, x, y, face, cols: cols == null ? undefined : cols, kind });
+    }
+    return out;
+  }
+  function orderAt(kind, wx, wy, opt) {
     if (S.observe || !S.sim || S.over) return;
-    const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0);
-    if (!cs.length) return;
-    if (cs.length === 1) { issue1(cs[0].id, { k: 'order', kind, x: wx, y: wy }); return; }
-    let mx = 0, my = 0; for (const c of cs) { mx += c.ax; my += c.ay; } mx /= cs.length; my /= cs.length;
-    for (const c of cs) issue1(c.id, { k: 'order', kind, x: wx + (c.ax - mx), y: wy + (c.ay - my) });
+    for (const o of planOrders(kind, wx, wy, opt)) issue1(o.c.id, { k: 'order', kind, x: o.x, y: o.y, face: o.face, cols: o.cols });
   }
   const doFormation = (f) => issue({ k: 'formation', f });
-  const doAbility = () => issue({ k: 'ability' });
-  const doHold = () => { const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0); if (!cs.length) return; for (const c of cs) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };
+  const doHold = () => { for (const c of selComps()) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };
   function issue1(id, cmd) { cmd.side = S.side; cmd.comps = [id]; S.sim.command(cmd); if (S.paused) S.sim.flush(); }
   const doRetreat = () => issue({ k: 'order', kind: 'retreat', x: 0, y: 0 });
 
@@ -1354,6 +1400,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (add) { S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); } else { S.selected.clear(); S.selected.add(id); }
   }
   const box = { on: false, x0: 0, y0: 0, x1: 0, y1: 0 };
+  const drag = { on: false, active: false, kind: 'attack', sx: 0, sy: 0, wx: 0, wy: 0, face: null, steps: 0 };
   const view = app.view;
   view.addEventListener('contextmenu', (e) => e.preventDefault());
   view.addEventListener('pointerdown', (e) => {
@@ -1363,13 +1410,15 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (S.pending) { const [wx, wy] = toWorld(sx, sy); orderAt(S.pending, wx, wy); S.pending = null; buildCmdBar(); return; }
       box.on = true; box.x0 = box.x1 = sx; box.y0 = box.y1 = sy; view.setPointerCapture(e.pointerId);
     } else if (e.button === 2) {
-      const [wx, wy] = toWorld(sx, sy); orderAt(e.shiftKey ? 'move' : 'attack', wx, wy); markers.push({ x: wx, y: wy, t: 1, kind: e.shiftKey ? 'move' : 'attack' });
+      const [wx, wy] = toWorld(sx, sy);
+      Object.assign(drag, { on: true, active: false, kind: e.shiftKey || S.pending === 'move' ? 'move' : 'attack', sx, sy, wx, wy, face: null, steps: 0 }); view.setPointerCapture(e.pointerId);
     } else if (e.button === 1) { pan.on = true; pan.x = e.clientX; pan.y = e.clientY; view.setPointerCapture(e.pointerId); e.preventDefault(); }
   });
   const pan = { on: false, x: 0, y: 0 }, markers = [];
   view.addEventListener('pointermove', (e) => {
     const r = view.getBoundingClientRect();
     if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
+    if (drag.on) { const sx = e.clientX - r.left, sy = e.clientY - r.top; if (Math.hypot(sx - drag.sx, sy - drag.sy) > 14) { const [wx, wy] = toWorld(sx, sy); drag.active = true; drag.face = Math.atan2(wy - drag.wy, wx - drag.wx); } }
     if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
       const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
       for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 5 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
@@ -1378,6 +1427,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
   });
   view.addEventListener('pointerup', (e) => {
+    if (e.button === 2 && drag.on) {
+      drag.on = false;
+      const opt = drag.active ? { face: drag.face, steps: drag.steps } : null;
+      orderAt(drag.kind, drag.wx, drag.wy, opt); markers.push({ x: drag.wx, y: drag.wy, t: 1, kind: drag.kind }); drag.active = false; return;
+    }
     if (box.on) {
       box.on = false;
       const moved = Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5, add = e.shiftKey;
@@ -1388,7 +1442,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
     pan.on = false;
   });
   view.addEventListener('wheel', (e) => {
-    e.preventDefault(); const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    e.preventDefault();
+    if (drag.on && drag.active) { drag.steps = Math.max(-6, Math.min(6, drag.steps + (e.deltaY < 0 ? 1 : -1))); return; } // w trakcie formowania kółko zmienia szerokość szyku
+    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
     const [cx, cy] = toContainer(sx, sy), nz = Math.max(0.4, Math.min(8, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
     cam.z = nz; cam.x = sx - cx * nz; cam.y = sy - cy * nz; applyCam();
   }, { passive: false });
@@ -1413,10 +1469,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
       case 'Equal': case 'NumpadAdd': changeSpeed(1); break;
       case 'Minus': case 'NumpadSubtract': changeSpeed(-1); break;
       case 'KeyZ': doFormation(0); break; case 'KeyX': doFormation(1); break; case 'KeyC': doFormation(2); break;
-      case 'KeyH': doHold(); break; case 'KeyV': doRetreat(); break; case 'KeyQ': doAbility(); break;
+      case 'KeyH': doHold(); break; case 'KeyV': doRetreat(); break;
       case 'KeyM': S.pending = 'move'; buildCmdBar(); break;
       case 'Escape': S.pending = null; S.selected.clear(); buildCards(); buildCmdBar(); break;
       case 'Slash': toggleHelp(); break;
+      default: if (e.code in abKeys) useAbilitySlot(abKeys[e.code]);
     }
   });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
@@ -1427,7 +1484,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz, Shift+PPM: sam ruch, M + klik: ruch · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · Q: umiejętność · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera';
+  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -1443,40 +1500,120 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
   function syncMenu() { $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
-  function buildCmdBar() {
-    const b = $('cmdbar'); b.innerHTML = '';
-    const add = (label, fn, title, on) => { const x = document.createElement('button'); x.textContent = label; x.title = title || ''; if (on) x.classList.add('on'); x.onclick = fn; b.appendChild(x); return x; };
-    const sep = () => { const s = document.createElement('span'); s.className = 'sep'; b.appendChild(s); };
-    if (S.observe) { b.textContent = 'Tryb obserwatora: AI steruje obiema stronami.'; return; }
-    add('Linia (Z)', () => doFormation(0)); add('Kolumna (X)', () => doFormation(1)); add('Klin (C)', () => doFormation(2)); sep();
-    add('Stój (H)', doHold); add('Ruch (M)', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie: marsz bez walki', S.pending === 'move'); add('Odwrót (V)', doRetreat); sep();
-    add('Umiejętność (Q)', doAbility, 'Umiejętność jednostki specjalnej w rocie'); sep();
-    const hint = document.createElement('span'); hint.style.color = 'var(--dim)'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: atak-marsz'; b.appendChild(hint);
+  // ---------- drewniany interfejs ----------
+  // tekstura desek: cztery deski z usłojeniem, sękami i szwami; używana jako tło paneli (.wood)
+  (function makeWood() {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
+    const base = ['#7b5733', '#704e2c', '#80593a', '#694829'];
+    for (let p = 0; p < 4; p++) {
+      g.fillStyle = base[p]; g.fillRect(p * 64, 0, 64, 256);
+      for (let i = 0; i < 24; i++) {
+        const x0 = p * 64 + (i * 2.9 + p * 7) % 64; g.strokeStyle = i % 3 ? 'rgba(45,28,12,0.26)' : 'rgba(255,222,165,0.11)'; g.lineWidth = 1; g.beginPath();
+        for (let y = 0; y <= 256; y += 8) { const x = x0 + Math.sin(y * 0.045 + i * 1.7 + p) * 2.4; y ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+      }
+      const kx = p * 64 + 18 + (p * 13) % 28, ky = 40 + p * 53;
+      for (let r = 7; r > 0; r -= 2) { g.strokeStyle = 'rgba(40,24,10,' + (0.5 - r * 0.04) + ')'; g.lineWidth = 1.4; g.beginPath(); g.ellipse(kx, ky, r, r * 1.6, 0, 0, 7); g.stroke(); }
+      g.fillStyle = 'rgba(20,10,4,0.7)'; g.fillRect(p * 64, 0, 2, 256); g.fillStyle = 'rgba(255,230,180,0.16)'; g.fillRect(p * 64 + 2, 0, 1, 256);
+    }
+    document.documentElement.style.setProperty('--wood', 'url(' + cv.toDataURL() + ')');
+  })();
+
+  // ---------- portrety (z atlasu mrówek) ----------
+  function antIcon(canvas, c, scale) {
+    const g = canvas.getContext('2d'); g.clearRect(0, 0, canvas.width, canvas.height); if (!atlas || !c) return;
+    const sim = S.sim, dom = c._domName || 'infantry', tex = atlas[SIDES[c.side] + dom + 2]; if (!tex) return;
+    const f = tex.frame, w = f.width * scale, h = f.height * scale;
+    g.imageSmoothingEnabled = true; g.drawImage(atlas.cv, f.x, f.y, f.width, f.height, (canvas.width - w) / 2, (canvas.height - h) / 2 + canvas.height * 0.04, w, h);
   }
+  const primary = () => { for (const id of S.selected) { const c = S.sim.comps[id]; if (c.alive > 0) return c; } return null; };
+  let portKey = '';
+  function updatePortrait() {
+    const c = primary(), n = [...S.selected].filter((id) => S.sim.comps[id].alive > 0).length;
+    const key = c ? c.id + ':' + n + ':' + c.alive + ':' + c.cstate : 'none';
+    if (key === portKey && c) { $('portSub').textContent = portSub(c); return; }
+    portKey = key;
+    if (!c) { $('portName').textContent = 'Zaznacz rotę'; $('portSub').textContent = 'klik, ramka lub karta'; $('portBadge').classList.add('hidden'); antIcon($('portCv'), null, 1); return; }
+    antIcon($('portCv'), c, 3.6);
+    $('portName').textContent = c.name + ' #' + c.num; $('portSub').textContent = portSub(c);
+    $('portBadge').textContent = n > 1 ? '+' + (n - 1) : ''; $('portBadge').classList.toggle('hidden', n <= 1);
+  }
+  const portSub = (c) => c.alive + '/' + c.initial + ' · ' + (c.cstate === 2 ? (c.side === 0 ? 'szał' : 'odwrót') : CS_LABEL[c.cstate]) + ' · zm. ' + Math.round(c.fatigue) + '%';
+
+  // ---------- pasek rozkazów ----------
+  const FORM_GLYPH = ['▬', '▮', '▲'];
+  function buildCmdBar() {
+    const b = $('orders'); b.innerHTML = '';
+    if (S.observe) { b.textContent = 'Tryb obserwatora: AI steruje obiema stronami.'; return; }
+    const add = (label, fn, title, on) => { const x = document.createElement('button'); x.className = 'wbtn' + (on ? ' on' : ''); x.innerHTML = label; x.title = title || ''; x.onclick = fn; b.appendChild(x); return x; };
+    const sep = () => { const s2 = document.createElement('span'); s2.className = 'sep'; b.appendChild(s2); };
+    const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0), fm = cs.length && cs.every((c) => c.formation === cs[0].formation) ? cs[0].formation : -1;
+    add(FORM_GLYPH[0] + ' Linia <small>Z</small>', () => doFormation(0), 'Szyk liniowy', fm === 0); add(FORM_GLYPH[1] + ' Kolumna <small>X</small>', () => doFormation(1), 'Szyk kolumny', fm === 1); add(FORM_GLYPH[2] + ' Klin <small>C</small>', () => doFormation(2), 'Szyk klina', fm === 2); sep();
+    add('■ Stój <small>H</small>', doHold, 'Zatrzymaj i broń pozycji'); add('➜ Ruch <small>M</small>', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie: marsz bez walki', S.pending === 'move'); add('↩ Odwrót <small>V</small>', doRetreat, 'Wycofaj rotę'); sep();
+    const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: atak (czerwona linia) · Shift+PPM: ruch (biała) · przeciągnij PPM: kierunek szyku, kółko: szerokość'; b.appendChild(hint);
+  }
+
+  // ---------- karty rot ----------
   function buildCards() {
     const host = $('cards'); host.innerHTML = ''; if (!S.sim) return;
     for (const c of S.sim.comps) {
-      if (S.observe ? false : SIDES[c.side] !== S.side) continue;
-      if (S.observe && c.side !== 0) continue;
-      const d = document.createElement('div'); d.className = 'card'; d.dataset.id = c.id;
+      if (S.observe ? c.side !== 0 : SIDES[c.side] !== S.side) continue;
+      const d = document.createElement('div'); d.className = 'card' + (c._elite ? ' elite' : ''); d.dataset.id = c.id; d.title = c.name + ' #' + c.num;
       d.onclick = (e) => { if (e.shiftKey) { S.selected.has(c.id) ? S.selected.delete(c.id) : S.selected.add(c.id); } else { S.selected.clear(); S.selected.add(c.id); } buildCards(); };
-      d.innerHTML = '<div class="nm"><span></span><span class="n"></span></div><div class="bar"><i></i></div><div class="bar fg"><i></i></div><div class="sub"><span class="stl"></span><span class="ab"></span></div>';
-      host.appendChild(d);
+      d.innerHTML = '<div class="n"></div><canvas width="120" height="90"></canvas><span class="g">' + (GLYPH[c._kind] || '') + (c._elite ? '★' : '') + '</span><span class="ab1"></span><div class="bars"><div class="bar"><i class="hp"></i></div><div class="bar"><i class="mo"></i></div><div class="bar" style="height:4px"><i class="fa"></i></div></div><div class="stl"></div>';
+      host.appendChild(d); antIcon(d.querySelector('canvas'), c, 1.9);
     }
-    updateCards();
+    updateCards(); buildCmdBar(); buildAbilities();
   }
   function updateCards() {
     if (!S.sim) return;
     for (const d of $('cards').children) {
       const c = S.sim.comps[+d.dataset.id];
       d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0);
-      d.querySelector('.nm span').textContent = c.name + ' #' + c.num; { const f = d.querySelector('.fg i'); f.style.width = c.fatigue + '%'; f.style.background = '#7aa7ff'; d.querySelector('.fg').title = 'Zmęczenie ' + Math.round(c.fatigue) + '%'; } d.querySelector('.n').textContent = c.alive + '/' + c.initial;
-      const bar = d.querySelector('.bar:not(.fg) i'); bar.style.width = c.control + '%'; bar.style.background = c.cstate === 0 ? 'var(--ok)' : (c.cstate === 1 ? 'var(--warn)' : 'var(--bad)');
-      const lab = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : CS_LABEL[c.cstate];
-      d.querySelector('.stl').innerHTML = '<span class="st st' + c.cstate + '">' + lab + '</span>' + (c.cmdIn ? '' : ' <span title="Poza zasięgiem dowódcy" style="color:var(--bad)">bez dowódcy</span>');
-      const ab = d.querySelector('.ab');
-      if (c.abilType) { const a = S.sim.defs.units[c.abilType].ability, rem = Math.max(0, c.abilCdUntil - S.sim.tick) / 20; ab.textContent = a.name + (a.id === 'close' ? (c.closed ? ': zamknięte' : ': otwarte') : (rem > 0 ? ' ' + rem.toFixed(0) + 's' : ' ✓')); } else ab.textContent = '';
-      if (c.acidMax > 0) ab.textContent = 'kwas ' + Math.round(100 * c.acid / c.acidMax) + '% ' + ab.textContent;
+      d.querySelector('.n').textContent = c.alive;
+      const hp = d.querySelector('.hp'); hp.style.width = (100 * c.alive / c.initial) + '%'; hp.style.background = '#6fbf4a';
+      const mo = d.querySelector('.mo'); mo.style.width = c.control + '%'; mo.style.background = c.cstate === 0 ? '#6fbf4a' : (c.cstate === 1 ? '#e6b422' : '#e0483a');
+      const fa = d.querySelector('.fa'); fa.style.width = c.fatigue + '%'; fa.style.background = '#7aa7ff';
+      d.querySelector('.stl').className = 'stl st' + c.cstate; d.querySelector('.stl').textContent = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : (c.cmdIn ? CS_LABEL[c.cstate] : 'bez dow.');
+      const a = d.querySelector('.ab1'); a.textContent = c.abilType && S.sim.abilityReady(c) ? '✦' : '';
+    }
+    updatePortrait(); updateAbilities();
+  }
+
+  // ---------- umiejętności: siatka 3x3 ----------
+  const ABIL = [
+    { kind: 'dowodca', ic: '✦', key: 'KeyQ', hk: 'Q', tip: 'Rozkaz dowódcy: natychmiast podnosi morale rot w zasięgu aury.' },
+    { kind: 'taran', ic: '➤', key: 'KeyE', hk: 'E', tip: 'Szarża tarana: większa prędkość i dwukrotny odrzut przez kilka sekund.' },
+    { kind: 'biegacz', ic: '»', key: 'KeyR', hk: 'R', tip: 'Rajd biegaczy: sprint, dobry do gonienia plujek i flankowania.' },
+    { kind: 'pekacz', ic: '✺', key: 'KeyF', hk: 'F', tip: 'Pęknięcie: pękacze szukają wroga i wybuchają, oblepiając obszar.' },
+    { kind: 'odzwierny', ic: '▥', key: 'KeyG', hk: 'G', tip: 'Zamknij wejście: odźwierni tworzą nieruchomą zaporę (przełącznik).' }
+  ];
+  const abKeys = {}; ABIL.forEach((a, i) => { abKeys[a.key] = i; });
+  const abComps = (a) => [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0 && c.abilType === a.kind);
+  function useAbilitySlot(i) {
+    if (S.observe || !S.sim || S.over) return; const a = ABIL[i], cs = abComps(a); if (!cs.length) return;
+    S.sim.command({ k: 'ability', side: S.side, comps: cs.map((c) => c.id) }); if (S.paused) S.sim.flush(); setTimeout(updateAbilities, 30);
+  }
+  function buildAbilities() {
+    const g = $('abGrid'); g.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+      const a = ABIL[i], d = document.createElement('button'); d.className = 'ab' + (a ? '' : ' lock'); d.dataset.i = i;
+      if (a) { const u = DEFS0.units[a.kind].ability; d.innerHTML = '<span class="hk">' + a.hk + '</span><span class="ic">' + a.ic + '</span><span class="nm">' + u.name + '</span><span class="cd hidden"></span>'; d.title = u.name + ': ' + a.tip; d.onclick = () => useAbilitySlot(i); }
+      else { d.innerHTML = '<span class="ic">·</span><span class="nm">wkrótce</span>'; d.title = 'Miejsce na kolejną umiejętność'; }
+      g.appendChild(d);
+    }
+    updateAbilities();
+  }
+  function updateAbilities() {
+    if (!S.sim) return; const sim = S.sim;
+    for (const d of $('abGrid').children) {
+      const a = ABIL[+d.dataset.i]; if (!a) continue;
+      const cs = abComps(a), cd = d.querySelector('.cd'); d.classList.toggle('off', !cs.length);
+      let rem = 0, act = false;
+      for (const c of cs) { const r = Math.max(0, c.abilCdUntil - sim.tick) / 20; rem = rem ? Math.min(rem, r) : r; if (c.abilUntil > sim.tick || (c.closed && a.kind === 'odzwierny')) act = true; if (sim.abilityReady(c)) rem = 0; }
+      const isClose = a.kind === 'odzwierny', ready = !rem;
+      d.classList.toggle('act', act && cs.length > 0);
+      cd.classList.toggle('hidden', !cs.length || isClose || ready); cd.textContent = Math.ceil(rem);
+      if (isClose) d.querySelector('.nm').textContent = cs.length && cs.every((c) => c.closed) ? 'Otwórz' : 'Zamknij wejście';
     }
   }
 
@@ -1530,13 +1667,49 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (sel) {
         const rad = Math.sqrt(c.alive) * 5 + 14;
         gOver.lineStyle(2 * k, 0xe6b422, 0.95); ell(gOver, c.ax, c.ay, rad);
-        const o = c.order; gOver.lineStyle(1.2 * k, 0xe6b422, 0.6).moveTo(sx, sy).lineTo(ISO.sx(o.x, o.y), ISO.sy(o.x, o.y)); ell(gOver, o.x, o.y, 9);
+        drawOrder(c);
       }
       // kapitan roty: złoty znacznik nad mrówką
       if (c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
     }
+    // podgląd formowania podczas przeciągania PPM
+    if (drag.on && drag.active) for (const o of planOrders(drag.kind, drag.wx, drag.wy, { face: drag.face, steps: drag.steps })) drawFormation(o.c, o.x, o.y, o.face, o.cols, drag.kind, true);
+    drawFx(sim, k);
     for (let q = markers.length - 1; q >= 0; q--) { const m = markers[q]; m.t -= 0.02; if (m.t <= 0) { markers.splice(q, 1); continue; } gOver.lineStyle(2 * k, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t); ell(gOver, m.x, m.y, (1.2 - m.t) * 60 + 8); }
     drawBox();
+  }
+  // kolory rozkazów: biała linia to ruch, czerwona to atak, jasnoniebieska to odwrót
+  const ORDER_COL = { attack: 0xff4a3a, move: 0xffffff, retreat: 0x7fc8ff, hold: 0xffe08a };
+  function drawFormation(c, x, y, face, cols, kind, preview) {
+    const k = 1 / cam.z, col = ORDER_COL[kind] || 0xffffff, sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), tx = ISO.sx(x, y), ty = ISO.sy(x, y);
+    gOver.lineStyle((preview ? 2 : 1.6) * k, col, preview ? 0.95 : 0.85).moveTo(sx, sy).lineTo(tx, ty);
+    gOver.lineStyle(2 * k, col, 0.95).beginFill(col, 0.18);
+    if (face == null) { gOver.drawEllipse(tx, ty, ISO.rx(10), ISO.ry(10)); gOver.endFill(); return; }
+    const n = c.alive, cc = cols || autoCols(c), rows = Math.max(1, Math.ceil(n / cc)), W = cc * c.spacing, D = rows * c.spacing, fx2 = Math.cos(face), fy2 = Math.sin(face), lx = -fy2, ly = fx2;
+    const P = (u, v) => [ISO.sx(x + fx2 * u + lx * v, y + fy2 * u + ly * v), ISO.sy(x + fx2 * u + lx * v, y + fy2 * u + ly * v)];
+    const a = P(D / 2, -W / 2), b = P(D / 2, W / 2), c2 = P(-D / 2, W / 2), d = P(-D / 2, -W / 2);
+    gOver.drawPolygon([a[0], a[1], b[0], b[1], c2[0], c2[1], d[0], d[1]]); gOver.endFill();
+    const f0 = P(D / 2, 0), f1 = P(D / 2 + 22, 0), h1 = P(D / 2 + 12, -8), h2 = P(D / 2 + 12, 8);   // strzałka kierunku
+    gOver.lineStyle(2 * k, col, 0.95).moveTo(f0[0], f0[1]).lineTo(f1[0], f1[1]).moveTo(h1[0], h1[1]).lineTo(f1[0], f1[1]).lineTo(h2[0], h2[1]);
+  }
+  function drawOrder(c) {
+    const o = c.order; if (!o) return;
+    if (o.kind === 'hold') { gOver.lineStyle(1.6 / cam.z, ORDER_COL.hold, 0.8); gOver.drawEllipse(ISO.sx(c.ax, c.ay), ISO.sy(c.ax, c.ay), ISO.rx(Math.sqrt(c.alive) * 5 + 22), ISO.ry(Math.sqrt(c.alive) * 5 + 22)); if (o.face != null) drawFormation(c, c.ax, c.ay, o.face, c.fcols || null, 'hold', false); return; }
+    drawFormation(c, o.x, o.y, o.face, c.fcols || null, o.kind, false);
+  }
+  // pociski kwasu lecą łukiem ponad swoimi (celuje się tylko z uwzględnieniem przeszkód terenu), po trafieniu zostaje plama; wybuchy pękaczy to rozchodzący się pierścień
+  function drawFx(sim, k) {
+    const fx = sim.fx, tick = sim.tick;
+    for (let q = fx.length - 1; q >= 0; q--) {
+      const e = fx[q], age = tick - e.t; if (age > 14) break;
+      if (e.k === 'acid') {
+        const flight = 8;
+        if (age < flight) { const p = age / flight, x = e.x0 + (e.x1 - e.x0) * p, y = e.y0 + (e.y1 - e.y0) * p, h = 46 * Math.sin(Math.PI * p); gOver.lineStyle(0).beginFill(0x1a3a0a, 0.35).drawEllipse(ISO.sx(x, y), ISO.sy(x, y), 3 * k * 2, 1.5 * k * 2).endFill(); gOver.beginFill(0x7bd34a, 1).drawCircle(ISO.sx(x, y), ISO.sy(x, y) - h, 2.6).endFill(); gOver.beginFill(0xd4ff9e, 0.9).drawCircle(ISO.sx(x, y) - 0.8, ISO.sy(x, y) - h - 0.8, 0.9).endFill(); }
+        else { const p = (age - flight) / 6, a = Math.max(0, 0.55 * (1 - p)); gOver.lineStyle(0).beginFill(0x7bd34a, a).drawEllipse(ISO.sx(e.x1, e.y1), ISO.sy(e.x1, e.y1), ISO.rx(e.r) * (0.6 + 0.4 * p), ISO.ry(e.r) * (0.6 + 0.4 * p)).endFill(); }
+      } else if (e.k === 'burst') {
+        const p = age / 8; if (p <= 1) { gOver.lineStyle(2.4 * k, 0xe8c84a, 0.9 * (1 - p)).beginFill(0xe8c84a, 0.18 * (1 - p)).drawEllipse(ISO.sx(e.x, e.y), ISO.sy(e.x, e.y), ISO.rx(e.r) * p, ISO.ry(e.r) * p).endFill(); }
+      }
+    }
   }
   const boxG = new PIXI.Graphics(); app.stage.addChild(boxG);
   function drawBox() { boxG.clear(); if (box.on && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5) boxG.lineStyle(1, 0xe6b422, 0.9).beginFill(0xe6b422, 0.08).drawRect(Math.min(box.x0, box.x1), Math.min(box.y0, box.y1), Math.abs(box.x1 - box.x0), Math.abs(box.y1 - box.y0)).endFill(); }
