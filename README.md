@@ -12,4 +12,4 @@ P1 prototyp bitwy (HTML) → P2 prototyp kampanii (HTML) ‖ T test Godot 4 / C+
 
 ## P1: prototyp bitwy
 Otwórz `prototypy/p1-bitwa.html` w przeglądarce (wymaga internetu dla PixiJS z CDN). Parametry URL: `?autostart=1&side=WK|LH&seed=N&passage=32..320&speed=1|2|4|8&observe=1`.
-Sterowanie jest w grze (przycisk `?`). Testy: `npm install && npm test`. Eksperyment: `node tests/p1-experiment.js --seeds 20 --widths 64,128,256`. Wnioski i wyniki: [docs/wnioski-p1.md](docs/wnioski-p1.md).
+Sterowanie jest w grze (przycisk `?`). Testy: `npm install && npm test`. Eksperyment: `node tests/p1-experiment.js --seeds 20 --widths 64,128,256`. Wnioski i wyniki: [docs/wnioski-p1.md](docs/wnioski-p1.md). Decyzje projektowe i pseudokod bitwy (do przeniesienia na C++ lub C#): [docs/projekt-bitwy.md](docs/projekt-bitwy.md).
