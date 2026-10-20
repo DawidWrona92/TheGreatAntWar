@@ -29,7 +29,7 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - AI nie wykorzystuje struktury kopca: atakujący idzie wszystkimi rotami najkrótszą drogą, obrońca stoi na stanowiskach i kontratakuje w pobliżu. Do zrobienia: podział sił na dwie trasy, odwrót na kolejne pierścienie, blokowanie ramp, ostrzał ramp z wyższego pierścienia.
 - Plug odźwiernych (zamknięcie przejścia) nie działa na wejściach i rampach kopca; ściany nie są zniszczalne (tarany nie burzą).
 - Poziomy są pierścieniami w jednej płaszczyźnie; prawdziwe piętra nad sobą wymagałyby osobnych warstw (ruch, kolizje, widoczność, rysowanie).
-- Rozstawianie ręczne atakującego i obrońcy; strefa startu 640 x 1000 (mieści armię x1,5 budżetu Duży we wszystkich testowanych wzorcach).
+- Rozstawianie ręczne atakującego i obrońcy; strefa startu 840 x 1100 (mieści armię x1,5 budżetu Duży we wszystkich testowanych wzorcach).
 - Balans (obrona vs budżet x1,5 atakującego, limit 1500 s) i wszystkie wymiary kopca do oceny w grze.
 
 ## Armie (etap 3)

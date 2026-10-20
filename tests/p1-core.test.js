@@ -782,6 +782,8 @@ test('kopiec: rozmieszczenie (armia ze scenariusza i z budżetów, także najwi�
   const cfgs = [{}, { budget: 'maly' }, { budget: 'sredni' }, { budget: 'duzy' }, { budget: 'duzy', styles: { WK: 'lekka', LH: 'dystansowa' } }, { budget: 'duzy', styles: { WK: 'ciezka', LH: 'wytrwala' } }];
   for (const cfg of cfgs) {
     const sim = mound(3, cfg); n++;
+    // dobór armii nie może po cichu zmniejszyć budżetu, żeby zmieścić się w strefie startu lub w korytarzach (composeArmy powtarza z mniejszym budżetem przy błędzie „brak miejsca”)
+    if (cfg.budget) for (const sn of ['WK', 'LH']) { const ai = sim.armyInfo[sn]; assert.ok(ai.cost >= 0.97 * ai.budget, JSON.stringify(cfg) + ' ' + sn + ': armia ' + ai.cost + ' z budżetu ' + ai.budget + ' (zmniejszona, bo się nie mieści)'); }
     for (let i = 0; i < sim.count; i++) { assert.ok(!BLKC[sim.grid[cellOf(sim, sim.x[i], sim.y[i])]], JSON.stringify(cfg) + ': mrówka w ścianie');
       if (sim.side[i] === 0) assert.ok(sim.x[i] >= st[0] - 10 && sim.x[i] <= st[2] + 10 && sim.y[i] >= st[1] - 10 && sim.y[i] <= st[3] + 10, JSON.stringify(cfg) + ': atakujący poza strefą startu (' + sim.x[i].toFixed(0) + ', ' + sim.y[i].toFixed(0) + ')');
       else assert.ok(sim.x[i] > st[2] + 300, JSON.stringify(cfg) + ': obrońca poza kopcem'); }
@@ -792,7 +794,7 @@ test('kopiec: rozmieszczenie (armia ze scenariusza i z budżetów, także najwi�
     const hx = M0.center[0] * 16, hy = M0.center[1] * 16; const gd = sim.comps.filter((c) => c.side === 1 && c.startBy.dowodca); assert.ok(gd.length >= 1);
     for (const c of gd) assert.ok(Math.hypot(c.ax - hx, c.ay - hy) < M0.heartHalf * 16, 'gwardia dowódcy obrońcy nie stoi w sercu');
   }
-  return n + ' konfiguracji, najgorsze nałożenie ' + (100 * worst).toFixed(2) + '% mrówek';
+  return n + ' konfiguracji (armie z budżetu wykorzystują co najmniej 97% budżetu), najgorsze nałożenie ' + (100 * worst).toFixed(2) + '% mrówek';
 });
 
 test('kopiec: w marszu nikt nie przechodzi przez ścianę, a atakujący wchodzą kolejno na wyższe poziomy (AI przeciw AI, 150 s)', () => {

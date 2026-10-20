@@ -181,6 +181,22 @@ const { openPage, ROOT } = require('./browser-lib');
     const diag = await page.$eval('#diag', (e) => e.textContent); assert.ok(/pod kursorem: wysokość \d+ \((poziom \d|rampa|serce gniazda)\)/.test(diag), 'diagnostyka: ' + diag);
     await page.evaluate(() => { __P1.S.paused = true; }); await page.screenshot({ path: path.join(shots, 'p1-kopiec.png') }); await page.evaluate(() => { __P1.S.paused = false; });
     ok('kopiec: poziomy i serce na mapie, obrońcy w głębi niewidoczni (' + km.hiddenLH + '/' + km.totalLH + '), poziom pod kursorem w diagnostyce');
+    // etap 5 + etap 3: ekran armii w Oblężeniu (kopiec) dla obu stron, budżet Duży: armia AI mieści się w kopcu i w strefie startu, a start nie rzuca błędu
+    for (const side of ['WK', 'LH']) {
+      await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); document.getElementById('army').classList.add('hidden'); });
+      await page.selectOption('#mScen', 'kopiec'); await page.click(side === 'WK' ? '#cWK' : '#cLH'); await page.selectOption('#mBudget', 'duzy');
+      await page.click('#mArmy'); await page.waitForSelector('#army:not(.hidden)');
+      await page.selectOption('#aStyle', side === 'WK' ? 'lekka' : 'dystansowa'); await page.click('#aAuto');
+      const t = await page.textContent('#aBudget'); const m = /wykorzystano (\d+) z (\d+) pkt/.exec(t); assert.ok(m && +m[1] >= 0.9 * +m[2], 'ekran armii (kopiec, ' + side + '): ' + t);
+      let guard = 0; while (guard++ < 40) { const btns = await page.$$('#aPool tr:nth-child(2) button'); if (!btns.length || await btns[0].isDisabled()) break; await btns[0].click(); }   // dokładanie rot aż przycisk się wyłączy (budżet lub brak miejsca)
+      await page.click('#aDone'); await page.click('#mStart'); await page.evaluate(() => { __P1.S.paused = false; });
+      await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 5 && __P1.S.sim.mound, null, { timeout: 120000 });
+      const ai = await page.evaluate(() => { const i = __P1.S.sim.armyInfo; return { wk: i.WK.cost / i.WK.budget, lh: i.LH.cost / i.LH.budget }; });
+      assert.ok(ai.wk <= 1 && ai.lh <= 1 && ai.wk > 0.5 && ai.lh > 0.5, 'koszty armii w kopcu: ' + JSON.stringify(ai));
+      ok('ekran armii w kopcu (' + side + ', budżet Duży): start bez błędu, koszt armii WK ' + (100 * ai.wk).toFixed(0) + '% i LH ' + (100 * ai.lh).toFixed(0) + '% budżetu');
+    }
+    await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); document.getElementById('army').classList.add('hidden'); });
+    await page.selectOption('#mBudget', ''); await page.click('#cWK');   // dalsze sekcje zakładają brak budżetu i stronę WK
     // etap 3: budżet, konfiguracja armii (pula frakcji, koszty, limit budżetu), wzorce AI, start z armią
     await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
     await page.selectOption('#mScen', 'bitwa'); await page.selectOption('#mMap', '2'); await page.click('#cWK');
