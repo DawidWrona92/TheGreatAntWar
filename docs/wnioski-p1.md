@@ -25,6 +25,8 @@ Proxy: AI przeciw AI na mapie „dno lasu” 2000 x 1200, 6 ziaren na szerokoś�
 - Suwak zaopatrzenia ma teraz wyraźny wpływ (192, 6 ziaren): przy WK 100 i LH 0 wygrywa WK 6/6, przy WK 0 i LH 100 wygrywa WK 1/6, przy 60 i 60 jest 4/6. Dane: `docs/wyniki/p1-zaopatrzenie.json`.
 - Mapa z bocznicą i kilkoma przeszkodami daje wyraźniej decydujące bitwy niż poprzednia z jednym murem: obie strony tracą po ok. 1000-1150 mrówek, a rozstrzygnięcie zapada przed końcem czasu.
 
+> Uwaga: wyniki AI w Oblężeniu z etapów 1-3 (wygrane WK, czasy marszu, tabele wzorców dla Oblężenia) zmierzono przed zmianą, po której uzupełnienia ma tylko obrońca (atakujący ich nie ma). Wyniki Bitwy i Przeprawy tej zmiany nie dotyczą. Pomiary w Oblężeniu wymagają powtórzenia.
+
 ## Etap 1 rozszerzenia: wybór typu mapy
 Menu ma listę pięciu typów mapy (parametr URL `map=1..5`). Struktura map (wykonane: `node tools/mapa-metryki.js 12`, 12 ziaren na typ; surowe dane w `wyniki/p1-mapy-metryki.json`):
 

@@ -10,6 +10,11 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Bitwa: AI obu stron idzie na najbliższą rotę, bez koncentracji i bez wykorzystania terenu.
 - Do rozważenia: osobne doktryny frakcji w AI (masa i centralne dowodzenie kontra jakość i samodzielne oddziały).
 
+## Do pamiętania w etapie 5 (rework oblężenia)
+- Strefa rozstawienia atakującego musi być adekwatnie duża (obecna strefa WK ma 470 jednostek szerokości i mieści najwyżej ok. 2000 mrówek, więc przewaga budżetowa atakującego x1,5 na budżecie Duży bywa nierealizowalna).
+- Rozstawianie rot ręcznie przez gracza: na razie automatyczne (decyzja użytkownika: „dojdziemy do tego”).
+- Obsługiwane tryby: tylko AI przeciw AI i gracz przeciw AI (bez dwóch graczy); AI zawsze gra uczciwie (te same ograniczenia widzenia co gracz).
+
 ## Armie (etap 3)
 - Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
 - Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).

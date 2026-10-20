@@ -192,8 +192,8 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).",
       "bitwa": { "name": "Bitwa", "nest": false, "posture": { "WK": "advance", "LH": "advance" }, "end": "annihilate",
                  "desc": "Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych." },
-      "oblezenie": { "name": "Oblężenie", "nest": true, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest",
-                     "desc": "Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i uzupełnia straty. Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5)." },
+      "oblezenie": { "name": "Oblężenie", "nest": true, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest", "reinforce": { "WK": false, "LH": true },
+                     "desc": "Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i jako jedyny uzupełnia straty (atakujący nie ma uzupełnień). Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5)." },
       "przeprawa": { "name": "Przeprawa", "nest": false, "map": "stream", "posture": { "WK": "advance", "LH": "hold" }, "end": "annihilate",
                      "desc": "Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa." }
     },
@@ -594,7 +594,7 @@ const Sim = (function () {
     const cfg = defs.world.scenarioTypes[id];
     if (!cfg || !cfg.posture) throw new Error('Nieznany scenariusz: ' + id);
     defs.world.nestWall = cfg.nest;
-    defs.scenario.mode = { id, nest: cfg.nest, posture: cfg.posture, end: cfg.end };
+    defs.scenario.mode = { id, nest: cfg.nest, posture: cfg.posture, end: cfg.end, reinforce: cfg.reinforce || { WK: true, LH: true } };
     return { id, name: cfg.name, desc: cfg.desc, nest: cfg.nest, end: cfg.end, map: cfg.map };
   }
 
@@ -961,7 +961,8 @@ const Sim = (function () {
 
     // ---------- kompanie ----------
     const comps = []; sim.comps = comps;
-    const reserve = { WK: defs.scenario.sides.WK.reserve, LH: defs.scenario.sides.LH.reserve };
+    // uzupełnienia: w oblężeniu ma je tylko obrońca (scenarioTypes.oblezenie.reinforce)
+    const reserve = { WK: defs.scenario.mode.reinforce.WK ? defs.scenario.sides.WK.reserve : 0, LH: defs.scenario.mode.reinforce.LH ? defs.scenario.sides.LH.reserve : 0 };
     sim.reserve = reserve;
     const commanders = { WK: [], LH: [] };
     function addAnt(t, s, ci, x, y) {

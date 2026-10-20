@@ -276,8 +276,8 @@ function reachableFrom(sim, x, y) {
 }
 
 test('typ mapy 3 to dotychczasowa mapa: ten sam teren i ten sam przebieg co przed etapem 1', () => {
-  // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach)
-  const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', 'b9b8ee0d'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '1db337c2'] };
+  // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach); dla szerokości 192 przeliczone po zmianie: w oblężeniu uzupełnienia ma tylko obrońca
+  const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', '36d141ed'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '575f40d9'] };
   for (const key in base) {
     const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage);
     let h = 0; for (let i = 0; i < sim.grid.length; i++) h = (Math.imul(h, 31) + sim.grid[i]) | 0;
@@ -354,6 +354,13 @@ test('determinizm na mapach z korytarzami (ścieżka za kotwicą): to samo ziarn
     out.push('mapa ' + map + ': ' + a.split(':')[1]);
   }
   return out.join(', ');
+});
+
+test('uzupełnienia: w oblężeniu ma je tylko obrońca, w Bitwie i Przeprawie obie strony', () => {
+  const at = (scen) => { const sim = makeScen(scen, 3, 1); return { WK: sim.reserve.WK, LH: sim.reserve.LH }; };
+  assert.deepStrictEqual(at('oblezenie'), { WK: 0, LH: 150 }); assert.deepStrictEqual(at('bitwa'), { WK: 150, LH: 150 }); assert.deepStrictEqual(at('przeprawa'), { WK: 150, LH: 150 });
+  const sim = makeScen('oblezenie', 3, 1); const wk0 = sim.count_alive()[0]; let maxWK = wk0; for (let k = 0; k < 20 * 200; k++) { sim.step(); maxWK = Math.max(maxWK, sim.count_alive()[0]); } assert.strictEqual(maxWK, wk0, 'atakujący dostaje uzupełnienia w oblężeniu');
+  return 'rezerwa w oblężeniu: WK 0, LH 150; w Bitwie i Przeprawie po 150';
 });
 
 function dummyDefenders(d) {
