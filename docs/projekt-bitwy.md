@@ -68,6 +68,15 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 47. Pola przepływu (jedno na cel) są trzymane w pamięci podręcznej o rozmiarze 80 (najstarsze wypada): na dużych mapach z ruchomymi celami nieograniczona pamięć rosła zbyt szybko, a brakujące pole jest liczone ponownie (wynik ten sam).
 48. Mnożnik prędkości strony (`opts.speedMult`, domyślnie 1) istnieje tylko do eksperymentów z szybkością (`tests/p1-przeprawa.js`); nie ma go w interfejsie.
 
+**Armie i budżety (etap 3 rozszerzenia P1)**
+49. Przed bitwą można wybrać budżet armii: Mały 1200, Średni 2200, Duży 3500 punktów (`army.budgets`). Bez budżetu (domyślnie) obie strony dostają armię ze scenariusza, jak dotąd (test regresji: identyczny przebieg). Obie strony dostają ten sam budżet w Bitwie i Przeprawie, niezależnie od tego, czy przeciwnikiem jest AI; w Oblężeniu atakujący dostaje budżet razy `siegeAttackerRatio` (1,5). Rezerwa uzupełnień (150 piechurów) zostaje poza budżetem.
+50. **Koszty to założenie prototypu**: Dokument 0.5 nie podaje kosztów jednostek ani budżetów bitwy (zasoby kampanii nie mają przełożenia na koszt mrówki w bitwie). Za radą użytkownika przyjęto tabelę wg roli (punkty za mrówkę): piechur 1, ciężki wojownik 3, biegacz 2, pękacz 2, plujka 4, odźwierny 7, taran 8; dowódca z gwardią = 30 + 50 x koszt typu gwardii x 1,7. Prosty wzór ze statystyk dawał absurdy (plujka wychodziła tańsza od piechura, bo pomija zasięg i obszar rażenia), więc nie został użyty. Tabela jest w bloku `army` w JSON i jest do poprawy po testach.
+51. Pula: jednostki wspólne (piechur, ciężki wojownik) i własne unikaty frakcji (WK: taran, biegacz, pękacz; LH: odźwierny, plujka). Każda armia ma 1-3 roty dowódcy z gwardią dowolnego typu z puli. Rota to typ i rozmiar 30-300 (krok 10); domyślne rozmiary jak w scenariuszu. Jednostek latających nie ma (odłożone na prośbę użytkownika; w dokumencie lotnik jest tylko wspomniany, bez statystyk).
+52. Budżet jest twardym limitem: `Sim.create` odrzuca armię o koszcie wyższym niż budżet, jednostki spoza puli, rozmiar roty poza zakresem i brak dowódcy; interfejs wyłącza dodawanie, gdy nie starcza budżetu lub miejsca. AI nie dostaje niczego ponad budżet.
+53. Rozmieszczenie jest automatyczne (`layoutArmy`): rota po rocie w strefie startu strony, klasy razem w kolumnach od frontu do tyłu (WK: piechota i ciężcy, dowódcy, tarany i pękacze, biegacze; LH: odźwierni, plujki, piechota i ciężcy, dowódcy), szerokość rot dobrana tak, by kolumna wypełniła strefę. Gdy armia się nie mieści, odstęp w szyku maleje z 11 do 9,5, a potem jest błąd „brak miejsca w strefie startu”. Strefa zachodnia ma 470 jednostek szerokości, więc Wielka Kolonia mieści najwyżej ok. 2000 mrówek (lekka masa w budżecie Duży jest tym ograniczona; w oblężeniu przewaga atakującego x1,5 też bywa ograniczona miejscem). Pierwsza rota odźwiernych staje jako plug, jeśli mapa ma przesmyk i obrońca broni pozycji.
+54. **AI dobiera armię wg nazwanych wzorców** (`army.archetypes`, nie losowo): zrównoważona, ciężka, lekka masa, flankująca (WK, biegacze), szturmowa (WK, tarany i pękacze), wytrwała (na wyczerpanie: odźwierni, ciężcy, plujki, pękacze) i dystansowa (LH, plujki). Wzorzec to udział budżetu na typ jednostki, typ gwardii i przydatność w scenariuszu i roli (atakujący/obrońca). Przeciwnika (AI) można ustawić w menu na konkretny wzorzec albo `auto`; gracz też może zastosować wzorzec do swojej armii w ekranie konfiguracji i dalej ją edytować.
+55. Wzorzec `auto`: bierze wzorzec o najwyższym wyniku przydatności w scenariuszu i roli, z premią z tabeli `army.counters`, jeśli znana jest armia przeciwnika (np. wobec co najmniej 25% plujek flankująca x1,5, bo biegacze polują na plujki; wobec 45% ciężkich dystansowa x1,4, bo kwas ignoruje pancerz). Wzorce w granicach 8% od najlepszego rozstrzyga ziarno, więc różne ziarna dają różne, ale rozsądne armie. Armię przeciwnika AI zna tylko wtedy, gdy ją skonfigurował gracz (zwiad przed bitwą); gdy obie strony dobiera AI, żadna nie kontruje drugiej.
+
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
 ## 2. Dane
@@ -118,6 +127,19 @@ Przeszkody:
 | Bitwa | nie | advance / advance | annihilate |
 | Oblężenie | tak | advance / hold | nest |
 | Przeprawa | nie | advance / hold | annihilate (mapa: Potok z kamieniami) |
+
+### Armie (`army`, założenia prototypu)
+Koszt za mrówkę: infantry 1, ciezki 3, biegacz 2, pekacz 2, plujka 4, odzwierny 7, taran 8, dowodca 30. Budżety: Mały 1200, Średni 2200, Duży 3500; atakujący w oblężeniu x1.5. Rota: 30-300 mrówek (krok 10), dowódców 1-3, gwardia 50 mrówek x koszt typu x 1.7.
+
+| Wzorzec | Frakcje | Udział budżetu WK | Udział budżetu LH | Gwardia |
+|---|---|---|---|---|
+| zrownowazona: Zrównoważona | WK, LH | infantry 50%, ciezki 10%, taran 12%, pekacz 10%, biegacz 18% | infantry 30%, ciezki 20%, plujka 25%, odzwierny 25% | ciezki, ciezki |
+| ciezka: Ciężka | WK, LH | ciezki 50%, taran 22%, infantry 18%, pekacz 10% | ciezki 50%, odzwierny 20%, infantry 15%, plujka 15% | ciezki, ciezki |
+| lekka: Lekka masa | WK, LH | infantry 72%, pekacz 13%, biegacz 15% | infantry 75%, plujka 25% | infantry, infantry |
+| flankujaca: Flankująca (szybka) | WK | biegacz 42%, infantry 33%, ciezki 10%, pekacz 15% | - | biegacz |
+| szturmowa: Szturmowa (tarany i pękacze) | WK | taran 32%, pekacz 20%, infantry 38%, ciezki 10% | - | ciezki |
+| wytrwala: Wytrwała (na wyczerpanie) | WK, LH | ciezki 40%, infantry 40%, pekacz 20% | odzwierny 30%, ciezki 30%, plujka 25%, infantry 15% | ciezki, ciezki |
+| dystansowa: Dystansowa (plujki) | LH | - | plujka 40%, odzwierny 20%, ciezki 25%, infantry 15% | ciezki |
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
@@ -727,6 +749,32 @@ przeprawa (world.fords = [{ y, wx, wy, ex, ey }]; w = zachodnie, e = wschodnie l
      (zagrożenie_k + 4) / (załoga_k + siła(c) + 80) * (1.35 jeśli bieżący) / (1 + eta(c, e_k) / 120),
      zagrożenie_k = suma siła(w) * max(0, 1 - odległość(w, w_k) / 1600)^2
   rozkaz: stój przy e_k (+20 jednostek; plujki +60, gwardia dowódcy +90)
+```
+
+### 4.16 Armie z budżetu
+```
+create(opts):  # po applyScenario i applyMapType
+  jeśli opts.budget:
+    dla strony: budget = budgetFor(scenariusz, strona, poziom)          # w oblężeniu atakujący x1.5
+      a = opts.armies[strona]  (walidacja: pula, rozmiary, dowódcy, koszt <= budget, inaczej błąd)
+          albo composeArmy(strona, budget, styl, armia przeciwnika jeśli podana)
+      companies[strona] = layoutArmy(strona, a)
+
+composeArmy(styl):
+  id = styl == auto ? pickArchetype : styl
+  pickArchetype: score = fit[scenariusz][rola] * produkt premii counters (profil armii przeciwnika);
+                 spośród wzorców z score >= 0.92 * max wybierz losowo (ziarno)
+  commanders = budżet < 1500 ? 1 : 2; reszta = budżet - koszt dowódców
+  dla typu z udziałem: sztuki = reszta * udział / koszt; n rot = round(sztuki / rozmiar domyślny); rozmiar = sztuki / n (krok 10, 30..300)
+  dopełnij: powiększaj roty głównego typu o krok, potem dołóż rotę piechoty
+  gdy layoutArmy zgłosi brak miejsca: budżet *= 0.95 i od nowa (do 14 razy)
+
+layoutArmy(strona, a):
+  strefa: WK x 30..460, y wokół osi; LH od frontu (przesmyk + 90 albo W - 1040) do W - 340 (z gniazdem) lub W - 110
+  odcisk roty: kolumny = max(4, round(sqrt(n * 2.5))), wiersze = ceil(n / kolumny), odstęp max(11, promień * 2.1)
+  w klasie z kilkoma rotami: szerokość = (wysokość strefy + 14) / k - 14, kolumny = szerokość / odstęp
+  kolumny stref od frontu do tyłu, klasy osobno, rota pod rotą, kolumna wyśrodkowana w osi
+  brak miejsca: ponów z odstępem 9.5, potem błąd
 ```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#

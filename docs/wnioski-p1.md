@@ -67,6 +67,30 @@ AI przeciw AI (wykonane: `node tests/p1-experiment.js --seeds 4 --scenarios bitw
 
 Zrzuty: `wyniki/p1-scenariusz-bitwa.png`, `p1-scenariusz-oblezenie.png`, `p1-scenariusz-przeprawa.png`, `p1-przeprawa-brod.png` (kamera na brodzie 3).
 
+## Etap 3 rozszerzenia: konfiguracja armii
+Menu ma wybór budżetu (Mały 1200, Średni 2200, Duży 3500 punktów; parametr URL `budget=maly|sredni|duzy`), przycisk „Konfiguruj armię…” i wybór stylu armii przeciwnika. Bez budżetu obie strony mają armię ze scenariusza (jak dotąd, test regresji).
+
+Czego brakowało i jak to rozwiązano. Dokument 0.5 nie podaje kosztów jednostek ani budżetów bitwy, więc zapytałem użytkownika: koszty to tabela wg roli (założenie prototypu, w bloku `army` w JSON): piechur 1, ciężki wojownik 3, biegacz 2, pękacz 2, plujka 4, odźwierny 7, taran 8, dowódca z gwardią 30 + 50 x koszt typu x 1,7. Budżety 1200/2200/3500 też wybrał użytkownik. Jednostek latających nie ma (użytkownik kazał je odłożyć; w dokumencie lotnik nie ma statystyk ani zasad), jest to na liście `TODO.md`.
+
+Ekran konfiguracji: lista dostępnych jednostek frakcji (wspólne + własne unikaty) ze statystykami i kosztem, skład armii (typ i rozmiar roty 30-300, dowódcy z gwardią 1-3, typ gwardii), pasek wykorzystanego i pozostałego budżetu, wzorzec AI do zastosowania i edycji, ostrzeżenie o braku miejsca. W Bitwie i Przeprawie obie strony dostają równy budżet, w Oblężeniu atakujący x1,5 (3300 przy Średnim). Budżet jest twardym limitem w rdzeniu (błąd przy przekroczeniu, jednostce spoza puli, złym rozmiarze, braku dowódcy).
+
+Dobór armii przez AI to nazwane wzorce, nie losowanie: zrównoważona, ciężka, lekka masa, flankująca (WK), szturmowa (WK), wytrwała i dystansowa (LH). Test sprawdza, że udziały kosztów zgadzają się z definicją wzorca (±13 punktów procentowych), a wzorce różnią się od siebie. `auto` dobiera wzorzec do scenariusza i roli (oblężenie: WK szturmowa, LH dystansowa lub wytrwała; przeprawa: WK flankująca, LH dystansowa) i do armii gracza (wobec plujek flankująca, wobec masy ciężka lub dystansowa); w Bitwie ziarno rozstrzyga między podobnie dobrymi.
+
+Wzorce przeciw sobie (wykonane: `node tests/p1-armie.js --seeds 2`, Bitwa na mapie 2, budżet Średni, 2 ziarna, średnia różnica odsetka ocalałych WK i LH po 450 s lub końcu bitwy; dodatnia to przewaga WK, `wyniki/p1-armie-wzorce.json`):
+
+| WK \ LH | zrównoważona | ciężka | lekka | wytrwała | dystansowa |
+|---|---|---|---|---|---|
+| zrównoważona | 0,13 | 0,09 | -0,18 | 0,31 | 0,39 |
+| ciężka | -0,04 | -0,05 | -0,22 | 0,19 | -0,08 |
+| lekka | 0,39 | 0,40 | 0,03 | 0,44 | 0,52 |
+| flankująca | 0,09 | -0,22 | -0,29 | 0,02 | 0,26 |
+| szturmowa | 0,03 | -0,02 | 0,05 | 0,03 | 0,13 |
+| wytrwała | 0,03 | 0,07 | -0,19 | 0,15 | 0,23 |
+
+Wzorce wyraźnie dają różne wyniki (żaden nie wygrywa ze wszystkimi), ale to tylko 2 ziarna i AI w bitwie, a miara „odsetek ocalałych” premiuje tanią, liczną piechotę (lekka masa ma najwięcej ciał). To nie jest pomiar balansu.
+
+Ograniczenia: strefa startu Wielkiej Kolonii ma 470 jednostek szerokości, więc mieści najwyżej ok. 2000 mrówek (w budżecie Duży lekka masa WK i przewaga x1,5 atakującego w oblężeniu bywają ograniczone miejscem; interfejs wyłącza dodawanie, a rdzeń zgłasza „brak miejsca”). Rozmieszczenie jest automatyczne (gracz nie ustawia rot ręcznie) i omija przeszkody (stałe głazy mapy 3, ściany gąszczu). Podczas prac wyszły dwa błędy rozmieszczenia: ściany czołowe gąszczu wchodzą w strefę startu do ok. x = 440, a mapa 3 ma głazy w strefie obrońców; stąd front WK na 425 i sprawdzanie siatki terenu w `layoutArmy`.
+
 ## Błędy znalezione po drodze (każdy ma test)
 - Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.
 - Plug stał poza przejściem, był za wąski, obracał się za wrogiem, a szybkie mrówki i nacisk tłumu przepychały się przez szyk. Test: nieśmiertelny zamknięty plug nie przepuszcza nikogo przy 64, 128 i 256.
@@ -79,10 +103,11 @@ Zrzuty: `wyniki/p1-scenariusz-bitwa.png`, `p1-scenariusz-oblezenie.png`, `p1-sce
 - Pomiary czasu kroku w Node były zawyżone kilkukrotnie, bo rdzeń działał w `node:vm`; teraz jest wykonywany w głównym kontekście.
 
 ## Testy
-`npm install && npm test`. Rdzeń (24 testy; etap 1 dodał: identyczność typu 3 względem wersji sprzed etapu, różnice strukturalne pięciu typów, 25 ziaren na typ pod względem osiągalności i wolnych stref, linia zamiast plugu na mapach bez przesmyku, przesunięcie układu rot, nawigacja atakujących; `ONLY=fragment node tests/p1-core.test.js` uruchamia wybrane testy). Pierwotnie rdzeń (18 testów): zakres i nazwy rot, gwardia dowolnego typu, w walce ciała nie nakładają się (najgorszy pomiar 2,6% mrówek w nakładającej się parze), swoi mijają się poza walką, ciało w kontakcie stoi, zmęczenie, kapitan, determinizm (także z rozkazami), granice, kwas i uzupełnienia, geometria plugu, wpływ szerokości, kontrola feromonowa, wydajność. Przeglądarka: start, kółko myszy, marsz grupy rot z zachowaniem rozmieszczenia, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy.
+`npm install && npm test`. Rdzeń (39 testów; etap 1 dodał: identyczność typu 3 względem wersji sprzed etapu, różnice strukturalne pięciu typów, 25 ziaren na typ pod względem osiągalności i wolnych stref, linia zamiast plugu na mapach bez przesmyku, przesunięcie układu rot, nawigacja atakujących; `ONLY=fragment node tests/p1-core.test.js` uruchamia wybrane testy). Pierwotnie rdzeń (18 testów): zakres i nazwy rot, gwardia dowolnego typu, w walce ciała nie nakładają się (najgorszy pomiar 2,6% mrówek w nakładającej się parze), swoi mijają się poza walką, ciało w kontakcie stoi, zmęczenie, kapitan, determinizm (także z rozkazami), granice, kwas i uzupełnienia, geometria plugu, wpływ szerokości, kontrola feromonowa, wydajność. Przeglądarka: start, kółko myszy, marsz grupy rot z zachowaniem rozmieszczenia, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy.
 Krok symulacji przy ok. 4200 mrówkach w Node: mediana 9 ms, p99 17 ms, max 50 ms przy budżecie 50 ms (20 Hz). To czas sandboxa, nie kryterium 15.2.
 
 ## Nie zweryfikowane
+- Etap 3 (armie): koszty i budżety to założenia, nie dane z dokumentu; wzorce AI sprawdzone na 2 ziarnach; nie wiadomo, czy wybór armii jest ciekawy i czy ekran konfiguracji jest wygodny. Rezerwa uzupełnień (150 piechurów) jest poza budżetem, więc faktyczna siła armii jest nieco większa niż koszt. AI kontruje armię gracza, znając ją przed bitwą.
 - Etap 2 (scenariusze): oblężenie nie ma jeszcze przewagi budżetowej atakującego (jednostki nie mają kosztów; budżety dopiero w etapie 3) ani wnętrza kopca (etap 5), więc różni się od Bitwy tylko gniazdem, postawą AI i warunkami końca. W Przeprawie nie ma celu terenowego (zdecydował użytkownik): przeprawa liczy się tylko przez teren. Zasada „po czasie wygrywa większy odsetek ocalałych” w Bitwie i Przeprawie jest założeniem projektowym. Przeprawa jest mocno po stronie obrońcy przy obecnym AI (0 wygranych WK w 25 bitwach), więc balans i to, czy człowiek jako atakujący ma realną szansę, wymaga testu ręcznego. Czas dojścia jest liczony z odległości w linii prostej, a nie z długości trasy.
 - Etap 1 (mapy): czy mapy 4 i 5 są fajne do grania, czy gęstość i kręte korytarze sprawdzają się w walce, czy marsz przez gąszcz trwa za długo (ok. 4-7 minut dla całej armii; limit bitwy to 15 minut). Typ 3 jest dotychczasowym układem stałym (ziarno zmienia tylko mech). Nie ma elewacji, widoczności ani ukrywania się w mchu (etap 4): osłona (mech) tylko zmniejsza obrażenia. Zarośla (nowy typ komórki) blokują ruch jak pień i nie dają ukrycia.
 - Etap 1: AI zna tylko jeden plan (atak na gniazdo najkrótszą trasą), więc na mapach z wieloma trasami nie oskrzydla. Sprawdzono tylko 4 ziarna na typ.

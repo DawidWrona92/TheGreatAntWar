@@ -45,6 +45,13 @@ Przeszkody:
 |---|---|---|---|
 {chr(10).join(f"| {m['name']} | {'tak' if m['nest'] else 'nie'} | {m['posture']['WK']} / {m['posture']['LH']} | {m['end']}" + (f" (mapa: {W['mapTypes'][m['map']]['name']})" if m.get('map') else '') + " |" for k, m in W['scenarioTypes'].items() if isinstance(m, dict) and 'posture' in m)}
 
+### Armie (`army`, założenia prototypu)
+Koszt za mrówkę: {', '.join(f'{k} {v}' for k, v in defs['army']['costs'].items())}. Budżety: {', '.join(f"{defs['army']['budgetNames'][k]} {v}" for k, v in defs['army']['budgets'].items())}; atakujący w oblężeniu x{defs['army']['siegeAttackerRatio']}. Rota: {defs['army']['company']['min']}-{defs['army']['company']['max']} mrówek (krok {defs['army']['company']['step']}), dowódców {defs['army']['commanders']['min']}-{defs['army']['commanders']['max']}, gwardia {defs['army']['guardSize']} mrówek x koszt typu x {defs['army']['guardMult']}.
+
+| Wzorzec | Frakcje | Udział budżetu WK | Udział budżetu LH | Gwardia |
+|---|---|---|---|---|
+{chr(10).join(f"| {k}: {a['name']} | {', '.join(a['sides'])} | " + (', '.join(f'{t} {int(v*100)}%' for t, v in a['shares'].get('WK', {}).items()) or '-') + " | " + (', '.join(f'{t} {int(v*100)}%' for t, v in a['shares'].get('LH', {}).items()) or '-') + f" | {', '.join(a['guard'].values())} |" for k, a in defs['army']['archetypes'].items() if isinstance(a, dict) and 'shares' in a)}
+
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
 

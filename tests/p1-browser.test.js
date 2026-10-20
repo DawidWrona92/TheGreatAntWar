@@ -168,6 +168,35 @@ const { openPage, ROOT } = require('./browser-lib');
       await page.evaluate(() => { __P1.S.paused = false; __P1.S.speedIdx = 1; });
       ok('scenariusz ' + sc + ' startuje i jest rysowany (' + si.label + ', ' + si.w + ' szerokości)');
     }
+    // etap 3: budżet, konfiguracja armii (pula frakcji, koszty, limit budżetu), wzorce AI, start z armią
+    await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
+    await page.selectOption('#mScen', 'bitwa'); await page.selectOption('#mMap', '2'); await page.click('#cWK');
+    assert.ok(await page.$eval('#mArmy', (e) => e.disabled), 'przycisk konfiguracji powinien być wyłączony bez budżetu');
+    await page.selectOption('#mBudget', 'sredni');
+    assert.ok(!(await page.$eval('#mArmy', (e) => e.disabled)));
+    const opp = await page.$$eval('#mOppStyle option', (o) => o.map((x) => x.value)); assert.ok(opp.includes('auto') && opp.includes('dystansowa') && !opp.includes('flankujaca'), 'styl przeciwnika (LH): ' + opp);
+    await page.selectOption('#mOppStyle', 'dystansowa');
+    await page.click('#mArmy'); await page.waitForSelector('#army:not(.hidden)');
+    const nums = async () => { const t = await page.textContent('#aBudget'); const m = /wykorzystano (\d+) z (\d+) pkt, pozostało (-?\d+)/.exec(t); return m.slice(1).map(Number); };
+    let [used, total, rest] = await nums(); assert.strictEqual(total, 2200); assert.ok(used <= total && rest === total - used, 'budżet: ' + [used, total, rest]);
+    const pool = await page.$$eval('#aPool tr', (r) => r.length - 1); assert.strictEqual(pool, 5, 'pula WK powinna mieć 5 jednostek (piechur, ciężki, taran, biegacz, pękacz): ' + pool);
+    await page.selectOption('#aStyle', 'flankujaca'); await page.click('#aAuto');
+    const names = await page.$$eval('#aList .arow span:first-child', (e) => e.map((x) => x.textContent)); assert.ok(names.some((n) => /Biegacz/.test(n)), 'wzorzec flankujący bez biegaczy: ' + names);
+    [used, total] = await nums(); assert.ok(used <= total && used >= 0.9 * total, 'wzorzec flankujący: ' + used + '/' + total);
+    await page.click('#aClear'); const cl = await nums(); assert.ok(cl[0] < 400, 'po wyczyszczeniu zostaje tylko dowódca: ' + cl[0]);
+    let guard = 0; while (guard++ < 60) { const btns = await page.$$('#aPool tr:nth-child(3) button'); if (!btns.length || await btns[0].isDisabled()) break; await btns[0].click(); }
+    const full = await nums(); assert.ok(full[0] <= full[1], 'budżet przekroczony: ' + full); assert.ok(full[2] < 120 * 3, 'przycisk dodawania powinien wyłączyć się dopiero przy wyczerpaniu budżetu: pozostało ' + full[2]);
+    const rowsBefore = await page.$$eval('#aList .arow', (e) => e.length); await page.click('#aList .arow:nth-child(2) button'); assert.strictEqual(await page.$$eval('#aList .arow', (e) => e.length), rowsBefore - 1, 'usunięcie roty');
+    await page.selectOption('#aStyle', 'ciezka'); await page.click('#aAuto'); await page.click('#aDone');
+    assert.ok(/Twoja armia \(Ciężka\)/.test(await page.textContent('#mArmySum')), 'podsumowanie: ' + await page.textContent('#mArmySum'));
+    const shown = (await nums())[0];
+    await page.click('#mStart'); await page.evaluate(() => { __P1.S.paused = false; });
+    await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 5, null, { timeout: 30000 });
+    const ai = await page.evaluate(() => { const i = __P1.S.sim.armyInfo; return { wkCost: i.WK.cost, wkB: i.WK.budget, lhB: i.LH.budget, lhStyle: i.LH.style, wkComposed: i.WK.composed, wkStyle: i.WK.army.style }; });
+    assert.strictEqual(ai.wkCost, shown); assert.strictEqual(ai.wkB, 2200); assert.strictEqual(ai.lhB, 2200); assert.strictEqual(ai.lhStyle, 'dystansowa'); assert.ok(!ai.wkComposed && ai.wkStyle === 'ciezka');
+    await page.screenshot({ path: path.join(shots, 'p1-armia-start.png') });
+    await page.evaluate(() => { document.getElementById('menu').classList.remove('hidden'); }); await page.click('#mArmy'); await page.waitForSelector('#army:not(.hidden)'); await page.screenshot({ path: path.join(shots, 'p1-konfiguracja-armii.png') }); await page.click('#aDone');
+    ok('konfiguracja armii: budżet, pula frakcji, wzorce, limit budżetu, usuwanie rot i start z własną armią', 'koszt ' + shown + '/2200, LH: wzorzec ' + ai.lhStyle);
     assert.deepStrictEqual(errors, [], 'błędy w konsoli: ' + errors.join('; '));
     ok('brak błędów w konsoli przeglądarki');
   } catch (e) { failed++; out.push('FAIL ' + e.message + '\n' + (errors.length ? '       błędy: ' + errors.join('; ') : '')); }

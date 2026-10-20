@@ -75,6 +75,19 @@ textarea{width:100%;height:60px;background:#111;color:var(--text);border:1px sol
 .choice button{flex:1;min-width:210px;padding:10px;text-align:left}.choice button.on{background:#3b3412}
 .choice small{display:block;color:var(--dim);margin-top:2px}
 table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}table.rep td,table.rep th{border-bottom:1px solid var(--line);padding:2px 6px;text-align:right}table.rep td:first-child,table.rep th:first-child{text-align:left}
+.armydlg{max-width:1040px}
+.acols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.acols h2{margin:6px 0}
+#aPool,#aList{width:100%;border-collapse:collapse;font-size:12.5px}
+#aPool td,#aPool th,.arow{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+#aPool th{color:var(--dim);font-weight:500}
+.arow{display:grid;grid-template-columns:1fr 92px 54px 28px;gap:6px;align-items:center}
+.arow input[type=number]{width:70px}
+.abar{height:14px;background:#1a1810;border:1px solid var(--line);border-radius:4px;position:relative;margin:6px 0}
+#aBar{height:100%;background:#8aa04a;border-radius:3px}
+#aBudget{position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px}
+.warn{color:#f0b060}
+@media(max-width:800px){.acols{grid-template-columns:1fr}}
 .hidden{display:none!important}
 #help{position:absolute;left:10px;bottom:190px;z-index:4;background:rgba(23,22,15,.82);padding:5px 9px;border-radius:4px;font-size:11.5px;color:var(--dim);max-width:520px}
 #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:30;background:var(--bg);text-align:center;padding:20px}
@@ -127,12 +140,28 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     <p id="mMapDesc" class="mapdesc"></p>
     <div class="row" id="mPassRow" style="grid-template-columns:150px 1fr 50px"><span>Szerokość głównego przesmyku</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Budżet armii</span><select id="mBudget"></select><span></span></div>
+    <div class="row" id="mOppRow" style="grid-template-columns:150px 1fr 50px"><span>Styl armii przeciwnika (AI)</span><select id="mOppStyle"></select><span></span></div>
+    <p id="mArmySum" class="mapdesc" style="min-height:34px"></p>
+    <p><button id="mArmy" disabled>Konfiguruj armię…</button></p>
+    <div class="row" id="mGuardRow" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
     <p style="margin-top:12px"><button id="mStart" style="padding:8px 18px;font-weight:600;border-color:var(--acc)">Start</button></p>
     <div id="mHelp"></div>
   </div>
 </div>
+<div id="army" class="overlay hidden"><div class="dlg armydlg">
+  <h1>Konfiguracja armii: <span id="aSide"></span></h1>
+  <p id="aInfo"></p>
+  <div class="abar"><div id="aBar"></div><span id="aBudget"></span></div>
+  <div class="acols">
+    <div><h2>Dostępne jednostki</h2><table id="aPool"></table><p style="font-size:12px">Jednostki latające nie są jeszcze dostępne (odłożone). Koszty to założenie prototypu (dokument ich nie podaje), edytowalne w bloku <code>army</code> w JSON.</p></div>
+    <div><h2>Twoja armia</h2><div id="aList"></div></div>
+  </div>
+  <p id="aStyleDesc" style="font-size:12px"></p>
+  <p id="aSpace"></p>
+  <p><label>Wzorzec armii: <select id="aStyle"></select></label> <button id="aAuto" title="AI dobiera armię z puli w ramach budżetu według wzorca">Zastosuj wzorzec</button> <button id="aClear">Wyczyść</button> <button id="aDone" style="padding:6px 16px;font-weight:600;border-color:var(--acc)">Gotowe</button></p>
+</div></div>
 <div id="end" class="overlay hidden"><div class="dlg" id="endBody"></div></div>
 <div id="err"><div><h2>Nie udało się wczytać PixiJS z CDN</h2><p>Sprawdź połączenie z internetem i odśwież stronę. Prototyp wymaga biblioteki PixiJS 7.4.2 z cdn.jsdelivr.net.</p></div></div>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
@@ -228,6 +257,50 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "plujka":    { "taran": 1.6 }
   },
   "companyNames": { "infantry": "Rota wojowników", "taran": "Rota taranów", "biegacz": "Rota biegaczy", "pekacz": "Rota pękaczy", "odzwierny": "Rota odźwiernych", "plujka": "Rota plujek", "ciezki": "Rota wojowników ciężkich", "dowodca": "Rota dowódców" },
+  "army": {
+    "comment": "Konfiguracja armii (etap 3). Dokument 0.5 nie podaje kosztów jednostek ani budżetów bitwy: poniższe liczby to ZAŁOŻENIE PROTOTYPU (koszt w punktach za mrówkę wg roli, wybrany przez użytkownika), do poprawy po testach. Dowódca z gwardią kosztuje dowódca + gwardia (liczba gwardzistów x koszt typu bazowego x guardMult). Budżet w oblężeniu: atakujący dostaje budżet x siegeAttackerRatio. Lotników nie ma (odłożone). Pula: jednostki wspólne i własne unikaty frakcji (tabela unikatów w sekcji 9 dokumentu).",
+    "budgets": { "maly": 1200, "sredni": 2200, "duzy": 3500 },
+    "budgetNames": { "maly": "Mały", "sredni": "Średni", "duzy": "Duży" },
+    "siegeAttackerRatio": 1.5,
+    "costs": { "infantry": 1, "ciezki": 3, "biegacz": 2, "pekacz": 2, "plujka": 4, "odzwierny": 7, "taran": 8, "dowodca": 30 },
+    "guardMult": 1.7, "guardSize": 50, "commanders": { "min": 1, "max": 3 },
+    "company": { "min": 30, "max": 300, "step": 10 },
+    "defaultSize": { "infantry": 100, "ciezki": 60, "taran": 50, "biegacz": 80, "pekacz": 60, "odzwierny": 60, "plujka": 60 },
+    "pool": { "common": ["infantry", "ciezki"], "WK": ["taran", "biegacz", "pekacz"], "LH": ["odzwierny", "plujka"] },
+    "archetypes": {
+      "comment": "Wzorce armii AI: udział budżetu na typ jednostki dla każdej frakcji (sides = frakcje, które mają dość jednostek w puli), typ gwardii, przydatność w scenariuszach (fit: atakujący att / obrońca def) i opis. Wybór 'auto' bierze wzorzec o najwyższym fit zależnie od scenariusza i roli, z premią z tabeli counters, gdy znana jest armia przeciwnika.",
+      "zrownowazona": { "name": "Zrównoważona", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
+        "shares": { "WK": { "infantry": 0.5, "ciezki": 0.1, "taran": 0.12, "pekacz": 0.1, "biegacz": 0.18 }, "LH": { "infantry": 0.3, "ciezki": 0.2, "plujka": 0.25, "odzwierny": 0.25 } },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 1.0 }, "przeprawa": { "att": 1.0, "def": 1.0 } }, "desc": "Wszystkiego po trochu: masa piechoty, ciężcy, wsparcie i specjaliści frakcji." },
+      "ciezka": { "name": "Ciężka", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
+        "shares": { "WK": { "ciezki": 0.5, "taran": 0.22, "infantry": 0.18, "pekacz": 0.1 }, "LH": { "ciezki": 0.5, "odzwierny": 0.2, "infantry": 0.15, "plujka": 0.15 } },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 0.9 }, "przeprawa": { "att": 0.8, "def": 0.9 } }, "desc": "Skupiona na ciężkich wojownikach (zdrowie 24, pancerz 30%): wytrzymała i wolna." },
+      "lekka": { "name": "Lekka masa", "sides": ["WK", "LH"], "guard": { "WK": "infantry", "LH": "infantry" },
+        "shares": { "WK": { "infantry": 0.72, "pekacz": 0.13, "biegacz": 0.15 }, "LH": { "infantry": 0.75, "plujka": 0.25 } },
+        "fit": { "bitwa": 0.8, "oblezenie": { "att": 0.7, "def": 0.5 }, "przeprawa": { "att": 0.6, "def": 0.5 } }, "desc": "Dużo tanich wojowników: liczebność kosztem jakości, szybka (prędkość 30 zamiast 22)." },
+      "flankujaca": { "name": "Flankująca (szybka)", "sides": ["WK"], "guard": { "WK": "biegacz" },
+        "shares": { "WK": { "biegacz": 0.42, "infantry": 0.33, "ciezki": 0.1, "pekacz": 0.15 } },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 0.6 }, "przeprawa": { "att": 1.3, "def": 0.8 } }, "desc": "Wielu biegaczy (prędkość 62, polują na plujki) i lekka piechota: manewr i uderzenia z boku, kosztem wytrzymałości." },
+      "szturmowa": { "name": "Szturmowa (tarany i pękacze)", "sides": ["WK"], "guard": { "WK": "ciezki" },
+        "shares": { "WK": { "taran": 0.32, "pekacz": 0.2, "infantry": 0.38, "ciezki": 0.1 } },
+        "fit": { "bitwa": 0.9, "oblezenie": { "att": 1.3, "def": 0.6 }, "przeprawa": { "att": 0.8, "def": 0.6 } }, "desc": "Tarany i pękacze do przełamania linii i odźwiernych, z piechotą w tle." },
+      "wytrwala": { "name": "Wytrwała (na wyczerpanie)", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
+        "shares": { "WK": { "ciezki": 0.4, "infantry": 0.4, "pekacz": 0.2 }, "LH": { "odzwierny": 0.3, "ciezki": 0.3, "plujka": 0.25, "infantry": 0.15 } },
+        "fit": { "bitwa": 0.9, "oblezenie": { "att": 0.7, "def": 1.2 }, "przeprawa": { "att": 0.7, "def": 1.1 } }, "desc": "Wytrzymałe i trudne do ruszenia roty (ciężcy, odźwierni, pękacze wiążące wroga) i stałe uzupełnienia: wyczerpuje przeciwnika." },
+      "dystansowa": { "name": "Dystansowa (plujki)", "sides": ["LH"], "guard": { "LH": "ciezki" },
+        "shares": { "LH": { "plujka": 0.4, "odzwierny": 0.2, "ciezki": 0.25, "infantry": 0.15 } },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 1.15 }, "przeprawa": { "att": 0.7, "def": 1.3 } }, "desc": "Dużo plujek (kwas, zasięg 80, obszarowo) osłoniętych ciężką piechotą i odźwiernymi." }
+    },
+    "counters": [
+      { "vs": "ranged", "min": 0.25, "boost": { "flankujaca": 1.5, "szturmowa": 1.2 }, "why": "szybcy polują na plujki" },
+      { "vs": "heavy", "min": 0.45, "boost": { "dystansowa": 1.4, "wytrwala": 1.1 }, "why": "kwas ignoruje pancerz" },
+      { "vs": "light", "min": 0.55, "boost": { "ciezka": 1.3, "dystansowa": 1.3 }, "why": "ciężcy i kwas obszarowy przeciw masie" },
+      { "vs": "fast", "min": 0.2, "boost": { "wytrwala": 1.2, "ciezka": 1.2 }, "why": "odźwierni i ciężcy wytrzymują biegaczy" }
+    ],
+    "tags": { "ranged": ["plujka"], "heavy": ["ciezki", "taran", "odzwierny"], "light": ["infantry"], "fast": ["biegacz"] },
+    "roles": { "WK": { "infantry": "assault", "ciezki": "assault", "taran": "taran", "pekacz": "pekacz", "biegacz": "raider" }, "LH": { "infantry": "reserve", "ciezki": "reserve", "plujka": "artillery", "odzwierny": "line" } },
+    "delays": { "assault": [0, 5, 5, 22, 22, 26], "taran": [0, 2], "pekacz": [10, 12], "raider": [18, 22] }
+  },
   "scenario": {
     "attacker": "WK",
     "sides": {
@@ -559,6 +632,164 @@ const Sim = (function () {
     return info;
   }
 
+  // ---------- armie: wycena, losowy dobór przez AI, rozmieszczenie w strefie startu ----------
+  // Army = { guard: typ gwardii, commanders: liczba rot dowódcy z gwardią, companies: [{ type, size }] }
+  const ARMY_CLASSES = { WK: [['infantry', 'ciezki'], ['@cmd'], ['taran', 'pekacz'], ['biegacz']], LH: [['odzwierny'], ['plujka'], ['infantry', 'ciezki'], ['@cmd']] };
+  const armyPool = (defs, side) => defs.army.pool.common.concat(defs.army.pool[side]);
+  const commanderCost = (defs, guard) => Math.round(defs.army.costs.dowodca + defs.army.guardSize * defs.army.costs[guard] * defs.army.guardMult);
+  const companyCost = (defs, c) => Math.round(c.size * defs.army.costs[c.type]);
+  const armyCost = (defs, a) => a.companies.reduce((t, c) => t + companyCost(defs, c), a.commanders * commanderCost(defs, a.guard));
+  // równy budżet obu stron; w oblężeniu atakujący dostaje budżet x siegeAttackerRatio
+  function budgetFor(defs, scenarioId, side, tier) {
+    const A = defs.army, base = A.budgets[tier];
+    if (base == null) throw new Error('Nieznany poziom budżetu: ' + tier);
+    return Math.round(scenarioId === 'oblezenie' && side === defs.scenario.attacker ? base * A.siegeAttackerRatio : base);
+  }
+  // lista naruszeń reguł: pula frakcji, liczba dowódców, rozmiary rot, budżet
+  function armyProblems(defs, side, a, budget) {
+    const A = defs.army, pool = armyPool(defs, side), out = [];
+    if (!pool.includes(a.guard)) out.push('typ gwardii spoza puli frakcji: ' + a.guard);
+    if (!(a.commanders >= A.commanders.min && a.commanders <= A.commanders.max)) out.push('liczba dowódców poza zakresem ' + A.commanders.min + '-' + A.commanders.max);
+    for (const c of a.companies) {
+      if (!pool.includes(c.type)) out.push('jednostka spoza puli frakcji ' + side + ': ' + c.type);
+      if (!(c.size >= A.company.min && c.size <= A.company.max)) out.push('rozmiar roty poza zakresem ' + A.company.min + '-' + A.company.max + ': ' + c.type + ' ' + c.size);
+    }
+    const cost = armyCost(defs, a);
+    if (cost > budget) out.push('koszt armii ' + cost + ' przekracza budżet ' + budget);
+    return out;
+  }
+  // odcisk roty w szyku liniowym (szerokość wzdłuż frontu, głębokość wzdłuż kierunku marszu); wzór jak w repack
+  function footprint(defs, type, size, guard, tight) {
+    const U = defs.units, mr = type === '@cmd' ? U[guard].radius * 1.1 : U[type].radius, n = type === '@cmd' ? defs.army.guardSize + 1 : size;
+    const s = tight ? Math.max(9.5, mr * 2.05) : Math.max(SPACING, mr * 2.1), cols = Math.max(4, Math.round(Math.sqrt(n * 2.5))), rows = Math.ceil(n / cols);
+    return { w: cols * s, d: rows * s, s, n, cols };
+  }
+  // Rozmieszcza rotę po rocie w strefie startu strony (kolumny od frontu do tyłu, klasy razem); gdy się nie mieści, rzuca błąd
+  // najpierw zwykły odstęp w szyku; gdy armia się nie mieści, ciaśniejszy (9,5 zamiast 11), a dopiero potem błąd
+  function layoutArmy(defs, side, a, ctx) {
+    try { return layoutArmyAt(defs, side, a, ctx, false); } catch (e) { if (!/brak miejsca/.test(e.message)) throw e; }
+    return layoutArmyAt(defs, side, a, ctx, true);
+  }
+  function layoutArmyAt(defs, side, a, ctx, tight) {
+    const A = defs.army, world = ctx.world, W = world.w, H = world.h, Z = zonesFor(W, H, world.nest), dy = (H - 1200) / 2, east = side === 'LH';
+    const xFront = east ? (world.gap ? world.gap[0] + 90 : W - 1040) : 425, // 425: ściany czołowe gąszczu (mapy 4 i 5) wchodzą w strefę do ok. x = 440
+       xBack = east ? (ctx.mode.nest ? W - 340 : W - 110) : 30;
+    const y0 = east ? dy + 250 : Math.max(70, Z.wk[1]), y1 = east ? dy + 950 : Math.min(H - 70, Z.wk[3]), face = east ? Math.PI : 0;
+    const out = [], classes = ARMY_CLASSES[side], items = [];
+    let plugDone = !(east && world.gap && ctx.mode.posture.LH === 'hold');
+    const add = (type, size) => {
+      if (type === 'odzwierny' && !plugDone) {
+        plugDone = true; out.push({ role: 'plug', closed: true, spacing: 10.4, at: [world.gap[0], world.gap[1]], face, units: { odzwierny: size } }); return;
+      }
+      const cls = classes.findIndex((g) => g.includes(type)), fp = footprint(defs, type, size, a.guard, tight);
+      items.push({ type, size, cls, w: fp.w, d: fp.d, s: fp.s, n: fp.n, cols: 0 });
+    };
+    for (let k = 0; k < a.commanders; k++) add('@cmd', 0);
+    for (const c of a.companies) add(c.type, c.size);
+    items.sort((p, q) => p.cls - q.cls || (classes[p.cls].indexOf(p.type) - classes[q.cls].indexOf(q.type)) || q.size - p.size);
+    const GL = 14, GD = 16, zh = y1 - y0, cols = [];
+    // kształt rot: w klasie z kilkoma rotami dobieramy szerokość tak, by kolumna wypełniła strefę (k rot obok siebie), co mieści więcej mrówek
+    const byCls = {}; for (const it of items) (byCls[it.cls] = byCls[it.cls] || []).push(it);
+    for (const k in byCls) {
+      const list = byCls[k]; if (list.length < 2) continue;
+      const avgW = list.reduce((t, it) => t + it.w, 0) / list.length, per = Math.max(1, Math.min(list.length, Math.floor((zh + GL) / (avgW + GL)))), wt = (zh + GL) / per - GL;
+      for (const it of list) { const c = Math.max(4, Math.floor(wt / it.s)); it.cols = c; it.w = c * it.s; it.d = Math.ceil(it.n / c) * it.s; }
+    }
+    // siatka terenu (bez osłon i bez losowych plam): rota nie może stanąć na przeszkodzie (np. stałe głazy na mapie 3)
+    const grid = ctx.grid || (ctx.grid = rasterize(world, world.map.obstacles)), GC = Math.ceil(W / CELL);
+    const free = (cx, cy, w, d) => {
+      for (let yy = Math.floor((cy - w / 2 - 4) / CELL); yy <= Math.floor((cy + w / 2 + 4) / CELL); yy++) for (let xx = Math.floor((cx - d / 2 - 4) / CELL); xx <= Math.floor((cx + d / 2 + 4) / CELL); xx++) { const v = grid[yy * GC + xx]; if (v !== 0 && v !== 2 && v !== 8) return false; }
+      return true;
+    };
+    const place = (it, cx, cy) => {
+      if (it.type === '@cmd') out.push({ role: east ? 'reserve' : 'command', at: [Math.round(cx), Math.round(cy)], face, units: { '@guard': A.guardSize, dowodca: 1 }, delay: 0, spacing: tight ? it.s : 0, fcols: it.cols });
+      else {
+        const role = A.roles[side][it.type], k = counters[role] = (counters[role] || 0), dl = A.delays[role];
+        counters[role]++;
+        out.push({ role, at: [Math.round(cx), Math.round(cy)], face, units: { [it.type]: it.size }, delay: !east && dl ? dl[Math.min(k, dl.length - 1)] : 0, spacing: tight ? it.s : 0, fcols: it.cols });
+      }
+    };
+    // kolumny od frontu do tyłu, klasy osobno; w kolumnie rota po rocie od góry (pierwsze wolne miejsce), potem kolumna jest wyśrodkowana, jeśli się da
+    let off = 0; const counters = {}, fcx = (d) => (east ? xFront + off + d / 2 : xFront - off - d / 2);
+    for (let cls = 0; cls < classes.length; cls++) {
+      let rest = items.filter((it) => it.cls === cls);
+      for (const it of rest) if (it.w > zh) throw new Error('brak miejsca w strefie startu: rota szersza niż strefa');
+      while (rest.length) {
+        const placed = []; let cursor = y0, colD = 0;
+        const next = [];
+        for (const it of rest) {
+          let y = cursor + it.w / 2, ok = false; const cx = fcx(it.d);
+          for (; y + it.w / 2 <= y1; y += 16) if (free(cx, y, it.w, it.d)) { ok = true; break; }
+          if (ok) { placed.push({ it, cx, cy: y }); cursor = y + it.w / 2 + GL; colD = Math.max(colD, it.d); } else next.push(it);
+        }
+        if (!placed.length) { off += 40; if (off > Math.abs(xBack - xFront)) throw new Error('brak miejsca w strefie startu'); continue; }
+        const last = placed[placed.length - 1], slack = y1 - (last.cy + last.it.w / 2), shift = Math.floor(slack / 2 / 16) * 16;
+        if (shift > 0 && placed.every((q) => free(q.cx, q.cy + shift, q.it.w, q.it.d))) for (const q of placed) q.cy += shift;
+        for (const q of placed) place(q.it, q.cx, q.cy);
+        off += colD + GD; if (off - GD > Math.abs(xBack - xFront)) throw new Error('brak miejsca w strefie startu');
+        rest = next;
+      }
+    }
+    return out;
+  }
+  // ---- dobór armii przez AI: nazwane wzorce (army.archetypes), nie losowanie ----
+  // udziały sztuk w kategoriach army.tags (ranged, heavy, light, fast); do dopasowania wzorca do armii przeciwnika
+  function armyProfile(defs, a) {
+    const n = {}; let tot = 0;
+    const add = (t, k) => { n[t] = (n[t] || 0) + k; tot += k; };
+    for (const c of a.companies) add(c.type, c.size);
+    if (a.commanders) add(a.guard, a.commanders * defs.army.guardSize);
+    const out = {}; for (const tag in defs.army.tags) out[tag] = tot ? defs.army.tags[tag].reduce((t, ty) => t + (n[ty] || 0), 0) / tot : 0;
+    return out;
+  }
+  const archetypesFor = (defs, side) => Object.keys(defs.army.archetypes).filter((k) => k !== 'comment' && defs.army.archetypes[k].sides.includes(side));
+  // wynik wzorca: przydatność w scenariuszu i roli (att/def) razy premie z tabeli counters wobec znanej armii przeciwnika
+  function archetypeScore(defs, id, side, scenarioId, opp) {
+    const f = defs.army.archetypes[id].fit[scenarioId], role = side === defs.scenario.attacker ? 'att' : 'def';
+    let sc = typeof f === 'number' ? f : f[role];
+    if (opp) { const prof = armyProfile(defs, opp); for (const c of defs.army.counters) if (prof[c.vs] >= c.min && c.boost[id]) sc *= c.boost[id]; }
+    return sc;
+  }
+  // 'auto': wzorzec o najwyższym wyniku; wzorce w granicach 8% od najlepszego rozstrzyga ziarno (różne ziarna dają różne, ale rozsądne armie)
+  function pickArchetype(defs, side, scenarioId, opp, rng) {
+    const ids = archetypesFor(defs, side), sc = ids.map((id) => archetypeScore(defs, id, side, scenarioId, opp)), mx = Math.max(...sc);
+    const top = ids.filter((id, i) => sc[i] >= mx * 0.92);
+    return top[Math.floor(rng.next() * top.length)];
+  }
+  // armia wg wzorca: budżet dzielony wg udziałów, rota na typ w rozmiarach bliskich domyślnym, reszta budżetu do największego udziału
+  function composeArmy(defs, side, budget, rng, scenarioId, ctx, style, opp) {
+    const A = defs.army, id = !style || style === 'auto' ? pickArchetype(defs, side, scenarioId, opp, rng) : style, arch = A.archetypes[id];
+    if (!arch || !arch.sides.includes(side)) throw new Error('Wzorzec ' + id + ' nie jest dostępny dla frakcji ' + side);
+    const guard = arch.guard[side], sh = arch.shares[side], types = Object.keys(sh).sort((p, q) => sh[q] - sh[p]);
+    for (let shrink = 0; shrink < 14; shrink++) {
+      const B = Math.floor(budget * Math.pow(0.95, shrink)), commanders = B < 1500 ? 1 : 2, a = { guard, commanders, companies: [], style: id };
+      const rem0 = B - commanders * commanderCost(defs, guard); if (rem0 < 0) continue;
+      for (const t of types) {
+        let ants = Math.floor(rem0 * sh[t] / A.costs[t]); if (ants < A.company.min && rem0 * sh[t] >= 0.6 * A.company.min * A.costs[t]) ants = A.company.min; // drogi typ (np. taran): rota minimalna, gdy udział to co najmniej 60% jej ceny
+        if (ants < A.company.min) continue;
+        const n = Math.max(1, Math.round(ants / A.defaultSize[t])), size = Math.min(A.company.max, Math.max(A.company.min, Math.floor(ants / n / A.company.step) * A.company.step));
+        for (let k = 0; k < n; k++) a.companies.push({ type: t, size });
+      }
+      // reszta budżetu: powiększ rangą rotę głównego typu, potem dołóż rotę
+      const main = a.companies.filter((c) => c.type === types[0]);
+      for (let guardN = 0; guardN < 500; guardN++) {
+        const left = B - armyCost(defs, a), inc = main.find((c) => c.size + A.company.step <= A.company.max && A.costs[c.type] * A.company.step <= left);
+        if (!inc) break; inc.size += A.company.step;
+      }
+      const left = B - armyCost(defs, a);
+      if (left >= A.company.min * A.costs.infantry && types.includes('infantry')) a.companies.push({ type: 'infantry', size: Math.min(A.company.max, Math.floor(left / A.costs.infantry / A.company.step) * A.company.step || A.company.min) });
+      if (armyCost(defs, a) > budget) continue;
+      try { layoutArmy(defs, side, a, ctx); return a; } catch (e) { if (!/brak miejsca/.test(e.message)) throw e; }
+    }
+    throw new Error('Nie udało się dobrać armii wzorca ' + id + ' w budżecie ' + budget);
+  }
+  // kontekst świata (rozmiar, przesmyk, tryb scenariusza) dla wyceny i rozmieszczenia poza symulacją, np. w interfejsie
+  function armyContext(defs0, scenarioId, mapId, seed) {
+    const defs = JSON.parse(JSON.stringify(defs0)), sc = applyScenario(defs, scenarioId);
+    applyMapType(defs, sc.map || mapId, createRng(seed));
+    return { defs, world: defs.world, mode: defs.scenario.mode, scenario: sc };
+  }
+
   function create(opts) {
     const defs = JSON.parse(JSON.stringify(opts.defs));
     if (opts.passage != null) defs.world.passage = opts.passage;
@@ -570,6 +801,19 @@ const Sim = (function () {
     const mapInfo = applyMapType(defs, scenInfo.map || (opts.map == null ? 3 : opts.map), rng); // rozmiar, gniazdo, przeszkody i przesunięcie układu rot
     const MODE = defs.scenario.mode;
     const SPM = [(opts.speedMult && opts.speedMult.WK) || 1, (opts.speedMult && opts.speedMult.LH) || 1]; // mnożnik prędkości strony (tylko do eksperymentów)
+    // armie z budżetu (etap 3): gracz podaje skład (opts.armies), pozostałe strony dobiera AI; bez opts.budget zostaje armia ze scenariusza
+    let armyInfo = null;
+    if (opts.budget) {
+      armyInfo = {}; const actx = { world: defs.world, mode: MODE };
+      for (const sn of SIDES) {
+        const budget = budgetFor(defs, scenInfo.id, sn, opts.budget), given = opts.armies && opts.armies[sn];
+        let a = given;
+        if (a) { const pr = armyProblems(defs, sn, a, budget); if (pr.length) throw new Error('Nieprawidłowa armia ' + sn + ': ' + pr.join('; ')); }
+        else a = composeArmy(defs, sn, budget, rng.fork('army' + sn), scenInfo.id, actx, opts.styles && opts.styles[sn], opts.armies && opts.armies[sn === 'WK' ? 'LH' : 'WK']);
+        defs.scenario.sides[sn].companies = layoutArmy(defs, sn, a, actx); defs.scenario.sides[sn].guardType = a.guard;
+        armyInfo[sn] = { budget, cost: armyCost(defs, a), army: JSON.parse(JSON.stringify(a)), composed: !given, style: a.style || null };
+      }
+    } else if (opts.armies) throw new Error('opts.armies wymaga opts.budget');
     // plug (zamknięty szyk odźwiernych) ma sens tylko tam, gdzie jest przesmyk do zamknięcia i obrońca broni pozycji;
     // w pozostałych przypadkach odźwierni stają jako zwykła linia (nieruchomy zamknięty mur nie może iść do ataku)
     if (!defs.world.gap || MODE.posture.LH !== 'hold') for (const sn of SIDES) for (const cd of defs.scenario.sides[sn].companies) if (cd.role === 'plug') { cd.role = 'line'; cd.closed = false; delete cd.spacing; }
@@ -579,7 +823,7 @@ const Sim = (function () {
     const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
     const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
-    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo, scenarioInfo: scenInfo };
+    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo, scenarioInfo: scenInfo, armyInfo };
 
     // ---------- tabele typów (przebudowywane po zmianie suwaków) ----------
     let names, kinds, nT, ti, T, mult;
@@ -736,7 +980,7 @@ const Sim = (function () {
           const c = {
             id: comps.length, side: s, sideName: sn, name: cd.name || '', role: cd.role, spacing: cd.spacing || 0, fatigue: 0, delay: cd.delay || 0,
             ants: [], alive: 0, initial: 0, ax: at[0], ay: at[1], face: cd.face, fx: Math.cos(cd.face), fy: Math.sin(cd.face),
-            formation: F_LINE, fcols: 0, order: { kind: 'hold', x: at[0], y: at[1] }, eff: null,
+            formation: F_LINE, fcols: cd.fcols || 0, order: { kind: 'hold', x: at[0], y: at[1] }, eff: null,
             control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
             deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
@@ -1419,7 +1663,7 @@ const Sim = (function () {
     };
     return sim;
   }
-  return { create, HZ, DT, CELL, SIDES, mapMetrics, rasterize };
+  return { create, HZ, DT, CELL, SIDES, mapMetrics, rasterize, createRng, army: { archetypes: archetypesFor, pick: pickArchetype, score: archetypeScore, profile: armyProfile, pool: armyPool, cost: armyCost, commanderCost, companyCost, budgetFor, problems: armyProblems, layout: layoutArmy, compose: composeArmy, context: armyContext, footprint } };
 })();
 if (typeof module !== 'undefined') module.exports = Sim;
 /*SIM-END*/
@@ -1439,7 +1683,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'oblezenie',
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'oblezenie', budget: q.get('budget') || '', oppStyle: 'auto', army: null,
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -1730,7 +1974,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
-    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, scenario: S.scenario, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
+    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, scenario: S.scenario, budget: S.budget || undefined, armies: S.budget && S.army && !S.observe ? { [S.side]: S.army } : undefined, styles: S.budget ? { [S.side === 'WK' ? 'LH' : 'WK']: S.oppStyle, [S.side]: 'auto' } : undefined, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
     S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
     setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); buildFordButtons(); $('mapName').textContent = S.sim.scenarioInfo.name + ' · ' + (S.sim.scenarioInfo.map ? S.sim.mapInfo.name : S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name);
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
@@ -1881,8 +2125,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('bMenu').onclick = () => { $('menu').classList.remove('hidden'); };
   $('bPanel').onclick = () => { $('side').classList.toggle('hide'); };
   $('bHelp').onclick = toggleHelp;
-  $('cWK').onclick = () => { S.side = 'WK'; $('cWK').classList.add('on'); $('cLH').classList.remove('on'); };
-  $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); };
+  $('cWK').onclick = () => { S.side = 'WK'; $('cWK').classList.add('on'); $('cLH').classList.remove('on'); $('aStyle').innerHTML = ''; resetArmy(); };
+  $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); $('aStyle').innerHTML = ''; resetArmy(); };
   $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
   // typ mapy: lista z world.mapTypes; suwak przesmyku działa tylko na mapie z głównym przesmykiem (typ 3)
   const MAPT = DEFS0.world.mapTypes, SCENT = DEFS0.world.scenarioTypes;
@@ -1894,13 +2138,78 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const mt = forced || MAPT[S.map]; $('mMapDesc').textContent = mt ? mt.desc : '';
     const has = mt && mt.gen === 'legacy'; $('mPass').disabled = !has; $('mPassRow').style.opacity = has ? 1 : 0.4; $('mPassRow').title = has ? '' : 'Ten typ mapy nie ma głównego przesmyku';
   }
-  $('mMap').onchange = () => { S.map = +$('mMap').value; syncMapRow(); };
-  $('mScen').onchange = () => { S.scenario = $('mScen').value; syncMapRow(); };
-  $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); };
-  $('mObs').onchange = () => { S.observe = $('mObs').checked; };
+  $('mMap').onchange = () => { S.map = +$('mMap').value; syncMapRow(); if (typeof resetArmy === 'function') resetArmy(); };
+  $('mScen').onchange = () => { S.scenario = $('mScen').value; syncMapRow(); if (typeof resetArmy === 'function') resetArmy(); };
+  $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); resetArmy(); };
+  $('mObs').onchange = () => { S.observe = $('mObs').checked; syncArmyMenu(); };
   $('mGuard').onchange = () => { S.guard = $('mGuard').value; };
   $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
-  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen || MAPT[S.map].hidden) S.map = 3; if (!SCENT[S.scenario] || !SCENT[S.scenario].posture) S.scenario = 'oblezenie'; $('mScen').value = S.scenario; $('mMap').value = S.map; syncMapRow(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+  // ---------- konfiguracja armii (etap 3) ----------
+  const ADEF = DEFS0.army, UN = DEFS0.units;
+  for (const [v, t] of [['', 'Armia ze scenariusza (bez budżetu)']].concat(Object.keys(ADEF.budgets).map((k) => [k, ADEF.budgetNames[k] + ' (' + ADEF.budgets[k] + ' pkt)']))) { const o = document.createElement('option'); o.value = v; o.textContent = t; $('mBudget').appendChild(o); }
+  let actx = null, actxKey = '';
+  const armyCtx = () => { const k = S.scenario + '|' + S.map + '|' + S.seed; if (k !== actxKey) { actx = Sim.army.context(DEFS0, S.scenario, S.map, S.seed); actxKey = k; } return actx; };
+  const other = () => (S.side === 'WK' ? 'LH' : 'WK');
+  const ARCH = ADEF.archetypes;
+  function fillStyleSelect(sel, side, withAuto) {
+    sel.innerHTML = ''; if (withAuto) { const o = document.createElement('option'); o.value = 'auto'; o.textContent = 'Auto (wg scenariusza' + (side === other() ? ' i Twojej armii)' : ')'); sel.appendChild(o); }
+    for (const id of Sim.army.archetypes(DEFS0, side)) { const o = document.createElement('option'); o.value = id; o.textContent = ARCH[id].name; sel.appendChild(o); }
+  }
+  const budgetOf = (side) => Sim.army.budgetFor(armyCtx().defs, S.scenario, side, S.budget);
+  const fits = (a) => { try { Sim.army.layout(armyCtx().defs, S.side, a, armyCtx()); return true; } catch (e) { return false; } };
+  const armyCost = (a) => Sim.army.cost(armyCtx().defs, a);
+  function resetArmy() { S.army = null; fillStyleSelect($('mOppStyle'), other(), true); if (!Sim.army.archetypes(DEFS0, other()).includes(S.oppStyle)) S.oppStyle = 'auto'; $('mOppStyle').value = S.oppStyle; syncArmyMenu(); }
+  function ensureArmy() { if (!S.army) S.army = Sim.army.compose(armyCtx().defs, S.side, budgetOf(S.side), Sim.createRng(S.seed + ':ui:' + S.side + S.scenario), S.scenario, armyCtx()); return S.army; }
+  function syncArmyMenu() {
+    const on = !!S.budget; $('mArmy').disabled = !on || S.observe; $('mGuardRow').classList.toggle('hidden', on); $('mOppRow').classList.toggle('hidden', !on);
+    if (!on) { $('mArmySum').textContent = 'Obie strony dostają armię ze scenariusza (bez budżetu i bez wyboru jednostek).'; return; }
+    const my = budgetOf(S.side), op = budgetOf(other());
+    let t = 'Twój budżet: ' + my + ' pkt, przeciwnik (AI): ' + op + ' pkt' + (S.scenario === 'oblezenie' ? ' (atakujący ma x' + ADEF.siegeAttackerRatio + ')' : ' (w tym scenariuszu równy)') + '. ';
+    t += S.observe ? 'Tryb obserwatora: obie armie dobiera AI (auto).' : S.army ? 'Twoja armia (' + (S.army.style ? ARCH[S.army.style].name : 'własna') + '): ' + S.army.companies.length + ' rot + ' + S.army.commanders + ' dow., koszt ' + armyCost(S.army) + '/' + my + '.' : 'Armię dobierze AI wg wzorca auto, albo skonfiguruj ją sam.';
+    $('mArmySum').textContent = t;
+  }
+  const uStat = (t) => { const u = UN[t]; return 'zdr ' + u.hp + ', obr ' + u.dmg + ', pręd ' + u.speed + (u.ranged ? ', zasięg ' + u.range : '') + (u.ability ? ', ' + u.ability.name : '') + (u.burst ? ', jednorazowy' : ''); };
+  function renderArmy() {
+    const a = ensureArmy(), budget = budgetOf(S.side), cost = armyCost(a), rem = budget - cost, pool = Sim.army.pool(armyCtx().defs, S.side), C = ADEF.company;
+    if (!$('aStyle').options.length) fillStyleSelect($('aStyle'), S.side, true); $('aStyleDesc').textContent = $('aStyle').value === 'auto' ? 'Auto: AI wybiera wzorzec o najwyższej przydatności w tym scenariuszu i roli (z premią za kontrę wobec armii przeciwnika, jeśli ją zna).' : ARCH[$('aStyle').value].desc;
+    $('aSide').textContent = SIDE_NAME[S.side]; $('aInfo').textContent = 'Scenariusz: ' + SCENT[S.scenario].name + '. Przeciwnik (AI) dobierze armię z własnej puli w budżecie ' + budgetOf(other()) + ' pkt.';
+    $('aBar').style.width = Math.min(100, 100 * cost / budget) + '%'; $('aBudget').textContent = 'wykorzystano ' + cost + ' z ' + budget + ' pkt, pozostało ' + rem;
+    const tbl = $('aPool'); tbl.innerHTML = '<tr><th>Jednostka</th><th>Statystyki</th><th>Koszt/mrówka</th><th>Rota</th><th></th></tr>';
+    const addable = (t) => { const c = ADEF.costs[t]; let size = Math.min(ADEF.defaultSize[t], Math.floor(rem / c / C.step) * C.step); if (size < C.min) return 0; const b = JSON.parse(JSON.stringify(a)); b.companies.push({ type: t, size }); return fits(b) ? size : -1; };
+    for (const t of pool) {
+      const tr = document.createElement('tr'), sz = addable(t);
+      tr.innerHTML = '<td>' + UN[t].name + '</td><td>' + uStat(t) + '</td><td>' + ADEF.costs[t] + '</td><td>' + ADEF.defaultSize[t] + ' (' + ADEF.defaultSize[t] * ADEF.costs[t] + ' pkt)</td>';
+      const td = document.createElement('td'), b = document.createElement('button'); b.textContent = '+ rota'; b.disabled = sz <= 0; b.title = sz === 0 ? 'Za mało budżetu' : sz < 0 ? 'Brak miejsca w strefie startu' : 'Dodaj rotę (' + sz + ')';
+      b.onclick = () => { a.companies.push({ type: t, size: sz }); renderArmy(); }; td.appendChild(b); tr.appendChild(td); tbl.appendChild(tr);
+    }
+    const list = $('aList'); list.innerHTML = '';
+    const cr = document.createElement('div'); cr.className = 'arow'; const cc = Sim.army.commanderCost(armyCtx().defs, a.guard);
+    cr.innerHTML = '<span>Dowódca z gwardią <b>×' + a.commanders + '</b> <button data-d="-1">−</button><button data-d="1">+</button><br><small>gwardia: <select id="aGuard"></select> (' + cc + ' pkt za rotę)</small></span><span></span><span>' + a.commanders * cc + '</span><span></span>';
+    list.appendChild(cr);
+    for (const t of pool) { const o = document.createElement('option'); o.value = t; o.textContent = UN[t].name; if (t === a.guard) o.selected = true; cr.querySelector('#aGuard').appendChild(o); }
+    cr.querySelector('#aGuard').onchange = (e) => { const b = JSON.parse(JSON.stringify(a)); b.guard = e.target.value; if (armyCost(b) <= budget && fits(b)) a.guard = b.guard; renderArmy(); };
+    cr.querySelectorAll('button').forEach((bt) => { bt.onclick = () => { const b = JSON.parse(JSON.stringify(a)); b.commanders += +bt.dataset.d; if (b.commanders >= ADEF.commanders.min && b.commanders <= ADEF.commanders.max && armyCost(b) <= budget && fits(b)) a.commanders = b.commanders; renderArmy(); }; });
+    a.companies.forEach((c, i) => {
+      const r = document.createElement('div'); r.className = 'arow';
+      r.innerHTML = '<span>' + UN[c.type].name + '</span><span><input type="number" min="' + C.min + '" max="' + C.max + '" step="' + C.step + '" value="' + c.size + '"> mr.</span><span>' + Sim.army.companyCost(armyCtx().defs, c) + '</span><button title="Usuń rotę">✕</button>';
+      r.querySelector('input').onchange = (e) => {
+        let v = Math.max(C.min, Math.min(C.max, Math.round(+e.target.value / C.step) * C.step || c.size)); const maxAff = Math.floor((rem + Sim.army.companyCost(armyCtx().defs, c)) / ADEF.costs[c.type] / C.step) * C.step; v = Math.min(v, maxAff);
+        const b = JSON.parse(JSON.stringify(a)); b.companies[i].size = Math.max(C.min, v); if (fits(b)) c.size = b.companies[i].size; renderArmy();
+      };
+      r.querySelector('button').onclick = () => { a.companies.splice(i, 1); renderArmy(); }; list.appendChild(r);
+    });
+    const pr = Sim.army.problems(armyCtx().defs, S.side, a, budget);
+    $('aSpace').innerHTML = pr.length ? '<span class="warn">' + pr.join('; ') + '</span>' : 'Skład poprawny. Rozmieszczenie w strefie startu: ok (' + a.companies.length + ' rot, ' + a.companies.reduce((t, c) => t + c.size, 0) + ' mrówek + gwardia).';
+    $('aDone').disabled = pr.length > 0;
+  }
+  $('mBudget').onchange = () => { S.budget = $('mBudget').value; $('aStyle').innerHTML = ''; resetArmy(); };
+  $('mArmy').onclick = () => { renderArmy(); $('army').classList.remove('hidden'); };
+  $('aStyle').onchange = () => { renderArmy(); };
+  $('aAuto').onclick = () => { S.army = Sim.army.compose(armyCtx().defs, S.side, budgetOf(S.side), Sim.createRng(S.seed + ':ui:' + S.side + S.scenario), S.scenario, armyCtx(), $('aStyle').value); renderArmy(); };
+  $('mOppStyle').onchange = () => { S.oppStyle = $('mOppStyle').value; };
+  $('aClear').onclick = () => { const a = ensureArmy(); a.companies = []; a.commanders = ADEF.commanders.min; renderArmy(); };
+  $('aDone').onclick = () => { $('army').classList.add('hidden'); syncArmyMenu(); };
+  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen || MAPT[S.map].hidden) S.map = 3; if (!SCENT[S.scenario] || !SCENT[S.scenario].posture) S.scenario = 'oblezenie'; $('mScen').value = S.scenario; $('mMap').value = S.map; if (!ADEF.budgets[S.budget]) S.budget = ''; $('mBudget').value = S.budget; syncMapRow(); resetArmy(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
   // ---------- drewniany interfejs ----------
   // tekstura desek: cztery deski z usłojeniem, sękami i szwami; używana jako tło paneli (.wood)

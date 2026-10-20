@@ -494,6 +494,93 @@ test('determinizm scenariuszy: bitwa, oblężenie i przeprawa dają ten sam skr�
   return out.join(', ');
 });
 
+// ---------- etap 3: konfiguracja armii ----------
+function makeArmy(scen, map, seed, budget, extra) { const { Sim, defs } = loadP1(); return Sim.create(Object.assign({ defs, seed, map, scenario: scen, budget }, extra || {})); }
+const POOL = { WK: ['infantry', 'ciezki', 'taran', 'biegacz', 'pekacz'], LH: ['infantry', 'ciezki', 'odzwierny', 'plujka'] };
+const shareOf = (sim, side) => { const info = sim.armyInfo[side], d = sim.defs.army, cost = {}; let tot = 0; for (const c of info.army.companies) { cost[c.type] = (cost[c.type] || 0) + c.size * d.costs[c.type]; tot += c.size * d.costs[c.type]; } for (const k in cost) cost[k] /= tot; return cost; };
+
+test('budżety: trzy poziomy, w Bitwie i Przeprawie równe dla obu stron, w Oblężeniu atakujący ma x1,5', () => {
+  const { Sim, defs } = loadP1(); const A = defs.army;
+  assert.deepStrictEqual([A.budgets.maly, A.budgets.sredni, A.budgets.duzy], [1200, 2200, 3500]);
+  for (const tier of ['maly', 'sredni', 'duzy']) {
+    for (const scen of ['bitwa', 'przeprawa']) assert.strictEqual(Sim.army.budgetFor(defs, scen, 'WK', tier), Sim.army.budgetFor(defs, scen, 'LH', tier), scen + ' ' + tier + ': budżety nierówne');
+    assert.strictEqual(Sim.army.budgetFor(defs, 'oblezenie', 'WK', tier), Math.round(A.budgets[tier] * 1.5)); assert.strictEqual(Sim.army.budgetFor(defs, 'oblezenie', 'LH', tier), A.budgets[tier]);
+  }
+  for (const t of POOL.WK.concat(POOL.LH)) assert.ok(A.costs[t] > 0, 'brak kosztu ' + t);
+  const sim = makeArmy('oblezenie', 3, 1, 'sredni'); assert.strictEqual(sim.armyInfo.WK.budget, 3300); assert.strictEqual(sim.armyInfo.LH.budget, 2200);
+  return 'średni: bitwa/przeprawa 2200 vs 2200, oblężenie WK 3300 vs LH 2200';
+});
+
+test('budżet jest twardym limitem, a pula frakcji i rozmiary rot są egzekwowane', () => {
+  const ok = { guard: 'ciezki', commanders: 1, companies: [{ type: 'infantry', size: 100 }] };
+  assert.doesNotThrow(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: ok } }));
+  const { Sim, defs } = loadP1(); const exact = { guard: 'infantry', commanders: 1, companies: [] }; exact.companies.push({ type: 'infantry', size: 300 }, { type: 'infantry', size: 300 }, { type: 'infantry', size: 300 }); const used = Sim.army.cost(defs, exact);
+  exact.companies.push({ type: 'infantry', size: 300 - 0 }); assert.throws(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: exact } }), /przekracza budżet/);
+  assert.throws(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: { guard: 'ciezki', commanders: 1, companies: [{ type: 'odzwierny', size: 50 }] } } }), /spoza puli/);
+  assert.throws(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { LH: { guard: 'ciezki', commanders: 1, companies: [{ type: 'taran', size: 50 }] } } }), /spoza puli/);
+  assert.throws(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: { guard: 'ciezki', commanders: 1, companies: [{ type: 'infantry', size: 10 }] } } }), /rozmiar/);
+  assert.throws(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: { guard: 'ciezki', commanders: 0, companies: [] } } }), /dowódców/);
+  assert.throws(() => makeArmy('bitwa', 2, 1, undefined, { armies: { WK: ok } }), /budget/);
+  // dokładnie na limicie
+  const atLimit = { guard: 'infantry', commanders: 1, companies: [{ type: 'infantry', size: 300 }, { type: 'infantry', size: 300 }, { type: 'infantry', size: 300 }] };
+  const room = 1200 - Sim.army.cost(defs, atLimit); atLimit.companies.push({ type: 'infantry', size: Math.max(30, Math.min(300, room)) });
+  assert.ok(Sim.army.cost(defs, atLimit) <= 1200); assert.doesNotThrow(() => makeArmy('bitwa', 2, 1, 'maly', { armies: { WK: atLimit } }));
+  return 'przekroczenie budżetu, jednostki spoza puli, zły rozmiar roty i brak dowódcy są odrzucane; skład na limicie przechodzi';
+});
+
+test('AI dobiera armię wg wzorców: w budżecie, z puli frakcji, każdy wzorzec ma swoją sygnaturę i różni się od pozostałych', () => {
+  const { Sim, defs } = loadP1(); const profiles = {};
+  for (const side of ['WK', 'LH']) for (const id of Sim.army.archetypes(defs, side)) {
+    const sim = makeArmy('bitwa', 2, 1, 'sredni', { styles: { [side]: id } }), i = sim.armyInfo[side], sh = shareOf(sim, side);
+    assert.ok(i.cost <= i.budget && i.cost >= 0.9 * i.budget, side + ' ' + id + ': koszt ' + i.cost + '/' + i.budget);
+    assert.ok(i.army.companies.every((c) => POOL[side].includes(c.type)) && i.army.commanders >= 1, side + ' ' + id + ': jednostki spoza puli');
+    const arch = defs.army.archetypes[id]; for (const t in arch.shares[side]) assert.ok(Math.abs((sh[t] || 0) - arch.shares[side][t]) < 0.13, side + ' ' + id + ' ' + t + ': udział ' + (sh[t] || 0).toFixed(2) + ' zamiast ' + arch.shares[side][t]);
+    profiles[side + ':' + id] = sh;
+  }
+  const keys = Object.keys(profiles), L1 = (a, b) => [...new Set(Object.keys(a).concat(Object.keys(b)))].reduce((t, k) => t + Math.abs((a[k] || 0) - (b[k] || 0)), 0);
+  for (const side of ['WK', 'LH']) { const ks = keys.filter((k) => k.startsWith(side)); for (let x = 0; x < ks.length; x++) for (let y = x + 1; y < ks.length; y++) assert.ok(L1(profiles[ks[x]], profiles[ks[y]]) > 0.2, ks[x] + ' i ' + ks[y] + ' prawie identyczne'); }
+  assert.ok(profiles['LH:dystansowa'].plujka >= 0.3 && profiles['WK:flankujaca'].biegacz >= 0.3 && profiles['WK:szturmowa'].taran >= 0.2 && profiles['WK:ciezka'].ciezki >= 0.4 && profiles['WK:lekka'].infantry >= 0.6);
+  return 'wzorce WK: ' + Object.keys(profiles).filter((k) => k.startsWith('WK')).length + ', LH: ' + Object.keys(profiles).filter((k) => k.startsWith('LH')).length + '; udziały zgodne z definicją (±13 pp)';
+});
+
+test('wzorzec auto: dobór zależy od scenariusza i roli, uwzględnia kontrę wobec armii gracza i jest deterministyczny', () => {
+  const { Sim, defs } = loadP1(); const pick = (scen, side, seed, opp) => Sim.army.pick(defs, side, scen, opp, Sim.createRng(seed));
+  for (let seed = 1; seed <= 6; seed++) {
+    assert.strictEqual(pick('oblezenie', 'WK', seed), 'szturmowa'); assert.strictEqual(pick('przeprawa', 'WK', seed), 'flankujaca'); assert.strictEqual(pick('przeprawa', 'LH', seed), 'dystansowa');
+    assert.ok(['dystansowa', 'wytrwala'].includes(pick('oblezenie', 'LH', seed)), 'obrońca w oblężeniu');
+  }
+  const set = new Set(); for (let seed = 1; seed <= 12; seed++) set.add(pick('bitwa', 'WK', seed)); assert.ok(set.size >= 2, 'w Bitwie ziarno nie zmienia wzorca');
+  const plujki = { guard: 'ciezki', commanders: 1, companies: [{ type: 'plujka', size: 300 }, { type: 'plujka', size: 200 }, { type: 'odzwierny', size: 60 }] };
+  for (let seed = 1; seed <= 6; seed++) assert.strictEqual(pick('bitwa', 'WK', seed, plujki), 'flankujaca', 'WK nie kontruje plujek biegaczami');
+  const masa = { guard: 'infantry', commanders: 1, companies: Array.from({ length: 6 }, () => ({ type: 'infantry', size: 200 })) };
+  for (let seed = 1; seed <= 6; seed++) assert.ok(['ciezka', 'dystansowa'].includes(pick('bitwa', 'LH', seed, masa)), 'LH nie kontruje masy');
+  assert.strictEqual(pick('bitwa', 'LH', 4), pick('bitwa', 'LH', 4));
+  return 'oblężenie WK: szturmowa, LH: dystansowa/wytrwała; przeprawa WK: flankująca, LH: dystansowa; wobec plujek flankująca, wobec masy ciężka/dystansowa';
+});
+
+test('rozmieszczenie armii: dla trzech budżetów, scenariuszy i map nikt nie startuje w ścianie ani na sobie, a zbyt duża armia daje czytelny błąd', () => {
+  let n = 0, worstOverlap = 0;
+  for (const tier of ['maly', 'sredni', 'duzy']) for (const [scen, map] of [['bitwa', 1], ['bitwa', 5], ['oblezenie', 2], ['oblezenie', 3], ['oblezenie', 4], ['przeprawa', 3]]) {
+    const sim = makeArmy(scen, map, 3, tier); n++;
+    for (let i = 0; i < sim.count; i++) { const g = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; assert.ok(!(g === 1 || g === 3 || g === 4 || g === 5 || g === 6 || g === 7), tier + ' ' + scen + ' ' + map + ': mrówka w ścianie'); }
+    const cell = new Map(); let close = 0; for (let i = 0; i < sim.count; i++) { const k = Math.floor(sim.x[i] / 6) + ',' + Math.floor(sim.y[i] / 6); (cell.get(k) || cell.set(k, []).get(k)).push(i); }
+    for (let i = 0; i < sim.count; i++) { const cx = Math.floor(sim.x[i] / 6), cy = Math.floor(sim.y[i] / 6); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const j of cell.get((cx + dx) + ',' + (cy + dy)) || []) if (j > i && Math.hypot(sim.x[i] - sim.x[j], sim.y[i] - sim.y[j]) < 5) close++; }
+    worstOverlap = Math.max(worstOverlap, close / sim.count); assert.ok(close / sim.count < 0.02, tier + ' ' + scen + ' ' + map + ': rozmieszczenie nakłada rotę na rotę (' + (100 * close / sim.count).toFixed(1) + '% mrówek)');
+  }
+  const huge = { guard: 'infantry', commanders: 1, companies: Array.from({ length: 11 }, () => ({ type: 'infantry', size: 300 })) };
+  assert.throws(() => makeArmy('bitwa', 2, 1, 'duzy', { armies: { WK: huge } }), /brak miejsca/);
+  return n + ' konfiguracji, najgorsze nałożenie ' + (100 * worstOverlap).toFixed(2) + '% mrówek; 3300 piechurów nie mieści się w strefie startu (błąd „brak miejsca”)';
+});
+
+test('bitwa z armiami z budżetu: liczebność zgodna ze składem, determinizm, a inny wzorzec daje inny przebieg', () => {
+  const run = (styles) => { const sim = makeArmy('bitwa', 2, 5, 'maly', { styles }); const n = sim.count; for (let k = 0; k < 600; k++) sim.step(); return { n, h: sim.hash(), sim }; };
+  const a = run({ WK: 'lekka', LH: 'dystansowa' }), b = run({ WK: 'lekka', LH: 'dystansowa' }), c = run({ WK: 'ciezka', LH: 'dystansowa' });
+  assert.strictEqual(a.h, b.h, 'ten sam wzorzec i ziarno dały różne wyniki'); assert.notStrictEqual(a.h, c.h, 'inny wzorzec dał ten sam wynik');
+  const sim = a.sim; for (const sn of ['WK', 'LH']) { const info = sim.armyInfo[sn], ants = info.army.companies.reduce((t, x) => t + x.size, 0) + info.army.commanders * (sim.defs.army.guardSize + 1); assert.strictEqual(sim.comps.filter((x) => x.sideName === sn).reduce((t, x) => t + x.initial, 0), ants, sn + ': liczebność niezgodna ze składem'); }
+  for (let i = 0; i < sim.count; i++) assert.ok(Number.isFinite(sim.x[i]) && Number.isFinite(sim.y[i]));
+  return 'liczebność zgodna ze składem; skróty: lekka/dystansowa ' + a.h + ', ciężka/dystansowa ' + c.h;
+});
+
 let failed = 0;
 for (const r of results) { console.log((r.ok ? 'OK   ' : 'FAIL ') + r.name + (r.note ? '\n       ' + r.note : '') + '  [' + r.ms + ' ms]'); if (!r.ok) failed++; }
 console.log('\n' + (results.length - failed) + '/' + results.length + ' testów rdzenia przeszło');

@@ -12,7 +12,7 @@ async function openPage(query, opts = {}) {
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   await page.route('**/cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js', (r) => r.fulfill({ path: path.join(ROOT, 'node_modules/pixi.js/dist/pixi.min.js'), contentType: 'application/javascript' }));
-  await page.goto('file://' + path.join(ROOT, 'prototypy', 'p1-bitwa.html') + (query ? '?' + query : ''));
+  await page.goto('file://' + (process.env.P1_FILE || path.join(ROOT, 'prototypy', 'p1-bitwa.html')) + (query ? '?' + query : ''));
   return { browser, page, errors };
 }
 module.exports = { openPage, ROOT };

@@ -1,0 +1,37 @@
+# Lista TODO
+
+Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: rozmowy z użytkownikiem i wnioski z etapów 1-2 ([wnioski-p1.md](wnioski-p1.md)).
+
+## AI (odłożone na wyraźną prośbę użytkownika: „AI zajmiemy się potem”)
+- AI atakujących zna jeden plan (najkrótsza trasa do celu), więc nie oskrzydla na mapach z wieloma trasami i na otwartej polanie wchodzi czołowo w linię plujek (Wielka Kolonia 0/4 na mapach 1 i 2 w oblężeniu).
+- AI w Przeprawie nie umie zamienić przewagi w tempie na zwycięstwo: Wielka Kolonia przegrała 25 z 25 bitew, także z szybszą armią. Brak planu „szybcy uderzają na odsłonięty bród, a reszta wiąże obrońców”, brak blefu, brak rezerwy.
+- Czas dojścia w AI brodów liczony jest z odległości w linii prostej, a nie z długości trasy.
+- AI obrońców w oblężeniu i Przeprawie nie przegrupowuje się poza przydziałem do brodu (stały układ, reakcja na zagrożenie co 10 s).
+- Bitwa: AI obu stron idzie na najbliższą rotę, bez koncentracji i bez wykorzystania terenu.
+- Do rozważenia: osobne doktryny frakcji w AI (masa i centralne dowodzenie kontra jakość i samodzielne oddziały).
+
+## Armie (etap 3)
+- Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
+- Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).
+- Strefa startu Wielkiej Kolonii (470 jedn. szerokości) mieści najwyżej ok. 2000 mrówek: duże armie lekkiej masy i przewaga x1,5 atakującego w oblężeniu na budżecie Duży są ograniczone miejscem. Można powiększyć strefy startu w generatorach map.
+- AI armii: wzorce i tabela kontr są ręczne; brak doboru uwzględniającego mapę (np. gęstość, brody), brak uczenia się z poprzednich bitew, AI kontruje armię gracza tylko na podstawie prostego profilu (kategorie ranged/heavy/light/fast).
+- Flankująca i dystansowa to wzorce tylko jednej frakcji (WK, LH), bo druga nie ma dość jednostek w puli (LH nie ma szybkich, WK nie ma dystansowych).
+
+## Mapy i scenariusze
+- Typ mapy 3 jest stałym układem (ziarno zmienia tylko mech); można dodać generowany wariant z większą liczbą tras.
+- Przeprawa: wariant z celem terenowym (zajęcie przyczółka) zamiast samego zniszczenia przeciwnika.
+- Powierzchnia do chodzenia map 4 i 5 jest o 40-57% większa niż na typie 3 (strefy rozmieszczenia armii są stałe): można zmniejszyć strefy lub układ obrońców.
+- Mapa 5 i przeprawa: marsz całej armii trwa kilka minut; do oceny w grze.
+- Interfejs przeprawy: odliczanie czasu dojścia do brodu.
+
+## Mechanika
+- Ruch za kotwicą roty (mapy 4 i 5) i ruch do celu przed kotwicą (mapy 1-3) to dwie reguły; ujednolicenie zmieni wyniki na typie 3.
+- Gwardia typu Taran lub Odźwierny ma tylko statystyki elity (bez Szarży i Zamknięcia); gwardia pękaczy detonuje przy kontakcie.
+- Marsz grupy przesuwa układ rot, ale go nie obraca jak w Total War (obraca się tylko przy przeciągnięciu PPM).
+
+## Testy i narzędzia
+- Pełne `npm test` trwa ok. 12 minut (rdzeń ok. 9 minut, przeglądarka ok. 3): skrócić (mniej ziaren, mniejsze roty w testach nawigacji, równoległość).
+- Wydajność w Chrome na typowym PC (FPS) nie została zmierzona, tylko krok symulacji w Node.
+
+## Dalsze etapy rozszerzenia P1
+- Etap 3: konfiguracja armii i budżety (gotowy do testów ręcznych). Etap 4: elewacja, linia wzroku, zasadzki i ukrywanie się w mchu. Etap 5: pełnoprawne oblężenia kopców (wiele poziomów, korytarze, serce gniazda, panika obrońców).

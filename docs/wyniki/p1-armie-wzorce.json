@@ -1,0 +1,960 @@
+{
+ "generated": "wykonane: node tests/p1-armie.js",
+ "seeds": 2,
+ "budget": "sredni",
+ "scenario": "bitwa",
+ "map": 2,
+ "opis": "wartość = średni (odsetek ocalałych WK - odsetek ocalałych LH) po 450 s lub końcu bitwy; dodatnia: przewaga WK",
+ "macierz": [
+  {
+   "WK": "zrownowazona",
+   "zrownowazona": 0.13,
+   "ciezka": 0.09,
+   "lekka": -0.18,
+   "wytrwala": 0.31,
+   "dystansowa": 0.39
+  },
+  {
+   "WK": "ciezka",
+   "zrownowazona": -0.04,
+   "ciezka": -0.05,
+   "lekka": -0.22,
+   "wytrwala": 0.19,
+   "dystansowa": -0.08
+  },
+  {
+   "WK": "lekka",
+   "zrownowazona": 0.39,
+   "ciezka": 0.4,
+   "lekka": 0.03,
+   "wytrwala": 0.44,
+   "dystansowa": 0.52
+  },
+  {
+   "WK": "flankujaca",
+   "zrownowazona": 0.09,
+   "ciezka": -0.22,
+   "lekka": -0.29,
+   "wytrwala": 0.02,
+   "dystansowa": 0.26
+  },
+  {
+   "WK": "szturmowa",
+   "zrownowazona": 0.03,
+   "ciezka": -0.02,
+   "lekka": 0.05,
+   "wytrwala": 0.03,
+   "dystansowa": 0.13
+  },
+  {
+   "WK": "wytrwala",
+   "zrownowazona": 0.03,
+   "ciezka": 0.07,
+   "lekka": -0.19,
+   "wytrwala": 0.15,
+   "dystansowa": 0.23
+  }
+ ],
+ "runs": [
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "zrownowazona"
+   },
+   "winner": "WK",
+   "seconds": 309,
+   "fracWK": 0.1253541076487252,
+   "fracLH": 0.048283261802575105,
+   "startWK": 1412,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "zrownowazona"
+   },
+   "winner": "WK",
+   "seconds": 263,
+   "fracWK": 0.22875354107648727,
+   "fracLH": 0.04935622317596566,
+   "startWK": 1412,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "ciezka"
+   },
+   "winner": "WK",
+   "seconds": 299,
+   "fracWK": 0.20113314447592068,
+   "fracLH": 0.04918032786885246,
+   "startWK": 1412,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.08286118980169972,
+   "fracLH": 0.050546448087431695,
+   "startWK": 1412,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 216,
+   "fracWK": 0.45042492917847027,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1412,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 248,
+   "fracWK": 0.27407932011331443,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1412,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 257,
+   "fracWK": 0.049575070821529746,
+   "fracLH": 0.23072429906542055,
+   "startWK": 1412,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 255,
+   "fracWK": 0.049575070821529746,
+   "fracLH": 0.2213785046728972,
+   "startWK": 1412,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 160,
+   "fracWK": 0.46388101983002833,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1412,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "zrownowazona",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 227,
+   "fracWK": 0.40297450424929177,
+   "fracLH": 0.0449438202247191,
+   "startWK": 1412,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.0639386189258312,
+   "fracLH": 0.18025751072961374,
+   "startWK": 782,
+   "startLH": 932,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.17774936061381075,
+   "fracLH": 0.15021459227467812,
+   "startWK": 782,
+   "startLH": 932,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.26342710997442453,
+   "fracLH": 0.17076502732240437,
+   "startWK": 782,
+   "startLH": 732,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.09846547314578005,
+   "fracLH": 0.2855191256830601,
+   "startWK": 782,
+   "startLH": 732,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 370,
+   "fracWK": 0.2966751918158568,
+   "fracLH": 0.04915730337078652,
+   "startWK": 782,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "wytrwala"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.2557544757033248,
+   "fracLH": 0.12640449438202248,
+   "startWK": 782,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "dystansowa"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.11764705882352941,
+   "fracLH": 0.21769662921348315,
+   "startWK": 782,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 356,
+   "fracWK": 0.049872122762148335,
+   "fracLH": 0.2908878504672897,
+   "startWK": 782,
+   "startLH": 1712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "dystansowa"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.08312020460358056,
+   "fracLH": 0.14606741573033707,
+   "startWK": 782,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "ciezka",
+    "LH": "lekka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.29411764705882354,
+   "fracLH": 0.48539719626168226,
+   "startWK": 782,
+   "startLH": 1712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "lekka",
+    "LH": "zrownowazona"
+   },
+   "winner": "WK",
+   "seconds": 199,
+   "fracWK": 0.4205298013245033,
+   "fracLH": 0.048283261802575105,
+   "startWK": 1812,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "lekka",
+    "LH": "ciezka"
+   },
+   "winner": "WK",
+   "seconds": 186,
+   "fracWK": 0.5193156732891833,
+   "fracLH": 0.04781420765027322,
+   "startWK": 1812,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "lekka",
+    "LH": "zrownowazona"
+   },
+   "winner": "WK",
+   "seconds": 218,
+   "fracWK": 0.45474613686534215,
+   "fracLH": 0.048283261802575105,
+   "startWK": 1812,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "lekka",
+    "LH": "lekka"
+   },
+   "winner": "WK",
+   "seconds": 182,
+   "fracWK": 0.1401766004415011,
+   "fracLH": 0.04964953271028037,
+   "startWK": 1812,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "lekka",
+    "LH": "ciezka"
+   },
+   "winner": "WK",
+   "seconds": 258,
+   "fracWK": 0.38079470198675497,
+   "fracLH": 0.04644808743169399,
+   "startWK": 1812,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "lekka",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 201,
+   "fracWK": 0.48344370860927155,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1812,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "lekka",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 260,
+   "fracWK": 0.04746136865342163,
+   "fracLH": 0.07827102803738317,
+   "startWK": 1812,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "lekka",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 190,
+   "fracWK": 0.5022075055187638,
+   "fracLH": 0.047752808988764044,
+   "startWK": 1812,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "lekka",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 211,
+   "fracWK": 0.6236203090507726,
+   "fracLH": 0.04353932584269663,
+   "startWK": 1812,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "zrownowazona"
+   },
+   "winner": "WK",
+   "seconds": 282,
+   "fracWK": 0.2246376811594203,
+   "fracLH": 0.04935622317596566,
+   "startWK": 1242,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "lekka",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 235,
+   "fracWK": 0.5005518763796909,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1812,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.06763285024154589,
+   "fracLH": 0.05793991416309013,
+   "startWK": 1242,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "ciezka"
+   },
+   "winner": "LH",
+   "seconds": 239,
+   "fracWK": 0.04750402576489533,
+   "fracLH": 0.44808743169398907,
+   "startWK": 1242,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "ciezka"
+   },
+   "winner": "LH",
+   "seconds": 277,
+   "fracWK": 0.04669887278582931,
+   "fracLH": 0.09289617486338798,
+   "startWK": 1242,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 260,
+   "fracWK": 0.0499194847020934,
+   "fracLH": 0.37616822429906543,
+   "startWK": 1242,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "wytrwala"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.06280193236714976,
+   "fracLH": 0.05758426966292135,
+   "startWK": 1242,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 181,
+   "fracWK": 0.04911433172302738,
+   "fracLH": 0.29439252336448596,
+   "startWK": 1242,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "wytrwala"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.08132045088566828,
+   "fracLH": 0.05337078651685393,
+   "startWK": 1242,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 223,
+   "fracWK": 0.3671497584541063,
+   "fracLH": 0.047752808988764044,
+   "startWK": 1242,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "flankujaca",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 281,
+   "fracWK": 0.24557165861513688,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1242,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.096045197740113,
+   "fracLH": 0.0740343347639485,
+   "startWK": 1062,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.11393596986817325,
+   "fracLH": 0.07081545064377683,
+   "startWK": 1062,
+   "startLH": 932,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.11864406779661017,
+   "fracLH": 0.11202185792349727,
+   "startWK": 1062,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.07721280602636535,
+   "fracLH": 0.12978142076502733,
+   "startWK": 1062,
+   "startLH": 732,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 332,
+   "fracWK": 0.1271186440677966,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1062,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "wytrwala"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.07627118644067797,
+   "fracLH": 0.0898876404494382,
+   "startWK": 1062,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "lekka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.07062146892655367,
+   "fracLH": 0.07184579439252337,
+   "startWK": 1062,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "lekka"
+   },
+   "winner": "WK",
+   "seconds": 375,
+   "fracWK": 0.14500941619585686,
+   "fracLH": 0.04964953271028037,
+   "startWK": 1062,
+   "startLH": 1712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 295,
+   "fracWK": 0.23540489642184556,
+   "fracLH": 0.047752808988764044,
+   "startWK": 1062,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "szturmowa",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 358,
+   "fracWK": 0.10922787193973635,
+   "fracLH": 0.046348314606741575,
+   "startWK": 1062,
+   "startLH": 712,
+   "costWK": 2200,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.09442446043165467,
+   "fracLH": 0.07832618025751073,
+   "startWK": 1112,
+   "startLH": 932,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "zrownowazona"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.1393884892086331,
+   "fracLH": 0.09763948497854077,
+   "startWK": 1112,
+   "startLH": 932,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "ciezka"
+   },
+   "winner": "WK",
+   "seconds": 436,
+   "fracWK": 0.16097122302158273,
+   "fracLH": 0.04918032786885246,
+   "startWK": 1112,
+   "startLH": 732,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "ciezka"
+   },
+   "winner": null,
+   "seconds": 450.05,
+   "fracWK": 0.16276978417266186,
+   "fracLH": 0.1325136612021858,
+   "startWK": 1112,
+   "startLH": 732,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 339,
+   "fracWK": 0.22931654676258992,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1112,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 298,
+   "fracWK": 0.04946043165467626,
+   "fracLH": 0.14894859813084113,
+   "startWK": 1112,
+   "startLH": 1712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "lekka"
+   },
+   "winner": "LH",
+   "seconds": 297,
+   "fracWK": 0.047661870503597124,
+   "fracLH": 0.3341121495327103,
+   "startWK": 1112,
+   "startLH": 1712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "wytrwala"
+   },
+   "winner": "WK",
+   "seconds": 447,
+   "fracWK": 0.17715827338129497,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1112,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 1,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 407,
+   "fracWK": 0.29676258992805754,
+   "fracLH": 0.04915730337078652,
+   "startWK": 1112,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  },
+  {
+   "seed": 2,
+   "styles": {
+    "WK": "wytrwala",
+    "LH": "dystansowa"
+   },
+   "winner": "WK",
+   "seconds": 335,
+   "fracWK": 0.24910071942446044,
+   "fracLH": 0.04353932584269663,
+   "startWK": 1112,
+   "startLH": 712,
+   "costWK": 2190,
+   "costLH": 2200
+  }
+ ]
+}
