@@ -356,11 +356,12 @@ test('determinizm na mapach z korytarzami (ścieżka za kotwicą): to samo ziarn
   return out.join(', ');
 });
 
-test('uzupełnienia: w oblężeniu ma je tylko obrońca, w Bitwie i Przeprawie obie strony', () => {
+test('uzupełnienia: ma je tylko obrońca w oblężeniu, w Bitwie i Przeprawie nikt', () => {
   const at = (scen) => { const sim = makeScen(scen, 3, 1); return { WK: sim.reserve.WK, LH: sim.reserve.LH }; };
-  assert.deepStrictEqual(at('oblezenie'), { WK: 0, LH: 150 }); assert.deepStrictEqual(at('bitwa'), { WK: 150, LH: 150 }); assert.deepStrictEqual(at('przeprawa'), { WK: 150, LH: 150 });
+  assert.deepStrictEqual(at('oblezenie'), { WK: 0, LH: 150 }); assert.deepStrictEqual(at('bitwa'), { WK: 0, LH: 0 }); assert.deepStrictEqual(at('przeprawa'), { WK: 0, LH: 0 });
   const sim = makeScen('oblezenie', 3, 1); const wk0 = sim.count_alive()[0]; let maxWK = wk0; for (let k = 0; k < 20 * 200; k++) { sim.step(); maxWK = Math.max(maxWK, sim.count_alive()[0]); } assert.strictEqual(maxWK, wk0, 'atakujący dostaje uzupełnienia w oblężeniu');
-  return 'rezerwa w oblężeniu: WK 0, LH 150; w Bitwie i Przeprawie po 150';
+  for (const sc of ['bitwa', 'przeprawa']) { const b = makeScen(sc, 3, 1), n0 = b.count; for (let k = 0; k < 20 * 120; k++) b.step(); assert.strictEqual(b.count, n0, 'w scenariuszu ' + sc + ' pojawiły się uzupełnienia'); }
+  return 'rezerwa w oblężeniu: WK 0, LH 150; w Bitwie i Przeprawie 0, po 120 s nikt nie dołączył';
 });
 
 test('poprawki po przeglądzie: mapy 4 i 5 zawsze spełniają minimalną szerokość, duża lekka armia nie rzuca wyjątku, rota przed brodem nie zostaje pod wodą', () => {

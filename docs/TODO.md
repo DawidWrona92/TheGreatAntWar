@@ -17,7 +17,7 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Plujka nie zmienia pozycji, żeby zdobyć strzał (np. wejść na wzgórze lub zejść z linii wzgórza); brak takiego zachowania w AI.
 - AI zna prawdziwą liczebność rot, które widziało w ciągu ostatnich 15 s (uproszczenie widoczności).
 - Wzgórza mają tylko typy map 2, 4, 5 i potok; typ 1 i 3 są płaskie z założenia. Strefy rozmieszczenia mogą leżeć na zboczu.
-- Do rozstrzygnięcia: czy w Przeprawie atakujący też ma tracić uzupełnienia (użytkownik powiedział „w oblężeniach”).
+- Uzupełnienia (rozstrzygnięte): poza oblężeniem (Bitwa, Przeprawa) obie strony walczą tym, co mają, bez uzupełnień; w oblężeniu uzupełnia tylko obrońca.
 - Mrówki nie ukrywają się same (brak rozkazu „ukryj się”): ukrycie wynika z miejsca, w którym stoją.
 
 ## Do pamiętania w etapie 5 (rework oblężenia)
