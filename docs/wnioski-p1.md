@@ -80,14 +80,14 @@ Wzorce przeciw sobie (wykonane: `node tests/p1-armie.js --seeds 2`, Bitwa na map
 
 | WK \ LH | zrównoważona | ciężka | lekka | wytrwała | dystansowa |
 |---|---|---|---|---|---|
-| zrównoważona | 0,13 | 0,09 | -0,18 | 0,31 | 0,39 |
-| ciężka | -0,04 | -0,05 | -0,22 | 0,19 | -0,08 |
-| lekka | 0,39 | 0,40 | 0,03 | 0,44 | 0,52 |
-| flankująca | 0,09 | -0,22 | -0,29 | 0,02 | 0,26 |
-| szturmowa | 0,03 | -0,02 | 0,05 | 0,03 | 0,13 |
-| wytrwała | 0,03 | 0,07 | -0,19 | 0,15 | 0,23 |
+| zrównoważona | 0,01 | 0,14 | -0,14 | -0,03 | 0,05 |
+| ciężka | -0,01 | 0,00 | -0,16 | 0,07 | 0,18 |
+| lekka | 0,31 | 0,41 | -0,02 | 0,50 | 0,51 |
+| flankująca | -0,01 | -0,14 | -0,32 | 0,10 | 0,11 |
+| szturmowa | 0,03 | 0,05 | -0,01 | 0,03 | 0,07 |
+| wytrwała | 0,06 | 0,05 | -0,17 | 0,08 | 0,22 |
 
-Wzorce wyraźnie dają różne wyniki (żaden nie wygrywa ze wszystkimi), ale to tylko 2 ziarna i AI w bitwie, a miara „odsetek ocalałych” premiuje tanią, liczną piechotę (lekka masa ma najwięcej ciał). To nie jest pomiar balansu.
+Pomiar wykonany na ostatecznym kodzie rozmieszczenia (po poprawkach frontu 425, minimalnej rocie tarana i sprawdzaniu siatki). Wzorce dają różne wyniki (lekka masa wygrywa z większością, ale remisuje z LH-lekką, a flankująca przegrywa z lekką i ciężką LH), ale to tylko 2 ziarna i AI w bitwie, a miara „odsetek ocalałych” premiuje tanią, liczną piechotę (lekka masa ma najwięcej ciał). To nie jest pomiar balansu.
 
 Ograniczenia: strefa startu Wielkiej Kolonii ma 470 jednostek szerokości, więc mieści najwyżej ok. 2000 mrówek (w budżecie Duży lekka masa WK i przewaga x1,5 atakującego w oblężeniu bywają ograniczone miejscem; interfejs wyłącza dodawanie, a rdzeń zgłasza „brak miejsca”). Rozmieszczenie jest automatyczne (gracz nie ustawia rot ręcznie) i omija przeszkody (stałe głazy mapy 3, ściany gąszczu). Podczas prac wyszły dwa błędy rozmieszczenia: ściany czołowe gąszczu wchodzą w strefę startu do ok. x = 440, a mapa 3 ma głazy w strefie obrońców; stąd front WK na 425 i sprawdzanie siatki terenu w `layoutArmy`.
 
