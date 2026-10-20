@@ -34,7 +34,7 @@ Menu ma listę pięciu typów mapy (parametr URL `map=1..5`). Struktura map (wyk
 | 2 | Kilka przeszkód | 2000×1200 | 2,25 mln | 98% | 211 | 1,01 | 771 | 1,9 |
 | 3 | Pień z kilkoma trasami | 2000×1200 | 2,15 mln | 94% | 176 | 1,09 | 224 | 2,0 |
 | 4 | Gęsty i kręty podszyt | 2600×1400 | 2,98 mln | 84% | 75 | 1,24 | 196 | 5,7 |
-| 5 | Chaparral: gąszcz i tunele | 3000×1500 | 3,37 mln | 77% | 48 | 1,55 | 99 | 6,7 |
+| 5 | Chaparral: gąszcz wąskich przejść | 3000×1500 | 3,37 mln | 77% | 48 | 1,55 | 99 | 6,7 |
 
 Jak to czytać: „najwęższe miejsce” to szerokość trasy, którą da się przejść najszerzej, w jej najwęższym punkcie (jednostki świata, ciało zwykłej mrówki ma średnicę 8, taran 12); „kręta droga” to długość najkrótszej trasy do wejścia do gniazda przez odległość w linii prostej; „przekrój” to łączna szerokość wszystkich przejść w najwęższym przekroju (maksymalny przepływ komórek); „równoległe przejścia” to średnia liczba osobnych otwartych odcinków (co najmniej 48) w przekrojach poprzecznych pasa (typ 3 liczy tylko zachodnią połowę, bez przesmyku). Powierzchnia do chodzenia rośnie z 2,15 mln (typ 3) do 2,98 i 3,37 mln (typy 4 i 5): strefy rozmieszczenia armii są stałe, więc mapy gęste musiały być większe o 40-57%, a nie o tyle, ile zajmują zarośla.
 

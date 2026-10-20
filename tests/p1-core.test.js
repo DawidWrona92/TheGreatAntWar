@@ -344,6 +344,18 @@ test('układ rot jest przesunięty razem z gniazdem: atakujący przy zachodnim b
   return 'sprawdzono 5 typów map';
 });
 
+test('determinizm na mapach z korytarzami (ścieżka za kotwicą): to samo ziarno daje ten sam skrót mapy i przebiegu, inne ziarno inny', () => {
+  const out = [];
+  for (const map of [4, 5]) {
+    const hashOf = (seed) => { const sim = makeMap(map, seed); let g = 0; for (let i = 0; i < sim.grid.length; i++) g = (Math.imul(g, 31) + sim.grid[i]) | 0; for (let k = 0; k < 600; k++) sim.step(); return g + ':' + sim.hash(); };
+    const a = hashOf(3), b = hashOf(3), c = hashOf(4);
+    assert.strictEqual(a, b, 'mapa ' + map + ': to samo ziarno dało różne wyniki');
+    assert.notStrictEqual(a, c, 'mapa ' + map + ': inne ziarno dało ten sam wynik');
+    out.push('mapa ' + map + ': ' + a.split(':')[1]);
+  }
+  return out.join(', ');
+});
+
 function dummyDefenders(d) {
   for (const c of d.scenario.sides.WK.companies) for (const k in c.units) if (k !== 'dowodca' && k !== '@guard') c.units[k] = Math.round(c.units[k] * 0.6); // mniejsze roty: test sprawdza nawigację, nie przepustowość
   d.units.dummy = { name: 'Manekin', hp: 1e9, speed: 1, dmg: 0, reach: 1, cd: 1, aggro: 0, radius: 4, mass: 1, rank: 2, armor: 0, size: 0.5 };
