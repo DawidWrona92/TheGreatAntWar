@@ -87,20 +87,29 @@ const { openPage } = require('./browser-lib');
     const sA = await at(pA[0], pA[1]), sB = await at(pB[0], pB[1]);
     await click(sA[0], sA[1], { button: 'right' }); await page.keyboard.down('Shift'); await click(sB[0], sB[1], { button: 'right' }); await page.keyboard.up('Shift'); await flush(1);
     const q1 = await comp(B); assert.strictEqual(q1.order.kind, 'move', 'kolejka: ' + JSON.stringify({ o: q1.order, hit: await ev(() => __P1.R.hit), b0, sA, sB, sel: await sel() })); assert.strictEqual(q1.queue.length, 1, 'Shift+PPM nie dodał do kolejki'); assert.ok(Math.hypot(q1.queue[0].x - pB[0], q1.queue[0].y - pB[1]) < 20);
-    await flush(20 * 12); const q2 = await comp(B); assert.ok(Math.hypot(q2.ax - pB[0], q2.ay - pB[1]) < 8, 'rota nie doszła do drugiego punktu kolejki: ' + [q2.ax, q2.ay, pB]); assert.strictEqual(q2.queue.length, 0);
+    await ev(() => { const s = __P1.S.sim; for (const c of s.comps) if (c.side === 1) { for (const i of c.ants) { s.x[i] = s.W - 100 - (i % 50); s.y[i] = s.H - 100 - (i % 40); } c.ax = s.W - 80; c.ay = s.H - 80; c.order = { kind: 'hold', x: c.ax, y: c.ay, face: null, done: false }; } for (const c of s.comps) if (c.side === 0) c.order.kind === 'attackTarget' && (c.order = { kind: 'hold', x: c.ax, y: c.ay, face: null, done: false }); s.debug.vis(); });   // reszta testu dotyczy rot WK bez wpływu walki (rozkazy nie giną w starciach)
+    await flush(20 * 2); assert.strictEqual((await comp(B)).queue.length, 1, 'pierwszy rozkaz z kolejki został pominięty (rozkaz oznaczony jako wykonany w kroku wydania)');
+    for (let k = 0; k < 12 && (await comp(B)).queue.length + ((await comp(B)).order.done ? 0 : 1) > 0; k++) await flush(20 * 5); const q2 = await comp(B); assert.ok(Math.hypot(q2.ax - pB[0], q2.ay - pB[1]) < 8, 'rota nie doszła do drugiego punktu kolejki: ' + [q2.ax, q2.ay, pB]); assert.strictEqual(q2.queue.length, 0);
     // nowy rozkaz bez Shift czyści kolejkę
     await click(sA[0], sA[1], { button: 'right' }); await page.keyboard.down('Shift'); await click(sB[0], sB[1], { button: 'right' }); await page.keyboard.up('Shift'); await flush(1);
     const sC = await at(560, 170); await click(sC[0], sC[1], { button: 'right' }); await flush(1); assert.strictEqual((await comp(B)).queue.length, 0, 'nowy rozkaz bez Shift nie wyczyścił kolejki');
     ok('14. Shift + PPM dodaje rozkazy do kolejki, wykonywane po kolei; rozkaz bez Shift anuluje kolejkę');
-    // ---- 11. gest PPM z przeciąganiem: środek, kierunek, szerokość z długości gestu; podgląd w trakcie
+    // ---- 11. gest PPM z przeciąganiem: pierwszy punkt to kotwica (skrajny przedni człon), kursor to drugi skraj frontu, rota patrzy prostopadle; podgląd w trakcie
     await ev((id) => { __P1.S.selected.clear(); __P1.S.selected.add(id); }, C);
-    const c0 = await comp(C), gc = [c0.ax + 60, c0.ay + 60], s0 = await at(gc[0], gc[1]), s1 = await at(gc[0] + 120, gc[1]);
+    const c0 = await comp(C), gc = [c0.ax + 60, c0.ay + 60], s0 = await at(gc[0], gc[1]), s1 = [s0[0] + 90, s0[1]];   // przeciągnięcie poziomo na ekranie, z lewej na prawą
     await page.mouse.move(s0[0], s0[1]); await page.mouse.down({ button: 'right' }); await page.mouse.move(s1[0], s1[1], { steps: 5 });
-    const prev = await ev(() => ({ moved: __P1.R.moved, face: __P1.R.face, width: __P1.R.width })); assert.ok(prev.moved && Math.abs(prev.width - 120) < 25, 'podgląd: ' + JSON.stringify(prev));
+    const prev = await ev(() => ({ moved: __P1.R.moved, face: __P1.R.face, width: __P1.R.width, p1: __P1.R.p1, p0: [__P1.R.wx, __P1.R.wy] })); assert.ok(prev.moved && prev.width > 30 && prev.p1, 'podgląd: ' + JSON.stringify(prev));
+    assert.ok(Math.abs(Math.atan2(Math.sin(prev.face + 3 * Math.PI / 4), Math.cos(prev.face + 3 * Math.PI / 4))) < 0.35, 'przeciągnięcie w prawo na ekranie powinno dać front do góry ekranu (kierunek świata -135 stopni), jest ' + prev.face);
     await page.mouse.up({ button: 'right' }); await flush(1);
-    const fo = await comp(C); assert.ok(Math.abs(Math.cos(fo.order.face) - 1) < 0.2 || Math.abs(fo.order.face) < 0.3, 'kierunek frontu: ' + fo.order.face);
-    const expectCols = Math.round(prev.width / fo.spacing) + 1; assert.ok(Math.abs(fo.fcols - Math.max(3, Math.min(fo.alive, expectCols))) <= 1, 'szerokość szyku z długości gestu: ' + fo.fcols + ' vs ' + expectCols);
-    ok('11. Gest PPM z przeciąganiem: podgląd w trakcie, po zwolnieniu rozkaz ruchu z kierunkiem frontu i szerokością z długości gestu', 'długość ' + Math.round(prev.width) + ' -> kolumn ' + fo.fcols);
+    const fo = await comp(C); const expectCols = Math.round(prev.width / fo.spacing) + 1; assert.ok(Math.abs(fo.fcols - Math.max(3, Math.min(fo.alive, expectCols))) <= 1, 'szerokość szyku z długości gestu: ' + fo.fcols + ' vs ' + expectCols);
+    // środek roty = środek frontu cofnięty o pół głębokości szyku
+    const depth = Math.ceil(fo.alive / fo.fcols) * fo.spacing, mx = (prev.p0[0] + prev.p1[0]) / 2 - Math.cos(fo.order.face) * depth / 2, my = (prev.p0[1] + prev.p1[1]) / 2 - Math.sin(fo.order.face) * depth / 2;
+    assert.ok(Math.hypot(fo.order.x - mx, fo.order.y - my) < 6, 'cel roty nie leży za środkiem frontu: ' + Math.hypot(fo.order.x - mx, fo.order.y - my).toFixed(1));
+    for (let k = 0; k < 8 && !(await comp(C)).order.done; k++) await flush(300);   // czekamy na dotarcie (czas zależy od odległości i zagęszczenia)
+    await flush(100);   // po dotarciu skrajne człony przedniego szeregu leżą na linii gestu: pierwszy punkt to kotwica (lewy skraj), kursor to prawy skraj
+    const front = await ev(([p0, p1, id]) => { const s = __P1.S.sim, c = s.comps[id], fx = Math.cos(c.order.face), fy = Math.sin(c.order.face), lx = -fy, ly = fx, d = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]); let fmax = -1e9; const rows = []; for (const i of c.ants) if (s.alive[i]) { const f = (s.x[i] - p0[0]) * fx + (s.y[i] - p0[1]) * fy; fmax = Math.max(fmax, f); rows.push([f, (s.x[i] - p0[0]) * lx + (s.y[i] - p0[1]) * ly]); } const fr = rows.filter((r) => r[0] > fmax - 8).map((r) => r[1]); return { n: fr.length, lmin: Math.min(...fr), lmax: Math.max(...fr), d, fmax }; }, [prev.p0, prev.p1, C]);
+    assert.ok(front.n >= 3, 'za mało członków w przednim szeregu'); assert.ok(Math.abs(front.lmin) < fo.spacing * 2.5, 'lewy skraj frontu nie leży przy pierwszym punkcie: ' + JSON.stringify(front) + ' cols ' + fo.fcols + ' sp ' + fo.spacing + ' w ' + prev.width.toFixed(0) + ' order ' + JSON.stringify(fo.order) + ' p ' + JSON.stringify(prev)); assert.ok(Math.abs(front.lmax - front.d) < fo.spacing * 2.5, 'prawy skraj frontu nie leży przy kursorze: ' + JSON.stringify(front));
+    ok('11. Gest PPM z przeciąganiem: pierwszy punkt to kotwica (skraj przedniego szeregu), kursor to drugi skraj frontu, rota patrzy prostopadle (z lewej na prawą: do góry ekranu); podgląd w trakcie', 'długość ' + Math.round(prev.width) + ' -> kolumn ' + fo.fcols + ', skraje frontu ' + front.lmin.toFixed(0) + '..' + front.lmax.toFixed(0) + ' przy długości gestu ' + front.d.toFixed(0));
     // ---- 12/13. Alt + LPM: przesunięcie grupy z zachowaniem układu; Ctrl obraca
     await ev(() => { __P1.S.selected.clear(); const ids = __P1.S.sim.comps.filter((c) => c.side === 0).slice(0, 3).map((c) => c.id); ids.forEach((id) => { __P1.S.selected.add(id); const s = __P1.S.sim, c = s.comps[id]; s.command({ k: 'order', side: 'WK', comps: [id], kind: 'hold', x: c.ax, y: c.ay }); }); __P1.S.sim.flush(); });
     const grp = await sel(); const before = []; for (const id of grp) before.push(await comp(id));
@@ -123,7 +132,7 @@ const { openPage } = require('./browser-lib');
     assert.ok(af.every((c, i) => c.fcols === bf[i].fcols), 'obrót zmienił szerokość szyku');
     ok('13. Alt + Ctrl + przeciągnięcie obraca grupę wokół środka: odstępy między rotami i szerokość szyków bez zmian');
     // ---- 17. brak drogi: rozkaz odrzucony, czerwony krzyżyk i komunikat, rozkaz roty bez zmian (15 i 16: trasa z pathfindingu omija ściany i ich nie przekracza, testy rdzenia)
-    await ev(() => { __P1.S.selected.clear(); __P1.S.selected.add(0); const s = __P1.S.sim, px = 1400, py = 300, C = s.COLS; for (let yy = Math.floor(py / 16) - 3; yy <= Math.floor(py / 16) + 3; yy++) for (let xx = Math.floor(px / 16) - 3; xx <= Math.floor(px / 16) + 3; xx++) if (Math.max(Math.abs(yy - Math.floor(py / 16)), Math.abs(xx - Math.floor(px / 16))) === 3) s.grid[yy * C + xx] = 1; __P1.markers.length = 0; });
+    await ev(() => { __P1.S.selected.clear(); __P1.S.selected.add(0); const s = __P1.S.sim, px = 1400, py = 300, C = s.COLS; for (let yy = Math.floor(py / 16) - 3; yy <= Math.floor(py / 16) + 3; yy++) for (let xx = Math.floor(px / 16) - 3; xx <= Math.floor(px / 16) + 3; xx++) if (Math.max(Math.abs(yy - Math.floor(py / 16)), Math.abs(xx - Math.floor(px / 16))) === 3) s.grid[yy * C + xx] = 1; s.debug.resetFields(); __P1.markers.length = 0; });
     const keepOrder = JSON.stringify((await comp(0)).order); const pocket = await at(1400, 300);
     await ev(() => { __P1.S.lastR = null; }); await click(pocket[0], pocket[1], { button: 'right' }); await flush(1);
     assert.strictEqual(JSON.stringify((await comp(0)).order), keepOrder, 'rozkaz bez drogi został przyjęty');

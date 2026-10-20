@@ -268,6 +268,10 @@ body.sideOpen #miniWrap{right:316px}
         { "min": 0, "name": "Odwrót", "icon": "↩", "color": "#e0483a", "cd": 1.7, "speed": 0.85 }
       ]
     },
+    "reaction": {
+      "comment": "Automatyczny kontratak: rota sterowana przez gracza, która dostała obrażenia od widocznej roty wroga i nie ma nadrzędnego rozkazu (stoi bez rozkazu, ma wykonany rozkaz albo pusty rozkaz Stój nadany przez grę; jawne Stój/H gracza jest rozkazem), przechodzi do ataku na tę rotę. Pamięć obrażeń, odstęp między reakcjami i czas, po którym wygasa pościg za niewidocznym agresorem (sekundy). AI steruje swoimi rotami samo.",
+      "on": true, "memorySec": 2, "cooldownSec": 5, "lostSec": 6
+    },
     "control": {
       "regen": 5, "cmdBonus": 3, "noCmdWK": 6, "noCmdLH": 2, "lossK": 80, "alarmK": 2,
       "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
@@ -302,7 +306,7 @@ body.sideOpen #miniWrap{right:316px}
   "ui": {
     "controls": {
       "comment": "Sterowanie wzorowane na Total War (specyfikacja projektu, nie oficjalne wartości gry). Próg przeciągnięcia w pikselach ekranu, okno i tolerancja dwukrotnego kliknięcia oraz jedna mapa przypisań klawiszy (akcja -> skróty; skrót to kod klawisza z prefiksami Ctrl+, Alt+, Shift+).",
-      "dragPx": 6, "doubleClickMs": 350, "doubleClickPx": 14,
+      "dragPx": 6, "doubleClickMs": 350, "doubleClickPx": 14, "dragAnchor": "left",
       "keys": {
         "selectAll": ["Ctrl+KeyA"], "group": ["KeyG"], "lockGroup": ["Ctrl+KeyG"], "stop": ["Backspace"], "hold": ["KeyH"], "retreat": ["KeyV"],
         "move": ["KeyM"], "attackMove": ["KeyB"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
@@ -330,7 +334,7 @@ body.sideOpen #miniWrap{right:316px}
                    "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 }, "combat": { "meleeAttack": 30, "meleeDefence": 35, "baseDamage": 0, "armourPiercingDamage": 0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.05 } },
     "odzwierny": { "name": "Odźwierny",  "hp": 24, "speed": 11, "dmg": 1.6, "reach": 2,   "cd": 1.1, "aggro": 20, "radius": 5.6, "mass": 6,   "rank": 0,   "armor": 0.4, "size": 0.9, "heavy": true,
                    "ability": { "id": "close", "name": "Zamknij wejście" }, "combat": { "meleeAttack": 45, "meleeDefence": 58, "baseDamage": 2.5, "armourPiercingDamage": 0, "armour": 53.3333, "damageResistance": { "melee": 0.10, "acid": 0.15 }, "moraleResistance": 0.4 } },
-    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true, "combat": { "meleeAttack": 30, "meleeDefence": 25, "baseDamage": 0, "armourPiercingDamage": 1.0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.0, "accuracy": 0.9 } },
+    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 120, "aoe": 10, "ranged": true, "combat": { "meleeAttack": 30, "meleeDefence": 25, "baseDamage": 0, "armourPiercingDamage": 1.0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.0, "accuracy": 0.9 } },
     "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 2.5, "cd": 1.0, "aggro": 24, "radius": 5.4, "mass": 3,   "rank": 5,   "armor": 0.2, "size": 1.0,
                    "ability": { "id": "order", "name": "Rozkaz", "cd": 40 }, "combat": { "meleeAttack": 70, "meleeDefence": 60, "baseDamage": 3.6, "armourPiercingDamage": 1.0, "armour": 26.6667, "damageResistance": { "acid": 0.10 }, "moraleResistance": 0.5 } }
   },
@@ -1412,7 +1416,7 @@ const Sim = (function () {
             slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null],
             known: [null, null], trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4,
             queue: [], ostate: 'idle', blockT: 0, pgx: at[0], pgy: at[1], replanned: false, chargeUsed: false, notice: '',
-            lastDmgTick: -1e9, dmgIn: 0, lastFightTick: -1e9, lastFireTick: -1e9, flankTick: -1e9, flankPenTick: -1e9, routPen: 0, lastThreatTick: -1e9, band: 0, retreating: false, mb: {}, mres: 0, hp0: 0, rallyTick: -1e9
+            lastDmgTick: -1e9, lastAttacker: -1, autoCool: 0, dmgIn: 0, lastFightTick: -1e9, lastFireTick: -1e9, flankTick: -1e9, flankPenTick: -1e9, routPen: 0, lastThreatTick: -1e9, band: 0, retreating: false, mb: {}, mres: 0, hp0: 0, rallyTick: -1e9
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -1529,7 +1533,7 @@ const Sim = (function () {
       if (dc.closed && kinds[td] === 'odzwierny') m *= P.closedMult;
       dmg *= Math.max(1 - CB.maxReduction, m);
       if (dmg < CB.minDamage) dmg = CB.minDamage;
-      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg;
+      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg; if (a >= 0) dc.lastAttacker = compOf[a];
       if (hp[d] <= 0) kill(d, a, kind === 'melee' ? 'melee' : 'ranged');
       else if (kind === 'melee' && a >= 0 && T.knock[ta] > 0 && !T.heavy[td]) {
         const dx = ax[d] - ax[a], dy = ay[d] - ay[a], l = Math.hypot(dx, dy) || 1, kn = T.knock[ta] * (ac.abilUntil > tick && ac.abilType === 'taran' ? 2 : 1);
@@ -1554,7 +1558,7 @@ const Sim = (function () {
       if (shield[d] > tick) dmg *= P.shieldMult;
       const dc = comps[compOf[d]];
       if (dc.closed && kinds[type[d]] === 'odzwierny') dmg *= P.closedMult;
-      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg;
+      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg; if (a >= 0) dc.lastAttacker = compOf[a];
       if (hp[d] <= 0) kill(d, a, melee ? 'melee' : 'ranged');
       else if (melee && a >= 0 && T.knock[type[a]] > 0 && !T.heavy[type[d]]) {
         const dx = ax[d] - ax[a], dy = ay[d] - ay[a], l = Math.hypot(dx, dy) || 1, k = T.knock[type[a]] * (comps[compOf[a]].abilUntil > tick && comps[compOf[a]].abilType === 'taran' ? 2 : 1);
@@ -1612,7 +1616,7 @@ const Sim = (function () {
       return best;
     }
 
-    sim.debug = { hit, acquire, swings: (i) => swingN[i], slotErr: (i) => { const cc = comps[compOf[i]], w = CORR && cc.bent ? trailSlot(cc, i) : slotWorld(cc, i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
+    sim.debug = { hit, acquire, resetFields: () => fields.clear(), swings: (i) => swingN[i], slotErr: (i) => { const cc = comps[compOf[i]], w = CORR && cc.bent ? trailSlot(cc, i) : slotWorld(cc, i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
 
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
@@ -1630,12 +1634,15 @@ const Sim = (function () {
       }
       const p = cmd.kind === 'retreat' ? retreatPoint(c) : nearestOpen(cmd.x, cmd.y);
       if (cmd.kind !== 'retreat' && cmd.kind !== 'hold' && getField(p[0], p[1])[cellAt(c.ax, c.ay)] < 0) { c.ostate = 'noPath'; notify(c, 'brak drogi do wskazanego miejsca'); return null; }
-      return { kind: cmd.kind, x: p[0], y: p[1], face: cmd.face != null ? cmd.face : null, cols: cmd.cols, run: !!cmd.run, done: false };
+      return { kind: cmd.kind, x: p[0], y: p[1], face: cmd.face != null ? cmd.face : null, cols: cmd.cols, run: !!cmd.run, done: false, explicit: cmd.kind === 'hold' };   // jawne Stój gracza jest rozkazem nadrzędnym (rota nie reaguje automatycznie)
     }
     function setOrder(c, o) {
       c.order = o; c.aiUntil = Math.max(c.aiUntil, tick); c.ostate = 'idle'; c.notice = ''; c.blockT = 0; c.replanned = false; c.chargeUsed = false; c.pgx = c.ax; c.pgy = c.ay;
       if (o.kind === 'retreat' || o.kind === 'hold') c.queue.length = 0;
       if (o.cols != null && c.role !== 'plug') { c.fcols = o.cols; c.dirty = true; }
+      // skuteczny rozkaz odświeżany od razu (wcześniej dopiero przy najbliższej aktualizacji kontroli, do sekundy później): bez tego nowy rozkaz ruchu wydany stojącej rocie
+      // widział stary skuteczny rozkaz "stój" w miejscu, czyli odległość 0, i był oznaczany jako wykonany w tym samym kroku (bez trasy, bez wykrywania braku postępu, z kolejką ruszającą od razu)
+      if (!aiSides.has(SIDES[c.side]) && c.cstate !== CS_LOST) c.eff = effOf(c);
     }
     // po wykonaniu bieżącego rozkazu bierze następny poprawny z kolejki; nieprawidłowe cele (martwa rota, brak drogi) są pomijane
     function advanceQueue(c) {
@@ -1772,6 +1779,23 @@ const Sim = (function () {
       }
       return out;
     };
+    // automatyczny kontratak zaatakowanej roty gracza (params.reaction): tylko przy braku nadrzędnego rozkazu, tylko na widoczną rotę, do której jest droga
+    const RE = P.reaction || { on: false };
+    function autoReact(c) {
+      if (!RE.on || aiSides.has(SIDES[c.side]) || c.cstate === CS_LOST || c.retreating || c.role === 'plug' || c.closed || c.startBy.dowodca) return;
+      const o = c.order; if (!o) return;
+      if (o.kind === 'attackTarget' && o.auto && !o.done) {   // pościg wygasa, gdy agresor długo jest niewidoczny
+        const tc = comps[o.target]; if (!tc || tc.alive <= 0) return;
+        if (!compView(tc, c.side)) { o.lostT = (o.lostT || 0) + 1; if (o.lostT > RE.lostSec) { o.done = true; c.autoCool = tick + RE.cooldownSec * HZ; notify(c, 'agresor poza polem widzenia: koniec kontrataku'); } } else o.lostT = 0;
+        return;
+      }
+      if (!((o.kind === 'hold' && !o.explicit) || o.done) || c.queue.length || tick < c.autoCool) return;
+      if (c.lastAttacker < 0 || tick - c.lastDmgTick > RE.memorySec * HZ) return;
+      const tc = comps[c.lastAttacker]; if (!tc || tc.alive <= 0 || tc.side === c.side) return;
+      const v = compView(tc, c.side); if (!v || getField(v.ax, v.ay)[cellAt(c.ax, c.ay)] < 0) return;
+      setOrder(c, { kind: 'attackTarget', target: tc.id, x: v.ax, y: v.ay, face: null, charge: false, done: false, auto: true });
+      c.autoCool = tick + RE.cooldownSec * HZ; notify(c, 'kontratakuje agresora: ' + tc.name + ' #' + tc.num);
+    }
     function nearestEnemyComp(c) {
       let best = null, bd = 1e18;
       for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const v = compView(o, c.side); if (!v) continue; const d = Math.hypot(v.ax - c.ax, v.ay - c.ay); if (d < bd) { bd = d; best = v; } }
@@ -1862,7 +1886,7 @@ const Sim = (function () {
       if (c.cstate !== prev) {
         const lab = ['morale odzyskane (' + MO.bands[c.band].name + ')', 'morale spadło (' + MO.bands[c.band].name + ')', c.side === 0 && (!MSPEC || MO.attackerRage) ? 'SZAŁ (morale na zerze)' : 'ODWRÓT (morale na zerze)'][c.cstate];
         if (c.cstate > prev) logEvent(c.name + ' (' + sn + '): ' + lab + (c.lastCause ? ', przyczyna: ' + c.lastCause : ''), sn, c.id);
-        else logEvent(c.name + ' (' + sn + ') odzyskała: ' + lab, sn, c.id);
+        else logEvent(c.name + ' (' + sn + ') odzyskała morale (' + MO.bands[c.band].name + ')', sn, c.id);
         c.dirty = true;
       }
       if (MSPEC) { const bd = MO.bands[c.band]; c.cdMod = bd.cd * (1 + FP.effCd * fat); c.spMod = bd.speed * (1 - FP.effSpeed * fat) * SPM[c.side]; }
@@ -2382,7 +2406,7 @@ const Sim = (function () {
       buildHash();
       if (VIS && tick % VS.period === 0) updateVisibility();
       if (tick % 10 === 0) updateShields();
-      if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) updateControl(c);
+      if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) { updateControl(c); autoReact(c); }
       for (const c of comps) if (c.alive > 0) updateAnchor(c);
       for (let i = 0; i < count; i++) { prevX[i] = ax[i]; prevY[i] = ay[i]; }
       updateAnts();
@@ -2804,9 +2828,13 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (lg) items = cs.map((c) => { const t = lg.tpl.list.find((q) => q.id === c.id); return { c, ox: t.ox, oy: t.oy, df: t.df }; });
     else { const tp = makeTemplate(cs); items = cs.map((c, i) => ({ c, ox: tp.list[i].ox, oy: tp.list[i].oy, df: tp.list[i].df })); }
     const ref = lg ? lg.tpl.f : circMean(cs), rot = face != null && cs.length > 1 ? face - ref : 0, cr = Math.cos(rot), sr = Math.sin(rot);
+    // przeciągnięcie: front roty rozpięty między pierwszym punktem (kotwica, skrajny przedni człon) a kursorem; środek roty leży o pół głębokości szyku za środkiem frontu
+    const line = opt && opt.p1 ? { mx: (wx + opt.p1[0]) / 2, my: (wy + opt.p1[1]) / 2 } : null, bx = line ? line.mx : wx, by = line ? line.my : wy;
     for (const it of items) {
-      const c = it.c, x = cs.length === 1 ? wx : wx + it.ox * cr - it.oy * sr, y = cs.length === 1 ? wy : wy + it.ox * sr + it.oy * cr;
+      const c = it.c;
       let cols = null; if (opt && opt.width != null && cs.length === 1 && c.formation !== 2 && c.role !== 'plug') cols = Math.max(3, Math.min(Math.max(3, c.alive), Math.round(opt.width / c.spacing) + 1));
+      let x = cs.length === 1 ? bx : bx + it.ox * cr - it.oy * sr, y = cs.length === 1 ? by : by + it.ox * sr + it.oy * cr;
+      if (line && cs.length === 1 && face != null) { const cc = cols || c.fcols || autoCols(c), depth = Math.ceil(c.alive / Math.max(1, cc)) * c.spacing; x -= Math.cos(face) * depth / 2; y -= Math.sin(face) * depth / 2; }
       out.push({ c, x, y, face, cols: cols == null ? undefined : cols, kind });
     }
     return out;
@@ -2877,7 +2905,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (hit) G = { type: hit.own ? 'own' : 'enemy', id: hit.id, sx, sy, moved: false };   // gest zaczęty na jednostce nigdy nie uruchamia zaznaczania ramką
       else { G = { type: 'box', sx, sy, moved: false }; box.on = true; box.x0 = box.x1 = sx; box.y0 = box.y1 = sy; }
     } else if (e.button === 2) {
-      Object.assign(R, { on: true, moved: false, sx, sy, wx, wy, face: null, width: null, hit: pickAt(cx, cy), shift: e.shiftKey }); view.setPointerCapture(e.pointerId);
+      Object.assign(R, { on: true, moved: false, sx, sy, wx, wy, face: null, p1: null, width: null, hit: pickAt(cx, cy), shift: e.shiftKey }); view.setPointerCapture(e.pointerId);
     } else if (e.button === 1) { pan.on = true; pan.x = e.clientX; pan.y = e.clientY; view.setPointerCapture(e.pointerId); e.preventDefault(); }
   });
   const pan = { on: false, x: 0, y: 0 }, markers = [];
@@ -2886,7 +2914,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
     S.mouse = [sx, sy];
     if (G) { if (Math.hypot(sx - G.sx, sy - G.sy) > CTL.dragPx) G.moved = true; if (G.type === 'box') { box.x1 = sx; box.y1 = sy; } if (G.type === 'group') G.cur = toWorld(sx, sy); }
     if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(sx, sy); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); S.cursorLv = S.sim.levelAt(Math.max(0, wx), Math.max(0, wy)); }
-    if (R.on && Math.hypot(sx - R.sx, sy - R.sy) > CTL.dragPx) { const [wx, wy] = toWorld(sx, sy); R.moved = true; R.face = Math.atan2(wy - R.wy, wx - R.wx); R.width = Math.hypot(wx - R.wx, wy - R.wy); }
+    if (R.on && Math.hypot(sx - R.sx, sy - R.sy) > CTL.dragPx) { const [wx, wy] = toWorld(sx, sy); R.moved = true; R.p1 = [wx, wy]; R.width = Math.hypot(wx - R.wx, wy - R.wy);
+      // pierwszy punkt gestu to kotwica (skrajny człon przedniego szeregu), kursor to drugi skraj frontu; rota patrzy prostopadle do tej linii na ekranie
+      // (przeciągnięcie z lewej na prawą: front do góry ekranu; dragAnchor: 'right' odwraca strony)
+      const dxs = sx - R.sx, dys = sy - R.sy, ln = Math.hypot(dxs, dys) || 1, sg = CTL.dragAnchor === 'right' ? -1 : 1, nx = sg * dys / ln, ny = -sg * dxs / ln, mx = (R.sx + sx) / 2, my = (R.sy + sy) / 2, a0 = toWorld(mx, my), a1 = toWorld(mx + nx * 40, my + ny * 40);
+      R.face = Math.atan2(a1[1] - a0[1], a1[0] - a0[0]); }
     if (S.sim && S.started) { const [cx, cy] = toContainer(sx, sy), hit = pickAt(cx, cy); S.hover = hit ? hit.id : -1; S.hoverAnt = hit ? hit.i : -1; }   // samo najechanie niczego nie zmienia: tylko podświetlenie i panel informacji
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
   });
@@ -2897,7 +2929,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (S.observe || !S.sim || S.over) return;
       const now = performance.now(), L = S.lastR, same = (kind, id) => L && now - L.t < CTL.doubleClickMs && Math.hypot(sx - L.sx, sy - L.sy) < CTL.doubleClickPx && L.kind === kind && L.id === id;
       if (R.moved) {   // przeciągnięcie: ustawienie szyku (środek = początek gestu, kierunek i szerokość z przesunięcia)
-        orderAt('move', R.wx, R.wy, { face: R.face, width: R.width, queue: R.shift }); markers.push({ x: R.wx, y: R.wy, t: 1, kind: 'move' }); S.lastR = null; return;
+        orderAt('move', R.wx, R.wy, { face: R.face, width: R.width, p1: R.p1, queue: R.shift }); markers.push({ x: R.wx, y: R.wy, t: 1, kind: 'move' }); S.lastR = null; return;
       }
       if (R.hit && !R.hit.own) {   // PPM na wrogu: atak na wskazaną rotę; dwukrotny: szarża, jeśli rota ją ma
         const dbl = same('enemy', R.hit.id); attackOn(R.hit.id, { queue: R.shift, charge: dbl });
@@ -2982,7 +3014,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · B + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · nakładki: przycisk Nakładki lub K (panel), J: tryb taktyczny (pole ostrzału z uwzględnieniem ścian i terenu), po wskazaniu wroga przy zaznaczonych rotach: wykonalność ostrzału (✔ pełny, ◐ częściowy, ▲ ograniczony, ✖ brak) i przyczyna blokady · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
+  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: front roty od pierwszego punktu (kotwica, skrajny przedni człon) do kursora, rota patrzy prostopadle (z lewej na prawą: do góry ekranu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · B + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · nakładki: przycisk Nakładki lub K (panel), J: tryb taktyczny (pole ostrzału z uwzględnieniem ścian i terenu), po wskazaniu wroga przy zaznaczonych rotach: wykonalność ostrzału (✔ pełny, ◐ częściowy, ▲ ograniczony, ✖ brak) i przyczyna blokady · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -3378,7 +3410,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (S.ov.extra && c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
     }
     // podgląd formowania podczas przeciągania PPM
-    if (R.on && R.moved && !S.observe) for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width })) drawFormation(o.c, o.x, o.y, o.face, o.cols, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
+    if (R.on && R.moved && !S.observe) for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width, p1: R.p1 })) drawFormation(o.c, o.x, o.y, o.face, o.cols, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
     if (G && G.type === 'group' && G.moved) for (const o of planGroupMove(G)) drawFormation(o.c, o.x, o.y, o.face, null, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
     drawOverlays();
     drawFx(sim, k);
@@ -3544,7 +3576,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
     // podgląd po przeciągnięciu: zasięg z miejsca docelowego (niepotwierdzony; po dotarciu liczony od nowa)
     if (R.on && R.moved && !S.observe && (S.ov.range || S.ov.tactical) && shooters.length) {
-      for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width })) {
+      for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width, p1: R.p1 })) {
         if (!shooters.includes(o.c) || !sim.reachable(o.c, o.x, o.y)) continue;
         const R0 = sim.T.range[sim.type[sim.fireShooter(o.c.id)]]; ellG(o.x, o.y, R0, rc, oA(0.7), oW(1.4), true);
         if (S.ov.tactical) drawArea(areaCached(o.c.id, o.x, o.y, R0), R0, 0.2, true);

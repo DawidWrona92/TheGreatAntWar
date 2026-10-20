@@ -279,7 +279,7 @@ test('typ mapy 3 to dotychczasowa mapa: ten sam teren i ten sam przebieg co prze
   // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach); dla szerokości 192 przeliczone po zmianie: w oblężeniu uzupełnienia ma tylko obrońca
   const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', '36d141ed'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '575f40d9'] };
   for (const key in base) {
-    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage, (d) => { d.params.visibility.on = false; d.params.facing.on = false; d.params.elevation.on = false; d.params.combat.on = false; d.params.morale.spec = false; }); // mechaniki etapów 4 i B wyłączone: stary rdzeń bez zmian
+    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage, (d) => { d.params.visibility.on = false; d.params.facing.on = false; d.params.elevation.on = false; d.params.combat.on = false; d.params.morale.spec = false; d.params.reaction.on = false; d.units.plujka.range = 80; }); // mechaniki etapów 4 i B wyłączone, dawny zasięg plujki: stary rdzeń bez zmian
     let h = 0; for (let i = 0; i < sim.grid.length; i++) h = (Math.imul(h, 31) + sim.grid[i]) | 0;
     for (let k = 0; k < 600; k++) sim.step();
     assert.strictEqual(String(h), base[key][0], 'teren zmienił się dla ' + key);
@@ -396,7 +396,7 @@ test('balistyka: zasięg z różnicy wysokości zgodny ze wzorem R = R0 sqrt(1 +
 });
 
 test('strzał kwasem: wzgórze blokuje tor niski, stromy przechodzi nad nim, zbyt wysokie blokuje oba, wyższa pozycja daje dalszy zasięg', () => {
-  const sim = makeScen('bitwa', 2, 1), p = antOf(sim, 1, 'plujka'), t = antOf(sim, 0, 'infantry');
+  const sim = makeScen('bitwa', 2, 1, (d) => { d.units.plujka.range = 80; }), p = antOf(sim, 1, 'plujka'), t = antOf(sim, 0, 'infantry');   // geometria testu zakłada zasięg 80 (domyślny jest większy)
   assert.ok(sim.hills && p >= 0 && t >= 0); flat(sim); const C = sim.COLS;
   let X = 0, Y = 0; for (let y = 300; y < 900 && !X; y += 40) for (let x = 560; x < 880 && !X; x += 16) if (openSpot(sim, x, y, 110)) { X = Math.floor(x / 16) * 16 + 8; Y = Math.floor(y / 16) * 16 + 8; }
   assert.ok(X, 'brak otwartego miejsca');

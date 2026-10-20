@@ -46,6 +46,11 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Podgląd zasięgu z miejsca docelowego liczony od kotwicy; dokładniejszy wymagałby symulacji rozstawienia szyku.
 - Minimapa: markery rozkazów i klik prawym przyciskiem jako rozkaz ruchu.
 
+## Po etapie C
+- Pathfinding w obronie gniazda: zgłoszony problem nie został odtworzony (patrz `wnioski-p1.md`); czeka na opis scenariusza.
+- Gest PPM dla wielu rot: rozmieszczenie rot wzdłuż linii frontu (obecnie środek frontu grupy).
+- Strony AI nadal odświeżają skuteczny rozkaz raz na sekundę (kotwica regresji typu 3 jest liczona na AI-AI); gdyby miała się zmienić, trzeba przeliczyć skróty.
+
 ## Armie (etap 3)
 - Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
 - Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).
