@@ -95,7 +95,8 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 68. **Cel i koniec**: jak w płaskim Oblężeniu, ale celem jest serce: atakujący wygrywa, zajmując serce (co najmniej 15 mrówek w promieniu 96 przy mniej niż 3 obrońcach przez 8 s) albo niszcząc obrońców, a po czasie wygrywa obrońca; uzupełnienia ma tylko obrońca i pojawiają się w sercu (obrońcy z sąsiednich pierścieni kontratakują, uzupełnienia resetują licznik zajęcia). Limit czasu kopca to 1500 s (`scenarioTypes.kopiec.timeLimit`, zamiast 900 s płaskich map): w pomiarach (16 bitew AI przeciw AI) bitwy trwały 399-1048 s, więc przy 900 s co najmniej jedna z 16 kończyłaby się upływem czasu.
 69. **Założenia liczbowe kopca (do korekty po testach)**: limit czasu 1500 s, wymiary (korytarz 5 komórek = 80 jedn., ściana 4, rampa 3, wejście 4, serce 16 x 16 komórek), wysokości poziomów, położenie ramp i wejść, pole startu 840 x 1100, rozmieszczenie obrońców.
 70. **Ruch w korytarzach** (`params.corridor`, mapy z `followAnchor`: 4, 5 i kopiec; poprawka po zgłoszeniu blokowania się w wąskich przejściach). Diagnoza: szyk to prosta siatka miejsc wokół kotwicy, więc po zakręcie o 90° tylne rzędy miały miejsca w ścianach; mrówki z takim miejscem szły do kotwicy i zlewały się w kupkę, której nic nie rozsuwało (15-50% roty nigdy nie wracało do szyku). Rozwiązanie jest ogólne: (a) pola przepływu mają dodatkowy koszt komórek przy ścianie (9 dla odległości 1 komórki, 4 dla 2), więc kotwica idzie środkiem korytarza i nie ściera narożników; (b) rota, której szyk nie mieści się w korytarzu (miejsca w ścianach, albo za mało szerokości), zmniejsza liczbę kolumn do wynikającej z najwęższego miejsca wzdłuż szyku i układa się po śladzie kotwicy: miejsce o głębokości U < 0 leży na śladzie U jednostek za kotwicą (z bocznym przesunięciem V), więc kolumna skręca razem z korytarzem; z przodu miejsce proste albo kotwica. Poza korytarzem (szyk się mieści) nic się nie zmienia, a mapy 1-3 nie są dotknięte (kotwica regresji bez zmian). Pomiar (`tests/p1-korytarze.js`): odsetek mrówek na miejscu w szyku po dojściu do celu wzrósł z 49-85% do 100% dla zakrętu N->W i N->E, bliskiego celu za rogiem, rampy i wejścia do kopca.
-71. **Sterowanie wzorowane na Total War** (specyfikacja użytkownika, szczegóły i macierz zgodności w `sterowanie-total-war.md`): LPM zaznacza (Ctrl dodaje, ramka z progiem 6 px, Ctrl+A całą armię), PPM na terenie to ruch bez walki (dwukrotny: szybki ruch), PPM na wrogiej rocie to rozkaz ataku `attackTarget` (dwukrotny: szarża rot z umiejętnością), Shift+PPM dodaje do kolejki (`c.queue`), przeciągnięcie PPM ustawia środek, kierunek i szerokość szyku, Alt+LPM przesuwa grupę (z Ctrl obraca), G grupuje, Ctrl+G blokuje układ, Backspace zatrzymuje. Rozkaz jest przekazywany do tego samego mechanizmu co dotychczas (`c.order`); symulacja odrzuca rozkaz bez drogi (komunikat), wykrywa brak postępu (raz przelicza trasę, potem kończy rozkaz) i kończy rozkaz ataku po zniszczeniu celu, przechodząc do następnego z kolejki. Dotychczasowy atak-marsz zostaje pod A + klik. Zamknięcie wejścia przeniesione z G na T. Wartości (próg, okno dwukrotnego kliknięcia, mnożnik szybkiego ruchu 1,5, zmęczenie 2,5) to reguły projektu, nie wartości z Total War.
+71. **Sterowanie wzorowane na Total War** (specyfikacja użytkownika, szczegóły i macierz zgodności w `sterowanie-total-war.md`): LPM zaznacza (Ctrl dodaje, ramka z progiem 6 px, Ctrl+A całą armię), PPM na terenie to ruch bez walki (dwukrotny: szybki ruch), PPM na wrogiej rocie to rozkaz ataku `attackTarget` (dwukrotny: szarża rot z umiejętnością), Shift+PPM dodaje do kolejki (`c.queue`), przeciągnięcie PPM ustawia środek, kierunek i szerokość szyku, Alt+LPM przesuwa grupę (z Ctrl obraca), G grupuje, Ctrl+G blokuje układ, Backspace zatrzymuje. Rozkaz jest przekazywany do tego samego mechanizmu co dotychczas (`c.order`); symulacja odrzuca rozkaz bez drogi (komunikat), wykrywa brak postępu (raz przelicza trasę, potem kończy rozkaz) i kończy rozkaz ataku po zniszczeniu celu, przechodząc do następnego z kolejki. Dotychczasowy atak-marsz zostaje pod B + klik (A przesuwa kamerę). Zamknięcie wejścia przeniesione z G na T. Wartości (próg, okno dwukrotnego kliknięcia, mnożnik szybkiego ruchu 1,5, zmęczenie 2,5) to reguły projektu, nie wartości z Total War.
+72. **Interfejs bitwy, statystyki i system walki (etap B, specyfikacja użytkownika)**. Wszystkie liczby to założenia projektu w JSON (`units.*.combat`, `params.combat`, `params.morale`), nie są wartościami z gier Total War (źródła nie dało się pobrać). Walka: szansa trafienia wręcz = `clamp(50 + (atak - obrona) x 1, 5, 95)` pp (zmęczenie obniża atak o `fatigueAtk` x zmęczenie); trafienie liczy się osobno dla każdego ciosu, chybiony cios nie zadaje obrażeń. Obrażenia: `(podstawowe x (1 - min(75%, pancerz x 0,75%)) + przebijające pancerz) x mnożniki` (kontra typu, zmęczenie, kierunek ciosu), potem odporność rodzaju obrażeń i osłony jako jeden mnożnik z dolnym ograniczeniem (łącznie najwyżej 85% redukcji), minimum 1 HP na trafienie. Kwas ma celność i amunicję (pula roty), wybuchy omijają pancerz. Zdrowie roty to suma HP żywych mrówek (maksimum = suma początkowa), ranna mrówka jest żywa. Odstęp między ciosami jest liczony w krokach symulacji, więc nie zależy od klatek. **Morale to istniejąca kontrola roty** (decyzja użytkownika: przemapować, nie dublować): te same źródła (regeneracja, dowódca, masa, straty, presja walki, brak dowódcy, odcięcie, zmęczenie, kapitan) plus dwa nowe z specyfikacji (atak z boku lub od tyłu, ucieczka sąsiedniego oddziału w promieniu `allyRadius`), mnożone przez `1 - odporność psychiczna roty`; pasma 70/40/20/1/0 z histerezą 3 pkt i mnożnikami tempa ataku i prędkości; odwrót przy morale 0 (zatrzask), zebranie po `noThreatSec` s bez zagrożenia i morale >= `rallyMin`, potem rota czeka na rozkaz. Atakujący nadal wpada w szał zamiast uciekać (`attackerRage`), obrońca się wycofuje. **Bezpiecznik**: `params.combat.on` i `params.morale.spec` (domyślnie włączone); przy wyłączeniu rdzeń liczy po staremu (kotwica regresji typu 3 jest liczona przy wyłączonych). Interfejs: karta roty (żywe/max, pasek HP z sumy, pasek morale w kolorze pasma, amunicja lub zmęczenie, stan, błysk po obrażeniach, wyróżnienie odwrotu), lewy panel szczegółów zaznaczonej (lub podglądanej wrogiej) roty w grupach Stan, Atak, Obrona, Ruch, Aktywne efekty, podpowiedzi z wzorami i prawdziwymi wartościami z `sim.compStats`, kompaktowe wskaźniki nad rotą (pasek HP, kształt i kolor morale, strzałka odwrotu), pasek sił (orientacyjny: HP x waga morale; wróg tylko wg wiedzy strony, ostatnio widziane roty), minimapa (tylko widoczne jednostki, prostokąt widoku, klik i przeciąganie przenoszą kamerę). Decyzje użytkownika: model walki za bezpiecznikiem i domyślnie włączony; morale jako przemapowana kontrola; specyfikacja przyjęta w całości; etapy po kolei z przystankiem po każdym.
 
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, zniszczalne ściany i bramy kopca, nakładające się piętra kopca, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
@@ -209,6 +210,34 @@ Dodatkowo: Taran odrzuca (`knock` 45), Pękacz ma `burst` (promień 22, obrażen
 | `params.elite.cd` | 0.85 |
 | `params.elite.armor` | 0.12 |
 | `params.elite.speed` | 1.0 |
+| `params.elite.meleeAttack` | 8 |
+| `params.elite.meleeDefence` | 8 |
+| `params.elite.armour` | 16 |
+| `params.elite.moraleResistance` | 0.1 |
+| `params.combat.comment` | Model walki (własne reguły projektu, nie wzory Total War). Szansa trafienia wręcz = clamp(hitBase + (atak - obrona) * hitPerPoint, hitMin, hitMax) %. Redukcja pancerza = min(armourCap, pancerz * armourScale) % tylko dla obrażeń podstawowych; obrażenia przebijające pancerz ją omijają. Odporności i sytuacyjne osłony (mech, tarcza odźwiernych, zamknięty szyk) mnożą wynik; łączna redukcja nie przekracza maxReduction. Trafienie zadaje co najmniej minDamage. fatigueAtk: spadek ataku wręcz o tyle punktów przy 100% zmęczenia. Gdy on = false, działa dawny model (kotwica regresji). |
+| `params.combat.on` | True |
+| `params.combat.hitBase` | 50 |
+| `params.combat.hitPerPoint` | 1 |
+| `params.combat.hitMin` | 5 |
+| `params.combat.hitMax` | 95 |
+| `params.combat.armourScale` | 0.75 |
+| `params.combat.armourCap` | 75 |
+| `params.combat.minDamage` | 1 |
+| `params.combat.maxReduction` | 0.85 |
+| `params.combat.fatigueAtk` | 15 |
+| `params.morale.comment` | Morale = istniejąca kontrola roty (params.control) z progami i konsekwencjami ze specyfikacji (własne reguły projektu). Pasma: stabilne od bands[0].min, pod presją, chwieje się, na granicy ucieczki; przy morale <= retreatAt odwrót (atakujący: szał, gdy attackerRage). Zebranie: noThreatSec bez zagrożenia i morale >= rallyMin, po zebraniu rota czeka na rozkaz (hold). Źródła strat i regeneracji bez zmian względem dawnej kontroli (bazowa regeneracja params.control.regen, premie dowódcy, masy i strony); dochodzą tylko kary jednorazowe ze specyfikacji i odporność psychiczna. Kary jednorazowe: flank (atak z boku lub tyłu, najwyżej raz na flankCooldown s) i ally (ucieczka sojuszniczej roty w promieniu allyRadius). Odporność psychiczna roty zmniejsza każdą karę. Gdy spec = false, działa dawna kontrola. |
+| `params.morale.spec` | True |
+| `params.morale.retreatAt` | 0 |
+| `params.morale.rallyMin` | 35 |
+| `params.morale.noThreatSec` | 4 |
+| `params.morale.flank` | 12 |
+| `params.morale.flankCooldown` | 8 |
+| `params.morale.ally` | 8 |
+| `params.morale.allyRadius` | 220 |
+| `params.morale.hyst` | 3 |
+| `params.morale.threatRadius` | 130 |
+| `params.morale.attackerRage` | True |
+| `params.morale.bands` | [{'min': 70, 'name': 'Stabilne', 'icon': '●', 'color': '#6fbf4a', 'cd': 1.0, 'speed': 1.0}, {'min': 40, 'name': 'Pod presją', 'icon': '▲', 'color': '#e6c22a', 'cd': 1.15, 'speed': 0.95}, {'min': 20, 'name': 'Chwieje się', 'icon': '⚠', 'color': '#f0902a', 'cd': 1.4, 'speed': 0.9}, {'min': 1, 'name': 'Na granicy ucieczki', 'icon': '✖', 'color': '#e0483a', 'cd': 1.7, 'speed': 0.85}, {'min': 0, 'name': 'Odwrót', 'icon': '↩', 'color': '#e0483a', 'cd': 1.7, 'speed': 0.85}] |
 | `params.control.regen` | 5 |
 | `params.control.cmdBonus` | 3 |
 | `params.control.noCmdWK` | 6 |
@@ -266,6 +295,21 @@ Dodatkowo: Taran odrzuca (`knock` 45), Pękacz ma `burst` (promień 22, obrażen
 | `params.facing.rear` | 1.5 |
 | `params.facing.frontDeg` | 60 |
 | `params.facing.rearDeg` | 120 |
+| `params.run.comment` | Szybki ruch (dwukrotny PPM na terenie): mnożnik prędkości i mnożnik przyrostu zmęczenia w marszu. Wartości są założeniem projektu. |
+| `params.run.mult` | 1.5 |
+| `params.run.fatigue` | 2.5 |
+| `params.orders.comment` | Rozkazy gracza: sekundy bez postępu zanim rota próbuje przeliczyć trasę, a potem kończy rozkaz z komunikatem o braku drogi; odstęp odświeżania celu ataku (kroki). |
+| `params.orders.stuckSec` | 4 |
+| `params.orders.retargetTicks` | 5 |
+| `params.orders.chargeRange` | 160 |
+| `params.corridor.comment` | Ruch w korytarzach (mapy z followAnchor: 4, 5 i kopiec). Pole przepływu omija ściany (koszt komórek przy ścianie: penalty dla odległości 1 i 2 komórek), a szyk, którego miejsca wpadają w ściany lub jest za szeroki dla korytarza, zmienia się w kolumnę o liczbie kolumn dopasowanej do szerokości korytarza i podąża śladem kotwicy (miejsce o głębokości U leży na śladzie U jednostek za kotwicą, a nie na prostej). |
+| `params.corridor.on` | True |
+| `params.corridor.penalty` | [9, 4] |
+| `params.corridor.trailStep` | 3 |
+| `params.corridor.trailMax` | 400 |
+| `params.corridor.holdSec` | 3 |
+| `params.corridor.probe` | 40 |
+| `params.corridor.margin` | 2 |
 | `params.aiPeriod` | 20 |
 
 ### Scenariusz (liczebność i role rot)
@@ -876,6 +920,36 @@ layoutArmy(LH, kopiec) = layoutMoundDefense: dowódcy z gwardią do serca (bloki
     rota (fcols z szerokości korytarza) kolumną wzdłuż korytarza, od końca odcinka bliższego atakującego; nie mieści się -> serce -> błąd
 layoutArmy(WK, kopiec) = ten sam układ kolumn co zwykle, w prostokącie mound.staging
 retreatPoint(LH) = serce; pole przepływu po prawdziwych korytarzach
+```
+
+### 4.19 Walka i morale (etap B)
+```
+hitNew(a, d, base, kind):                       # kind: melee | acid | burst
+  jeśli kind == melee i a >= 0:
+    atak = matk[typ a] - fatigueAtk * zmęczenie(a)
+    szansa = clamp(hitBase + (atak - mdef[typ d]) * hitPerPoint, hitMin, hitMax) / 100
+    jeśli rng >= szansa: return                  # chybiony cios nic nie zadaje
+  jeśli kind == burst: przebijające = base, podstawowe = 0
+  inaczej: podstawowe = base[typ a], przebijające = ap[typ a]
+  k = wariancja * mnożnik kontry * (1 - effDmg * zmęczenie) * mnożnik kierunku ciosu
+  redukcja = min(armourCap, pancerz[typ d] * armourScale) / 100
+  dmg = (podstawowe * (1 - redukcja) + przebijające) * k
+  m = 1 - odporność_rodzaju[typ d]               # wręcz, kwas albo wybuch
+  m *= osłona terenu * tarcza * zamknięty szyk (jeśli dotyczy)
+  dmg *= max(1 - maxReduction, m)                # dolne ograniczenie łącznej redukcji
+  dmg = max(dmg, minDamage)                      # co najmniej 1 HP na trafienie
+  hp[d] -= dmg; jeśli hp[d] <= 0: zabij(d)
+
+updateControl(c) co sekundę (spec):
+  zagrożenie = walka > 5% lub wróg bliżej niż threatRadius lub obrażenia w ciągu 2 s
+  odporność = średnia moraleResistance żywych mrówek; mf = 1 - odporność
+  d = regen + dowódca + masa + premia strony
+      - mf * (straty + presja walki + brak dowódcy + odcięcie + flanka + ucieczka sąsiada + zmęczenie + brak kapitana)
+  morale = clamp(morale + d, 0, 100)
+  jeśli nie odwrót i morale <= retreatAt: odwrót = prawda; kolejka rozkazów czyszczona; sąsiedzi w allyRadius dostają karę ally
+  jeśli odwrót i spokój >= noThreatSec i morale >= rallyMin: odwrót = fałsz, rozkaz stój
+  pasmo = pierwsze q z morale >= bands[q].min; poprawa pasma dopiero o hyst pkt; odwrót => pasmo 4
+  tempo ataku = bands[pasmo].cd * (1 + effCd * zmęczenie); prędkość = bands[pasmo].speed * ...
 ```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#

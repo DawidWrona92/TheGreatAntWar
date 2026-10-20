@@ -88,6 +88,20 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 #aBudget{position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px}
 .warn{color:#f0b060}
 @media(max-width:800px){.acols{grid-template-columns:1fr}}
+#force{display:flex;align-items:center;gap:6px;font-size:12px;cursor:help}
+#forceBar{width:150px;height:12px;background:#7a3a1c;border:1px solid var(--line);border-radius:6px;overflow:hidden}#forceOwn{display:block;height:100%;background:#4fb3c9;width:50%}
+#unitPanel{position:absolute;left:8px;top:236px;width:240px;max-height:calc(100vh - 470px);overflow-y:auto;z-index:4;padding:8px 9px;font-size:12px;color:#f6e7c4}
+#unitPanel .uh{font-weight:700;font-size:13px;text-shadow:0 1px 0 #000;margin-bottom:3px}
+#unitPanel details{border-top:1px solid rgba(30,18,8,.7);padding:2px 0}#unitPanel summary{cursor:pointer;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#ffd98a;text-shadow:0 1px 0 #000}
+.up-row{display:flex;justify-content:space-between;gap:8px;padding:1px 0;cursor:help}.up-row b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.up-bar{height:7px;background:#140d06;border-radius:3px;overflow:hidden;margin:1px 0 3px;position:relative}.up-bar i{display:block;height:100%}.up-bar u{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.7)}
+#tip{position:fixed;z-index:40;max-width:310px;background:#15130c;border:1px solid #c9a24b;padding:6px 8px;font-size:12px;pointer-events:none;border-radius:4px;white-space:pre-line;color:#f1e8d0}
+#miniWrap{position:absolute;right:8px;top:46px;z-index:4;padding:4px;line-height:0}#mini{width:196px;height:120px;cursor:pointer;border-radius:3px}
+body.sideOpen #miniWrap{right:316px}
+.card .ic1{position:absolute;right:3px;top:15px;font-size:12px;font-weight:700;text-shadow:0 1px 0 #000;color:#fff}
+.card.hit{animation:cardhit .55s ease-out}@keyframes cardhit{0%{box-shadow:0 0 0 3px #ff3b2a,0 0 14px #ff3b2a}100%{box-shadow:none}}
+.card.rt{background:repeating-linear-gradient(135deg,#4a1210 0 6px,#2a1d10 6px 12px);border-color:#e0483a}
+.card .stl .mi{font-weight:900;margin-right:2px}
 .hidden{display:none!important}
 #help{position:absolute;left:10px;bottom:190px;z-index:4;background:rgba(23,22,15,.82);padding:5px 9px;border-radius:4px;font-size:11.5px;color:var(--dim);max-width:520px}
 #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:30;background:var(--bg);text-align:center;padding:20px}
@@ -99,7 +113,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <div id="topbar">
   <strong>Wojna superkolonii · P1</strong>
   <span class="cnt wk" id="cntWK">WK 0</span><span class="cnt lh" id="cntLH">LH 0</span>
-  <span id="clock">0:00</span><span id="mapName" class="dim" title="Typ mapy"></span><span id="fordBtns"></span>
+  <span id="clock">0:00</span><span id="force" data-tip="force"><span id="forceTxt"></span><span id="forceBar"><i id="forceOwn"></i></span></span><span id="mapName" class="dim" title="Typ mapy"></span><span id="fordBtns"></span>
   <button id="bPause" title="Spacja">Pauza</button>
   <button id="bSlow" title="−">−</button><span id="spd">1×</span><button id="bFast" title="+">+</button>
   <button id="bRestart" title="Ten sam seed i parametry">Restart</button>
@@ -109,6 +123,9 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
   <button id="bHelp">?</button>
 </div>
 <div id="ticker"></div>
+<div id="unitPanel" class="wood hidden"></div>
+<div id="miniWrap" class="wood"><canvas id="mini" width="196" height="120"></canvas></div>
+<div id="tip" class="hidden"></div>
 <div id="help" class="hidden"></div>
 <div id="side" class="hide">
   <h3>Diagnostyka</h3><pre id="diag"></pre>
@@ -231,7 +248,22 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     "dmgVariance": 0.3,
     "collision": { "passes": 6, "fightMass": 8 },
     "captain": { "shock": 20, "dur": 15, "regenPenalty": 4 },
-    "elite": { "hp": 1.7, "dmg": 1.3, "cd": 0.85, "armor": 0.12, "speed": 1.0 },
+    "elite": { "hp": 1.7, "dmg": 1.3, "cd": 0.85, "armor": 0.12, "speed": 1.0, "meleeAttack": 8, "meleeDefence": 8, "armour": 16, "moraleResistance": 0.1 },
+    "combat": {
+      "comment": "Model walki (własne reguły projektu, nie wzory Total War). Szansa trafienia wręcz = clamp(hitBase + (atak - obrona) * hitPerPoint, hitMin, hitMax) %. Redukcja pancerza = min(armourCap, pancerz * armourScale) % tylko dla obrażeń podstawowych; obrażenia przebijające pancerz ją omijają. Odporności i sytuacyjne osłony (mech, tarcza odźwiernych, zamknięty szyk) mnożą wynik; łączna redukcja nie przekracza maxReduction. Trafienie zadaje co najmniej minDamage. fatigueAtk: spadek ataku wręcz o tyle punktów przy 100% zmęczenia. Gdy on = false, działa dawny model (kotwica regresji).",
+      "on": true, "hitBase": 50, "hitPerPoint": 1, "hitMin": 5, "hitMax": 95, "armourScale": 0.75, "armourCap": 75, "minDamage": 1, "maxReduction": 0.85, "fatigueAtk": 15
+    },
+    "morale": {
+      "comment": "Morale = istniejąca kontrola roty (params.control) z progami i konsekwencjami ze specyfikacji (własne reguły projektu). Pasma: stabilne od bands[0].min, pod presją, chwieje się, na granicy ucieczki; przy morale <= retreatAt odwrót (atakujący: szał, gdy attackerRage). Zebranie: noThreatSec bez zagrożenia i morale >= rallyMin, po zebraniu rota czeka na rozkaz (hold). Źródła strat i regeneracji bez zmian względem dawnej kontroli (bazowa regeneracja params.control.regen, premie dowódcy, masy i strony); dochodzą tylko kary jednorazowe ze specyfikacji i odporność psychiczna. Kary jednorazowe: flank (atak z boku lub tyłu, najwyżej raz na flankCooldown s) i ally (ucieczka sojuszniczej roty w promieniu allyRadius). Odporność psychiczna roty zmniejsza każdą karę. Gdy spec = false, działa dawna kontrola.",
+      "spec": true, "retreatAt": 0, "rallyMin": 35, "noThreatSec": 4, "flank": 12, "flankCooldown": 8, "ally": 8, "allyRadius": 220, "hyst": 3, "threatRadius": 130, "attackerRage": true,
+      "bands": [
+        { "min": 70, "name": "Stabilne", "icon": "●", "color": "#6fbf4a", "cd": 1.0, "speed": 1.0 },
+        { "min": 40, "name": "Pod presją", "icon": "▲", "color": "#e6c22a", "cd": 1.15, "speed": 0.95 },
+        { "min": 20, "name": "Chwieje się", "icon": "⚠", "color": "#f0902a", "cd": 1.4, "speed": 0.9 },
+        { "min": 1, "name": "Na granicy ucieczki", "icon": "✖", "color": "#e0483a", "cd": 1.7, "speed": 0.85 },
+        { "min": 0, "name": "Odwrót", "icon": "↩", "color": "#e0483a", "cd": 1.7, "speed": 0.85 }
+      ]
+    },
     "control": {
       "regen": 5, "cmdBonus": 3, "noCmdWK": 6, "noCmdLH": 2, "lossK": 80, "alarmK": 2,
       "weakAt": 60, "lostAt": 25, "recoverAt": 45, "weakCd": 1.4, "weakSpeed": 0.9,
@@ -269,26 +301,26 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "dragPx": 6, "doubleClickMs": 350, "doubleClickPx": 14,
       "keys": {
         "selectAll": ["Ctrl+KeyA"], "group": ["KeyG"], "lockGroup": ["Ctrl+KeyG"], "stop": ["Backspace"], "hold": ["KeyH"], "retreat": ["KeyV"],
-        "move": ["KeyM"], "attackMove": ["KeyA"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
+        "move": ["KeyM"], "attackMove": ["KeyB"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
         "pause": ["Space"], "faster": ["Equal", "NumpadAdd"], "slower": ["Minus", "NumpadSubtract"], "cancel": ["Escape"], "help": ["Slash"]
       }
     }
   },
   "units": {
-    "infantry":  { "name": "Wojownik",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 2,   "cd": 1.0, "aggro": 28, "radius": 4.0, "mass": 1,   "rank": 2,   "armor": 0,   "size": 0.55 },
-    "ciezki":    { "name": "Wojownik ciężki", "hp": 24, "speed": 22, "dmg": 2.2, "reach": 2, "cd": 1.1, "aggro": 26, "radius": 4.8, "mass": 2.5, "rank": 1, "armor": 0.3, "size": 0.7 },
+    "infantry":  { "name": "Wojownik",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 2,   "cd": 1.0, "aggro": 28, "radius": 4.0, "mass": 1,   "rank": 2,   "armor": 0,   "size": 0.55, "combat": { "meleeAttack": 60, "meleeDefence": 40, "baseDamage": 3.1, "armourPiercingDamage": 0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.1 } },
+    "ciezki":    { "name": "Wojownik ciężki", "hp": 24, "speed": 22, "dmg": 2.2, "reach": 2, "cd": 1.1, "aggro": 26, "radius": 4.8, "mass": 2.5, "rank": 1, "armor": 0.3, "size": 0.7, "combat": { "meleeAttack": 55, "meleeDefence": 52, "baseDamage": 3.4, "armourPiercingDamage": 0, "armour": 40, "damageResistance": { "acid": 0.10 }, "moraleResistance": 0.25 } },
     "taran":     { "name": "Taran",      "hp": 50, "speed": 16, "dmg": 3.5, "reach": 2.5, "cd": 1.3, "aggro": 24, "radius": 6.2, "mass": 5,   "rank": 0,   "armor": 0.3, "size": 0.95, "knock": 45,
-                   "ability": { "id": "charge", "name": "Szarża", "dur": 5, "cd": 35, "mult": 1.8 } },
+                   "ability": { "id": "charge", "name": "Szarża", "dur": 5, "cd": 35, "mult": 1.8 }, "combat": { "meleeAttack": 50, "meleeDefence": 30, "baseDamage": 4.4, "armourPiercingDamage": 1.0, "armour": 40, "damageResistance": { "acid": 0.10 }, "moraleResistance": 0.3 } },
     "biegacz":   { "name": "Biegacz",    "hp": 6,  "speed": 62, "dmg": 1.6, "reach": 1.8, "cd": 0.8, "aggro": 40, "radius": 3.2, "mass": 0.7, "rank": 2.5, "armor": 0,   "size": 0.5,
-                   "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 } },
+                   "ability": { "id": "sprint", "name": "Rajd", "dur": 6, "cd": 30, "mult": 1.7 }, "combat": { "meleeAttack": 62, "meleeDefence": 45, "baseDamage": 2.5, "armourPiercingDamage": 0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.0 } },
     "pekacz":    { "name": "Pękacz",     "hp": 8,  "speed": 26, "dmg": 0,   "reach": 2,   "cd": 1.0, "aggro": 0,  "radius": 4.6, "mass": 1.2, "rank": 3,   "armor": 0,   "size": 0.7,
                    "burst": { "radius": 22, "dmg": 3.5, "stuck": 6, "seek": 120 },
-                   "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 } },
+                   "ability": { "id": "burst", "name": "Pęknięcie", "dur": 12, "cd": 20 }, "combat": { "meleeAttack": 30, "meleeDefence": 35, "baseDamage": 0, "armourPiercingDamage": 0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.05 } },
     "odzwierny": { "name": "Odźwierny",  "hp": 24, "speed": 11, "dmg": 1.6, "reach": 2,   "cd": 1.1, "aggro": 20, "radius": 5.6, "mass": 6,   "rank": 0,   "armor": 0.4, "size": 0.9, "heavy": true,
-                   "ability": { "id": "close", "name": "Zamknij wejście" } },
-    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true },
+                   "ability": { "id": "close", "name": "Zamknij wejście" }, "combat": { "meleeAttack": 45, "meleeDefence": 58, "baseDamage": 2.5, "armourPiercingDamage": 0, "armour": 53.3333, "damageResistance": { "melee": 0.10, "acid": 0.15 }, "moraleResistance": 0.4 } },
+    "plujka":    { "name": "Plujka",     "hp": 5,  "speed": 24, "dmg": 1.0, "reach": 0,   "cd": 2.2, "aggro": 0,  "radius": 3.6, "mass": 0.9, "rank": 4,   "armor": 0,   "size": 0.55, "range": 80, "aoe": 10, "ranged": true, "combat": { "meleeAttack": 30, "meleeDefence": 25, "baseDamage": 0, "armourPiercingDamage": 1.0, "armour": 0, "damageResistance": { }, "moraleResistance": 0.0, "accuracy": 0.9 } },
     "dowodca":   { "name": "Dowódca",    "hp": 70, "speed": 30, "dmg": 3.0, "reach": 2.5, "cd": 1.0, "aggro": 24, "radius": 5.4, "mass": 3,   "rank": 5,   "armor": 0.2, "size": 1.0,
-                   "ability": { "id": "order", "name": "Rozkaz", "cd": 40 } }
+                   "ability": { "id": "order", "name": "Rozkaz", "cd": 40 }, "combat": { "meleeAttack": 70, "meleeDefence": 60, "baseDamage": 3.6, "armourPiercingDamage": 1.0, "armour": 26.6667, "damageResistance": { "acid": 0.10 }, "moraleResistance": 0.5 } }
   },
   "counters": {
     "taran":     { "infantry": 1.4, "odzwierny": 0.8 },
@@ -1027,7 +1059,7 @@ const Sim = (function () {
     // Dowódca może być dowolnego typu: gwardia dowódcy to elitarna wersja każdego typu bazowego (generowana tu)
     for (const k of Object.keys(defs.units)) if (k !== 'dowodca' && !defs.units[k].base) defs.units['gwardia_' + k] = { name: 'Gwardzista: ' + defs.units[k].name.toLowerCase(), base: k };
     const aiSides = new Set(opts.aiSides || SIDES);
-    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor, EL = P.elevation, BL = P.ballistics, VS = P.visibility, FC = P.facing, VIS = !!VS.on;
+    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor, EL = P.elevation, BL = P.ballistics, VS = P.visibility, FC = P.facing, VIS = !!VS.on, CB = P.combat, MO = P.morale, COMBAT = !!CB.on, MSPEC = !!MO.spec;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
     const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
     const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo, scenarioInfo: scenInfo, armyInfo };
@@ -1039,14 +1071,19 @@ const Sim = (function () {
       names.forEach((n, i) => { ti[n] = i; });
       kinds = names.map((n) => defs.units[n].base || n); // rodzaj zachowania: elita zachowuje się jak jej typ bazowy
       const f = () => new Float32Array(nT);
-      T = { mass: f(), hp: f(), speed: f(), dmg: f(), reach: f(), cd: f(), aggro: f(), radius: f(), rank: f(), armor: f(), range: f(), aoe: f(), knock: f(), size: f(), ranged: new Uint8Array(nT), heavy: new Uint8Array(nT) };
+      T = { mass: f(), hp: f(), speed: f(), dmg: f(), reach: f(), cd: f(), aggro: f(), radius: f(), rank: f(), armor: f(), range: f(), aoe: f(), knock: f(), size: f(), ranged: new Uint8Array(nT), heavy: new Uint8Array(nT), matk: f(), mdef: f(), base: f(), ap: f(), armour: f(), resMelee: f(), resAcid: f(), resBurst: f(), mres: f(), acc: f() };
       const E = defs.params.elite;
       // elita (gwardia dowódcy) = statystyki bazowe powiększone o mnożniki elitarności; liczone na nowo po zmianie suwaków
-      const statOf = (n) => { const u = defs.units[n]; if (!u.base) return u; const b = defs.units[u.base]; return Object.assign({}, b, { name: u.name, ability: undefined, burst: undefined, hp: b.hp * E.hp, dmg: b.dmg * E.dmg, cd: b.cd * E.cd, armor: Math.min(0.8, (b.armor || 0) + E.armor), speed: b.speed * E.speed, radius: b.radius * 1.1, mass: (b.mass || 1) * 1.3, size: (b.size || 0.6) * 1.15, rank: b.rank - 0.5 }); };
+      // elita: atak i obrona wręcz, pancerz i odporność psychiczna z bonusami elity; obrażenia podstawowe i przebijające rosną jak dawne `dmg`
+      const eliteCombat = (c0, E) => { const c = c0 || {}; return Object.assign({}, c, { meleeAttack: (c.meleeAttack || 0) + E.meleeAttack, meleeDefence: (c.meleeDefence || 0) + E.meleeDefence, baseDamage: (c.baseDamage || 0) * E.dmg, armourPiercingDamage: (c.armourPiercingDamage || 0) * E.dmg, armour: Math.min(100, (c.armour || 0) + E.armour), moraleResistance: Math.min(0.9, (c.moraleResistance || 0) + E.moraleResistance) }); };
+      const statOf = (n) => { const u = defs.units[n]; if (!u.base) return u; const b = defs.units[u.base]; return Object.assign({}, b, { name: u.name, ability: undefined, burst: undefined, hp: b.hp * E.hp, dmg: b.dmg * E.dmg, cd: b.cd * E.cd, armor: Math.min(0.8, (b.armor || 0) + E.armor), combat: eliteCombat(b.combat, E), speed: b.speed * E.speed, radius: b.radius * 1.1, mass: (b.mass || 1) * 1.3, size: (b.size || 0.6) * 1.15, rank: b.rank - 0.5 }); };
       names.forEach((n, i) => {
         const u = statOf(n);
         for (const k of ['mass', 'hp', 'speed', 'dmg', 'reach', 'cd', 'aggro', 'radius', 'rank', 'armor', 'range', 'aoe', 'knock', 'size']) T[k][i] = u[k] || 0;
         T.ranged[i] = u.ranged ? 1 : 0; T.heavy[i] = u.heavy ? 1 : 0;
+        const cb = u.combat || {}, rs = cb.damageResistance || {};
+        T.matk[i] = cb.meleeAttack || 0; T.mdef[i] = cb.meleeDefence || 0; T.base[i] = cb.baseDamage || 0; T.ap[i] = cb.armourPiercingDamage || 0; T.armour[i] = cb.armour || 0;
+        T.resMelee[i] = rs.melee || 0; T.resAcid[i] = rs.acid || 0; T.resBurst[i] = rs.burst || 0; T.mres[i] = cb.moraleResistance || 0; T.acc[i] = cb.accuracy != null ? cb.accuracy : 1;
       });
       mult = new Float32Array(nT * nT).fill(1);
       for (const a in defs.counters) for (const d in defs.counters[a]) mult[ti[a] * nT + ti[d]] = defs.counters[a][d];
@@ -1214,7 +1251,7 @@ const Sim = (function () {
     cap += 16;
     const ax = new Float32Array(cap), ay = new Float32Array(cap), avx = new Float32Array(cap), avy = new Float32Array(cap);
     const hp = new Float32Array(cap), cdT = new Float32Array(cap), stuck = new Float32Array(cap), heading = new Float32Array(cap);
-    const slotU = new Float32Array(cap), slotV = new Float32Array(cap), shield = new Int32Array(cap);
+    const slotU = new Float32Array(cap), slotV = new Float32Array(cap), shield = new Int32Array(cap), swingN = new Int32Array(cap);
     const type = new Uint8Array(cap), side = new Uint8Array(cap), alive = new Uint8Array(cap);
     const compOf = new Int16Array(cap), target = new Int32Array(cap).fill(-1);
     // widoczność (etap 4): do kiedy mrówka jest widoczna dla danej strony i do kiedy jest ujawniona własnym atakiem
@@ -1263,8 +1300,9 @@ const Sim = (function () {
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
             captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9,
             slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null],
-            trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4,
-            queue: [], ostate: 'idle', blockT: 0, pgx: at[0], pgy: at[1], replanned: false, chargeUsed: false, notice: ''
+            known: [null, null], trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4,
+            queue: [], ostate: 'idle', blockT: 0, pgx: at[0], pgy: at[1], replanned: false, chargeUsed: false, notice: '',
+            lastDmgTick: -1e9, dmgIn: 0, lastFightTick: -1e9, lastFireTick: -1e9, flankTick: -1e9, flankPenTick: -1e9, routPen: 0, lastThreatTick: -1e9, band: 0, retreating: false, mb: {}, mres: 0, hp0: 0, rallyTick: -1e9
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -1273,7 +1311,7 @@ const Sim = (function () {
             for (let n = 0; n < cd.units[k]; n++) addAnt(t, s, c.id, at[0], at[1]);
             c.startBy[k] = cd.units[k]; stats[sn].start[k] = (stats[sn].start[k] || 0) + cd.units[k];
           }
-          c.initial = c.alive;
+          c.initial = c.alive; c.hp0 = 0; for (const i of c.ants) c.hp0 += hp[i];
           { let mr = 0; for (const k in cd.units) if (k !== 'dowodca') mr = Math.max(mr, T.radius[ti[k]]); c.rad = mr || 4; if (!c.spacing) c.spacing = Math.max(SPACING, mr * 2.1); }
           if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / c.spacing) + 1);
           let nP = 0; for (const k in c.startBy) if (kinds[ti[k]] === 'plujka') nP += c.startBy[k]; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
@@ -1349,7 +1387,47 @@ const Sim = (function () {
         for (const o of comps) if (o.side === side[d]) o.cmdDiedAt = Math.max(o.cmdDiedAt, tick);
       }
     }
-    function hit(a, d, base, melee) {
+    // Centralny system obrażeń (params.combat.on): trafienie wręcz (atak - obrona), obrażenia podstawowe i przebijające pancerz, mnożniki (rodzaj celu, zmęczenie, kierunek ciosu),
+    // redukcja pancerza tylko części podstawowej, potem odporności i osłony (jeden mnożnik z dolnym ograniczeniem), minimum minDamage, zastosowanie do HP trafionej mrówki.
+    const combatStat = { swings: 0, hits: 0, misses: 0 };
+    sim.combat = combatStat;
+    function hitNew(a, d, base, kind) {
+      if (!alive[d]) return;
+      const td = type[d], dc = comps[compOf[d]], ac = a >= 0 ? comps[compOf[a]] : null, ta = a >= 0 ? type[a] : -1;
+      if (kind === 'melee' && a >= 0) {
+        combatStat.swings++;
+        const att = T.matk[ta] - CB.fatigueAtk * ac.fatigue / 100, chance = Math.max(CB.hitMin, Math.min(CB.hitMax, CB.hitBase + (att - T.mdef[td]) * CB.hitPerPoint)) / 100;
+        if (rngCombat.next() >= chance) { combatStat.misses++; return; }   // nietrafiony atak nie zadaje obrażeń
+        combatStat.hits++;
+      }
+      let b = 0, p = 0;
+      if (kind === 'burst') p = base; else { b = T.base[ta]; p = T.ap[ta]; }
+      let k = 1 - P.dmgVariance / 2 + P.dmgVariance * rngCombat.next();
+      if (a >= 0) {
+        k *= mult[ta * nT + td]; k *= 1 - P.fatigue.effDmg * ac.fatigue / 100;
+        revealUntil[a] = tick + VS.revealSec * HZ;   // kto atakuje, ten się ujawnia
+        if (FC.on) {   // cios z przodu x1, z flanki x flank, od tyłu x rear
+          const bx = ax[a] - ax[d], by = ay[a] - ay[d];
+          if (bx !== 0 || by !== 0) { let da = Math.atan2(by, bx) - heading[d]; da = Math.abs(Math.atan2(Math.sin(da), Math.cos(da))) * 57.29578; const fm = da <= FC.frontDeg ? 1 : da <= FC.rearDeg ? FC.flank : FC.rear; k *= fm; if (fm > 1) dc.flankTick = tick; }
+        }
+      }
+      const red = Math.min(CB.armourCap, T.armour[td] * CB.armourScale) / 100;
+      let dmg = (b * (1 - red) + p) * k;
+      let m = 1 - (kind === 'melee' ? T.resMelee[td] : kind === 'acid' ? T.resAcid[td] : T.resBurst[td]);
+      if (grid[cellAt(ax[d], ay[d])] === 2) m *= P.cover;
+      if (shield[d] > tick) m *= P.shieldMult;
+      if (dc.closed && kinds[td] === 'odzwierny') m *= P.closedMult;
+      dmg *= Math.max(1 - CB.maxReduction, m);
+      if (dmg < CB.minDamage) dmg = CB.minDamage;
+      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg;
+      if (hp[d] <= 0) kill(d, a, kind === 'melee' ? 'melee' : 'ranged');
+      else if (kind === 'melee' && a >= 0 && T.knock[ta] > 0 && !T.heavy[td]) {
+        const dx = ax[d] - ax[a], dy = ay[d] - ay[a], l = Math.hypot(dx, dy) || 1, kn = T.knock[ta] * (ac.abilUntil > tick && ac.abilType === 'taran' ? 2 : 1);
+        avx[d] += dx / l * kn; avy[d] += dy / l * kn;
+      }
+    }
+    function hit(a, d, base, melee, kind) {
+      if (COMBAT) return hitNew(a, d, base, kind || (melee ? 'melee' : 'acid'));
       if (!alive[d]) return;
       let dmg = base * (1 - P.dmgVariance / 2 + P.dmgVariance * rngCombat.next());
       if (a >= 0) { dmg *= mult[type[a] * nT + type[d]]; dmg *= 1 - P.fatigue.effDmg * comps[compOf[a]].fatigue / 100; }
@@ -1366,7 +1444,7 @@ const Sim = (function () {
       if (shield[d] > tick) dmg *= P.shieldMult;
       const dc = comps[compOf[d]];
       if (dc.closed && kinds[type[d]] === 'odzwierny') dmg *= P.closedMult;
-      hp[d] -= dmg;
+      hp[d] -= dmg; dc.lastDmgTick = tick; dc.dmgIn += dmg;
       if (hp[d] <= 0) kill(d, a, melee ? 'melee' : 'ranged');
       else if (melee && a >= 0 && T.knock[type[a]] > 0 && !T.heavy[type[d]]) {
         const dx = ax[d] - ax[a], dy = ay[d] - ay[a], l = Math.hypot(dx, dy) || 1, k = T.knock[type[a]] * (comps[compOf[a]].abilUntil > tick && comps[compOf[a]].abilType === 'taran' ? 2 : 1);
@@ -1383,20 +1461,21 @@ const Sim = (function () {
           const j = cellItems[k];
           if (!alive[j] || side[j] === s || Math.hypot(ax[j] - x, ay[j] - y) > u.radius) continue;
           stuck[j] = Math.max(stuck[j], u.stuck);
-          hit(i, j, u.dmg, false);
+          hit(i, j, u.dmg, false, 'burst');
         }
       }
       kill(i, -1, 'burst');
     }
     function acid(i, tx, ty, apex) {
       revealUntil[i] = tick + VS.revealSec * HZ;
+      if (COMBAT && T.acc[type[i]] < 1 && rngCombat.next() >= T.acc[type[i]]) { addFx({ k: 'acid', x0: ax[i], y0: ay[i], x1: tx, y1: ty, r: T.aoe[type[i]], lob: 12, miss: true }); return; }   // celność strzału kwasem: chybiony pocisk nikogo nie rani
       addFx({ k: 'acid', x0: ax[i], y0: ay[i], x1: tx, y1: ty, r: T.aoe[type[i]], lob: apex > 0 ? apex - Math.max(heightAt(ax[i], ay[i]) + BL.eyeShooter, heightAt(tx, ty)) : 12 });
       const u = T.aoe[type[i]], s = side[i], r = Math.ceil(u / HASH), cx = (tx / HASH) | 0, cy = (ty / HASH) | 0;
       for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
         const c = yy * HC + xx;
         for (let k = cellStart[c]; k < cellStart[c + 1]; k++) {
           const j = cellItems[k];
-          if (alive[j] && side[j] !== s && Math.hypot(ax[j] - tx, ay[j] - ty) <= u) hit(i, j, T.dmg[type[i]], false);
+          if (alive[j] && side[j] !== s && Math.hypot(ax[j] - tx, ay[j] - ty) <= u) hit(i, j, T.dmg[type[i]], false, 'acid');
         }
       }
     }
@@ -1423,7 +1502,7 @@ const Sim = (function () {
       return best;
     }
 
-    sim.debug = { hit, acquire, slotErr: (i) => { const cc = comps[compOf[i]], w = CORR && cc.bent ? trailSlot(cc, i) : slotWorld(cc, i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
+    sim.debug = { hit, acquire, swings: (i) => swingN[i], slotErr: (i) => { const cc = comps[compOf[i]], w = CORR && cc.bent ? trailSlot(cc, i) : slotWorld(cc, i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
 
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
@@ -1534,7 +1613,7 @@ const Sim = (function () {
         vsx.length = vsy.length = vsn.length = comps.length; vsx.fill(0); vsy.fill(0); vsn.fill(0);
         for (let j = 0; j < count; j++) if (alive[j] && side[j] === e && visibleTo(s, j)) { const ci = compOf[j]; vsx[ci] += ax[j]; vsy[ci] += ay[j]; vsn[ci]++; }
         for (const o of comps) if (o.side === e && vsn[o.id] > 0) {
-          o.seenAt[s] = tick; o.lastX[s] = vsx[o.id] / vsn[o.id]; o.lastY[s] = vsy[o.id] / vsn[o.id];
+          o.seenAt[s] = tick; o.lastX[s] = vsx[o.id] / vsn[o.id]; o.lastY[s] = vsy[o.id] / vsn[o.id]; o.known[s] = { tick, ants: o.alive, hp: compHp(o), power: compPower(o) };   // wiedza strony o wrogiej rocie (dla wskaźnika sił)
           if (!o.vw[s]) o.vw[s] = Object.create(o);   // widok roty dla strony s: te same pola, ale pozycja ostatnio widziana
           o.vw[s].ax = o.lastX[s]; o.vw[s].ay = o.lastY[s];
         }
@@ -1542,6 +1621,47 @@ const Sim = (function () {
     }
     const compView = (o, s) => (!VIS ? o : tick - o.seenAt[s] <= memTicks ? o.vw[s] : null);
     sim.visibleTo = visibleTo; sim.compVisible = (c, s) => !VIS || c.side === s || tick - c.seenAt[s] <= VS.period * 2;
+    // ---------- stan roty dla interfejsu: jedno źródło prawdy (liczone z mrówek, bez własnych kopii) ----------
+    const compHp = (c) => { let h = 0; for (const i of c.ants) if (alive[i]) h += hp[i]; return h; };
+    const compPower = (c) => compHp(c) * (c.cstate === CS_LOST ? 0.3 : c.cstate === CS_WEAK ? 0.8 : 1);   // orientacyjna siła: zdrowie ważone stanem morale (jak strength() w AI)
+    sim.compHp = compHp;
+    const CTXT = ['', '', ''];
+    // statystyki dominującego typu roty z aktualnymi modyfikatorami (zmęczenie, pasmo morale, osłony), wartości dokładnie takie jak używa mechanika
+    sim.compStats = (c) => {
+      const dt = c.domType >= 0 ? c.domType : 0, fat = c.fatigue / 100, interval = T.cd[dt] * c.cdMod * P.cdScale, band = MO.bands[c.band];
+      const eff = [];
+      if (fat > 0.1) eff.push({ name: 'Zmęczenie', value: Math.round(c.fatigue) + '%', note: 'atak wręcz -' + (CB.fatigueAtk * fat).toFixed(0) + ' pkt, obrażenia x' + (1 - P.fatigue.effDmg * fat).toFixed(2) + ', tempo ataku x' + (1 + P.fatigue.effCd * fat).toFixed(2) + ', prędkość x' + (1 - P.fatigue.effSpeed * fat).toFixed(2) });
+      if (c.band > 0 && MSPEC) eff.push({ name: band.name, value: Math.round(c.control), note: 'tempo ataku x' + band.cd.toFixed(2) + ', prędkość x' + band.speed.toFixed(2) });
+      if (c.abilUntil > tick) eff.push({ name: (defs.units[c.abilType] && defs.units[c.abilType].ability.name) || 'Umiejętność', value: Math.ceil((c.abilUntil - tick) / HZ) + ' s', note: 'aktywna' });
+      if (c.closed) eff.push({ name: 'Zamknięty szyk', value: 'tak', note: 'obrażenia x' + P.closedMult });
+      if (c.order && c.order.run && !c.order.done && c.order.kind === 'move') eff.push({ name: 'Szybki ruch', value: 'x' + P.run.mult, note: 'zmęczenie x' + P.run.fatigue });
+      if (!c.cmdIn) eff.push({ name: 'Brak dowódcy w zasięgu', value: '', note: 'kara morale (noCmd)' });
+      if (tick < c.captainPenaltyUntil) eff.push({ name: 'Brak kapitana', value: Math.ceil((c.captainPenaltyUntil - tick) / HZ) + ' s', note: 'kara morale' });
+      const ranged = !!T.ranged[dt], red = Math.min(CB.armourCap, T.armour[dt] * CB.armourScale);
+      const resist = { melee: T.resMelee[dt], acid: T.resAcid[dt], burst: T.resBurst[dt] };
+      const ant = c.ants.filter((i) => alive[i]), hpNow = compHp(c);
+      let firing = tick - c.lastFireTick < 2 * HZ, fighting = tick - c.lastFightTick < 2 * HZ, hurt = tick - c.lastDmgTick < 1.5 * HZ;
+      const state = c.cstate === CS_LOST ? (c.side === 0 && (!MSPEC || MO.attackerRage) ? 'szał' : 'odwrót') : firing ? 'ostrzał' : fighting ? 'walka' : c.moving ? 'ruch' : 'bezczynna';
+      return {
+        id: c.id, name: c.name, num: c.num, kind: c.domType >= 0 ? names[c.domType] : '', elite: !!c.startBy.dowodca,
+        entities: { current: c.alive, initial: c.initial, max: c.initial }, health: { current: hpNow, max: c.hp0, perAntMax: T.hp[dt] },
+        morale: { value: c.control, band: c.band, name: band.name, icon: band.icon, color: band.color, retreating: c.cstate === CS_LOST, resistance: c.mres, breakdown: c.mb, threshold: MO.bands.map((b) => b.min) },
+        state, firing, fighting, hurt, order: c.ostate,
+        attack: { melee: Math.max(0, T.matk[dt] - CB.fatigueAtk * fat), baseDamage: T.base[dt], armourPiercing: T.ap[dt], interval, reach: T.reach[dt], range: ranged ? T.range[dt] : 0, accuracy: ranged ? T.acc[dt] : null, ranged, counters: Object.keys(defs.counters[names[dt]] || {}).map((k) => ({ vs: k, mult: defs.counters[names[dt]][k] })) },
+        defence: { melee: T.mdef[dt], armour: T.armour[dt], armourReduction: red, resist },
+        speed: { base: T.speed[dt], current: T.speed[dt] * c.spMod }, ammo: ranged ? { current: c.acid, max: c.acidMax } : null, effects: eff
+      };
+    };
+    // orientacyjny wskaźnik sił: własne wartości dokładne, wroga tylko według wiedzy strony (ostatnio widziane roty), w trybie obserwatora dokładnie
+    sim.forces = (viewSide) => {
+      const out = { own: { hp: 0, hp0: 0, power: 0, ants: 0 }, enemy: { hp: 0, hp0: 0, power: 0, ants: 0, known: 0, total: 0 } };
+      for (const c of comps) {
+        const mine = viewSide < 0 ? c.side === 0 : c.side === viewSide, tgt = mine ? out.own : out.enemy;
+        if (mine) { tgt.hp += compHp(c); tgt.hp0 += c.hp0; tgt.power += compPower(c); tgt.ants += c.alive; }
+        else { tgt.total++; const k = viewSide < 0 ? { hp: compHp(c), power: compPower(c), ants: c.alive } : c.known[viewSide]; if (k) { tgt.known++; tgt.hp += k.hp; tgt.power += k.power; tgt.ants += k.ants; tgt.hp0 += c.hp0; } }
+      }
+      return out;
+    };
     function nearestEnemyComp(c) {
       let best = null, bd = 1e18;
       for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const v = compView(o, c.side); if (!v) continue; const d = Math.hypot(v.ax - c.ax, v.ay - c.ay); if (d < bd) { bd = d; best = v; } }
@@ -1573,9 +1693,21 @@ const Sim = (function () {
       const noCmd = sn === 'WK' ? PC.noCmdWK : PC.noCmdLH;
       const pLoss = PC.lossK * f, pAlarm = PC.alarmK * eng;
       let pNoCmd = inCmd ? 0 : noCmd, pCut = (!inCmd && !friendNear) ? PC.cutOff : 0;
-      let d = PC.regen + (inCmd ? PC.cmdBonus : 0) - pLoss - pAlarm - pNoCmd - pCut;
-      if (n >= 0.7 * c.initial && friendNear) d += PC.massBonus;
-      d += defs.scenario.sides[sn].regenBonus || 0;
+      let d, mf = 1; const mb = c.mb = {}, ne = nearestEnemyComp(c);
+      if (MSPEC) {
+        // morale wg specyfikacji (na bazie istniejącej kontroli): zagrożenie, odporność psychiczna roty, kary jednorazowe i ciągłe, regeneracja po spokoju
+        const threat = eng > 0.05 || (ne && ne.d < MO.threatRadius) || tick - c.lastDmgTick < 2 * HZ; if (threat) c.lastThreatTick = tick;
+        const calmFor = (tick - c.lastThreatTick) / HZ; let mr = 0; for (const i of c.ants) mr += T.mres[type[i]]; c.mres = n ? mr / n : 0; mf = 1 - c.mres;
+        mb.regen = PC.regen; mb.cmd = inCmd ? PC.cmdBonus : 0; mb.mass = n >= 0.7 * c.initial && friendNear ? PC.massBonus : 0; mb.side = defs.scenario.sides[sn].regenBonus || 0;
+        mb.loss = -pLoss * mf; mb.alarm = -pAlarm * mf; mb.noCmd = -pNoCmd * mf; mb.cutOff = -pCut * mf;
+        mb.flank = 0; if (c.flankTick > c.flankPenTick && tick - c.flankPenTick > MO.flankCooldown * HZ) { mb.flank = -MO.flank * mf; c.flankPenTick = tick; }
+        mb.rout = c.routPen ? -c.routPen * mf : 0; c.routPen = 0;
+        d = mb.regen + mb.cmd + mb.mass + mb.side + mb.loss + mb.alarm + mb.noCmd + mb.cutOff + mb.flank + mb.rout;
+      } else {
+        d = PC.regen + (inCmd ? PC.cmdBonus : 0) - pLoss - pAlarm - pNoCmd - pCut;
+        if (n >= 0.7 * c.initial && friendNear) d += PC.massBonus;
+        d += defs.scenario.sides[sn].regenBonus || 0;
+      }
       // zmęczenie: rośnie w marszu i walce, spada na odpoczynku; obniża tempo ataku, prędkość, obrażenia i kontrolę
       const FP = P.fatigue;
       let fg = FP.fight * eng;
@@ -1586,10 +1718,9 @@ const Sim = (function () {
       } else if (eng < 0.05) fg -= FP.rest;
       c.slopeSum = 0; c.slopeN = 0;
       c.fatigue = Math.max(0, Math.min(100, c.fatigue + fg));
-      const fat = c.fatigue / 100; d -= FP.effControl * fat;
-      const capOut = tick < c.captainPenaltyUntil; if (capOut) d -= P.captain.regenPenalty;
+      const fat = c.fatigue / 100; d -= FP.effControl * fat * mf; mb.fatigue = -FP.effControl * fat * mf;
+      const capOut = tick < c.captainPenaltyUntil; if (capOut) d -= P.captain.regenPenalty * mf; mb.captain = capOut ? -P.captain.regenPenalty * mf : 0;
       if (c.captain < 0 && !capOut && c.alive > 0 && !(c.startBy.dowodca)) c.captain = pickCaptain(c);
-      const ne = nearestEnemyComp(c);
       if (c.cstate === CS_LOST && ne && ne.d < 90) d = Math.min(d, 0);
       c.control = Math.max(0, Math.min(100, c.control + d));
       // przyczyna dominująca
@@ -1597,21 +1728,39 @@ const Sim = (function () {
       const cand = [[pLoss, 'loss'], [pAlarm * 1.5, 'alarm'], [pNoCmd, cmdRecent ? 'cmdDeath' : 'noCmd'], [pCut, 'cutOff'], [capOut ? P.captain.regenPenalty * 2 : 0, 'captain'], [FP.effControl * fat * 1.2, 'fatigue']];
       cand.sort((a, b) => b[0] - a[0]); c.lastCause = cand[0][0] > 0 ? CAUSE_NAMES[cand[0][1]] : '';
       const prev = c.cstate;
-      if (c.cstate === CS_FULL) { if (c.control < PC.weakAt) c.cstate = CS_WEAK; }
-      else if (c.cstate === CS_WEAK) { if (c.control >= PC.weakAt + 5) c.cstate = CS_FULL; else if (c.control < PC.lostAt) c.cstate = CS_LOST; }
-      else if (c.control >= PC.recoverAt) c.cstate = CS_WEAK;
+      if (MSPEC) {
+        // pasma morale z histerezą; odwrót przy morale <= retreatAt (jednorazowy) i zebranie dopiero po noThreatSec bez zagrożenia i morale >= rallyMin
+        const B = MO.bands, calmFor = (tick - c.lastThreatTick) / HZ;
+        if (!c.retreating && c.control <= MO.retreatAt) {
+          c.retreating = true; c.queue.length = 0;
+          for (const o of comps) if (o !== c && o.side === c.side && o.alive > 0 && Math.hypot(o.ax - c.ax, o.ay - c.ay) < MO.allyRadius) o.routPen += MO.ally;   // sąsiedzi widzą ucieczkę (kara jednorazowa)
+        } else if (c.retreating && calmFor >= MO.noThreatSec && c.control >= MO.rallyMin) {
+          c.retreating = false; c.rallyTick = tick; c.order = { kind: 'hold', x: c.ax, y: c.ay, face: null, done: false }; c.queue.length = 0;   // po zebraniu rota czeka na rozkaz
+        }
+        let nb = 4; for (let q = 0; q < 4; q++) if (c.control >= B[q].min) { nb = q; break; }
+        if (c.retreating) nb = 4;
+        else if (nb < c.band && c.band < 4) nb = c.control >= B[nb].min + MO.hyst || c.control >= 100 ? nb : c.band;   // poprawa pasma dopiero o margines histerezy
+        else if (nb === 4) nb = 3;   // powyżej 0 to najniższe pasmo przed odwrotem, nie odwrót
+        c.band = nb;
+        c.cstate = c.retreating ? CS_LOST : nb === 0 ? CS_FULL : CS_WEAK;
+      } else {
+        if (c.cstate === CS_FULL) { if (c.control < PC.weakAt) c.cstate = CS_WEAK; }
+        else if (c.cstate === CS_WEAK) { if (c.control >= PC.weakAt + 5) c.cstate = CS_FULL; else if (c.control < PC.lostAt) c.cstate = CS_LOST; }
+        else if (c.control >= PC.recoverAt) c.cstate = CS_WEAK;
+        c.band = c.cstate === CS_LOST ? 4 : c.control >= 70 ? 0 : c.control >= 40 ? 1 : c.control >= 20 ? 2 : 3;   // tylko do wyświetlania
+      }
       if (c.cstate !== prev) {
-        const lab = ['pełna kontrola', 'osłabiona kontrola', c.side === 0 ? 'SZAŁ (utrata kontroli)' : 'ODWRÓT (utrata kontroli)'][c.cstate];
+        const lab = ['morale odzyskane (' + MO.bands[c.band].name + ')', 'morale spadło (' + MO.bands[c.band].name + ')', c.side === 0 && (!MSPEC || MO.attackerRage) ? 'SZAŁ (morale na zerze)' : 'ODWRÓT (morale na zerze)'][c.cstate];
         if (c.cstate > prev) logEvent(c.name + ' (' + sn + '): ' + lab + (c.lastCause ? ', przyczyna: ' + c.lastCause : ''), sn, c.id);
         else logEvent(c.name + ' (' + sn + ') odzyskała: ' + lab, sn, c.id);
         c.dirty = true;
       }
-      c.cdMod = (c.cstate === CS_FULL ? 1 : PC.weakCd) * (1 + FP.effCd * fat);
-      c.spMod = (c.cstate === CS_FULL ? 1 : PC.weakSpeed) * (1 - FP.effSpeed * fat) * SPM[c.side];
-      c.berserk = c.cstate === CS_LOST && c.side === 0;
+      if (MSPEC) { const bd = MO.bands[c.band]; c.cdMod = bd.cd * (1 + FP.effCd * fat); c.spMod = bd.speed * (1 - FP.effSpeed * fat) * SPM[c.side]; }
+      else { c.cdMod = (c.cstate === CS_FULL ? 1 : PC.weakCd) * (1 + FP.effCd * fat); c.spMod = (c.cstate === CS_FULL ? 1 : PC.weakSpeed) * (1 - FP.effSpeed * fat) * SPM[c.side]; }
+      c.berserk = c.cstate === CS_LOST && c.side === 0 && (!MSPEC || MO.attackerRage);
       // skuteczny rozkaz
       if (c.cstate === CS_LOST) {
-        if (c.side === 1) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: true }; }
+        if (c.side === 1 || (MSPEC && !MO.attackerRage)) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: true }; }
         else { const e = ne ? ne.c : null; c.eff = { kind: 'attack', x: e ? e.ax : c.order.x, y: e ? e.ay : c.order.y, engage: true }; }
       } else c.eff = effOf(c);
       // dominujący typ -> prędkość rity
@@ -1894,13 +2043,13 @@ const Sim = (function () {
             const apex = HILLS ? shotApex(i, tgt) : (d <= T.range[ty] ? 0 : -1);   // z wzgórzami: balistyka (zasięg zależy od różnicy wysokości, tor ominąć wzgórze)
             if (apex >= 0) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i]; contact[i] = 1;
-              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2, apex); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
+              if (cdT[i] <= 0 && c.acid > 0) { c.lastFireTick = tick; acid(i, tx, ty2, apex); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             }
           } else {
             const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
             if (d <= reach) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i]; contact[i] = 1;
-              if (cdT[i] <= 0) { hit(i, tgt, T.dmg[ty], true); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
+              if (cdT[i] <= 0) { swingN[i]++; c.lastFightTick = tick; hit(i, tgt, T.dmg[ty], true, 'melee'); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             } else { gx = tx; gy = ty2; goalSet = true; fighting = true; }
           }
           if (fighting) c.engCnt++;
@@ -2495,7 +2644,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function startBattle() {
     S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, scenario: S.scenario, budget: S.budget || undefined, armies: S.budget && S.army && !S.observe ? { [S.side]: S.army } : undefined, styles: S.budget ? { [S.side === 'WK' ? 'LH' : 'WK']: S.oppStyle, [S.side]: 'auto' } : undefined, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
     S.selected.clear(); S.groups = {}; S.cgroups = []; S.pinned = -1; S.lastR = null; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
-    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); buildFordButtons(); $('mapName').textContent = S.sim.scenarioInfo.name + ' · ' + (S.sim.scenarioInfo.map ? S.sim.mapInfo.name : S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name);
+    setupScene(S.sim); fitCamera(); miniSetup(); buildCards(); buildCmdBar(); buildFordButtons(); $('mapName').textContent = S.sim.scenarioInfo.name + ' · ' + (S.sim.scenarioInfo.map ? S.sim.mapInfo.name : S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name);
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
     if (q.get('autoselect')) for (const c of S.sim.comps) if (SIDES[c.side] === S.side) S.selected.add(c.id);
   }
@@ -2721,12 +2870,12 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · A + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
+  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · B + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
   $('bMenu').onclick = () => { $('menu').classList.remove('hidden'); };
-  $('bPanel').onclick = () => { $('side').classList.toggle('hide'); };
+  $('bPanel').onclick = () => { $('side').classList.toggle('hide'); document.body.classList.toggle('sideOpen', !$('side').classList.contains('hide')); };
   $('bHelp').onclick = toggleHelp;
   $('cWK').onclick = () => { S.side = 'WK'; $('cWK').classList.add('on'); $('cLH').classList.remove('on'); $('aStyle').innerHTML = ''; resetArmy(); };
   $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); $('aStyle').innerHTML = ''; resetArmy(); };
@@ -2852,7 +3001,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     $('portBadge').textContent = n > 1 ? '+' + (n - 1) : ''; $('portBadge').classList.toggle('hidden', n <= 1);
   }
   const OSTATE = { idle: 'bezczynna', moving: 'w ruchu', fighting: 'w walce', blocked: 'zablokowana', noPath: 'brak drogi', rage: 'szał', retreat: 'odwrót' };
-  const portSub = (c) => c.alive + '/' + c.initial + ' · ' + (c.cstate === 2 ? (c.side === 0 ? 'szał' : 'odwrót') : CS_LABEL[c.cstate]) + ' · zm. ' + Math.round(c.fatigue) + '% · ' + OSTATE[c.ostate || 'idle'];
+  const portSub = (c) => c.alive + '/' + c.initial + ' · morale ' + Math.round(c.control) + ' ' + (c.cstate === 2 ? (c.side === 0 && (!MI.spec || MI.attackerRage) ? 'szał' : 'odwrót') : MI.bands[c.band || 0].name.toLowerCase()) + ' · zm. ' + Math.round(c.fatigue) + '% · ' + OSTATE[c.ostate || 'idle'];
 
   // ---------- pasek rozkazów ----------
   const FORM_GLYPH = ['▬', '▮', '▲'];
@@ -2863,36 +3012,158 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const sep = () => { const s2 = document.createElement('span'); s2.className = 'sep'; b.appendChild(s2); };
     const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0), fm = cs.length && cs.every((c) => c.formation === cs[0].formation) ? cs[0].formation : -1;
     add(FORM_GLYPH[0] + ' Linia <small>Z</small>', () => doFormation(0), 'Szyk liniowy', fm === 0); add(FORM_GLYPH[1] + ' Kolumna <small>X</small>', () => doFormation(1), 'Szyk kolumny', fm === 1); add(FORM_GLYPH[2] + ' Klin <small>C</small>', () => doFormation(2), 'Szyk klina', fm === 2); sep();
-    add('■ Stój <small>H</small>', doHold, 'Zatrzymaj i broń pozycji'); add('➜ Ruch <small>M</small>', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie LPM: ruch (jak PPM)', S.pending === 'move'); add('⚔ Atak-marsz <small>A</small>', () => { S.pending = 'attack'; buildCmdBar(); }, 'Następne kliknięcie LPM: marsz z walką po drodze (dodatek poza schematem Total War)', S.pending === 'attack'); add('↩ Odwrót <small>V</small>', doRetreat, 'Wycofaj rotę'); sep();
+    add('■ Stój <small>H</small>', doHold, 'Zatrzymaj i broń pozycji'); add('➜ Ruch <small>M</small>', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie LPM: ruch (jak PPM)', S.pending === 'move'); add('⚔ Atak-marsz <small>B</small>', () => { S.pending = 'attack'; buildCmdBar(); }, 'Następne kliknięcie LPM: marsz z walką po drodze (dodatek poza schematem Total War); B', S.pending === 'attack'); add('↩ Odwrót <small>V</small>', doRetreat, 'Wycofaj rotę'); sep();
     const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: ruch · PPM na wrogu: atak · Shift+PPM: kolejka · przeciągnij PPM: szyk · Alt+LPM: grupa'; b.appendChild(hint);
   }
 
-  // ---------- karty rot ----------
+  // ---------- karty rot (dolny panel armii) ----------
+  // Wszystkie wartości pochodzą z sim.compStats(c): liczebność żywych mrówek, suma HP żywych mrówek, morale i stan z symulacji (bez własnych kopii).
+  const MI = DEFS0.params.morale, MBANDS = MI.bands.map((b) => Object.assign({ hex: parseInt(b.color.replace('#', ''), 16) }, b));
+  const STATE_ICON = { odwrót: '↩', szał: '‼', ostrzał: '➶', walka: '⚔', ruch: '', bezczynna: '' };
+  const hpColor = (f) => (f > 0.6 ? '#6fbf4a' : f > 0.3 ? '#e6b422' : '#e0483a');
   function buildCards() {
     const host = $('cards'); host.innerHTML = ''; if (!S.sim) return;
     for (const c of S.sim.comps) {
       if (S.observe ? c.side !== 0 : SIDES[c.side] !== S.side) continue;
-      const d = document.createElement('div'); d.className = 'card' + (c._elite ? ' elite' : ''); d.dataset.id = c.id; d.title = c.name + ' #' + c.num;
+      const d = document.createElement('div'); d.className = 'card' + (c._elite ? ' elite' : ''); d.dataset.id = c.id; d.dataset.tip = 'card';
       d.onclick = (e) => { if (e.ctrlKey || e.metaKey) { const had = S.selected.has(c.id); expandGroups([c.id]).forEach((id) => (had ? S.selected.delete(id) : S.selected.add(id))); } else setSelection([c.id], false); S.pinned = -1; buildCards(); };
-      d.innerHTML = '<div class="n"></div><canvas width="120" height="90"></canvas><span class="g">' + (GLYPH[c._kind] || '') + (c._elite ? '★' : '') + '</span><span class="ab1"></span><div class="bars"><div class="bar"><i class="hp"></i></div><div class="bar"><i class="mo"></i></div><div class="bar" style="height:4px"><i class="fa"></i></div></div><div class="stl"></div>';
+      d.onmouseenter = () => { S.hover = c.id; }; d.onmouseleave = () => { if (S.hover === c.id) S.hover = -1; };
+      const ranged = c._kind === 'plujka' || c.acidMax > 0;
+      d.innerHTML = '<div class="n"></div><canvas width="120" height="90"></canvas><span class="g">' + (GLYPH[c._kind] || '') + (c._elite ? '★' : '') + '</span><span class="ab1"></span><span class="ic1"></span><div class="bars"><div class="bar"><i class="hp"></i></div><div class="bar"><i class="mo"></i></div><div class="bar" style="height:4px"><i class="fa"></i></div></div><div class="stl"></div>';
+      d.dataset.ranged = ranged ? '1' : '';
       host.appendChild(d); antIcon(d.querySelector('canvas'), c, 1.9);
     }
     updateCards(); buildCmdBar(); buildAbilities();
   }
   function updateCards() {
     if (!S.sim) return;
+    const sim = S.sim;
     for (const d of $('cards').children) {
-      const c = S.sim.comps[+d.dataset.id];
-      d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0); d.title = c.name + ' #' + c.num + ' · ' + OSTATE[c.ostate || 'idle'] + (c.queue.length ? ' · w kolejce: ' + c.queue.length : '');
-      d.querySelector('.n').textContent = c.alive;
-      const hp = d.querySelector('.hp'); hp.style.width = (100 * c.alive / c.initial) + '%'; hp.style.background = '#6fbf4a';
-      const mo = d.querySelector('.mo'); mo.style.width = c.control + '%'; mo.style.background = c.cstate === 0 ? '#6fbf4a' : (c.cstate === 1 ? '#e6b422' : '#e0483a');
-      const fa = d.querySelector('.fa'); fa.style.width = c.fatigue + '%'; fa.style.background = '#7aa7ff';
-      d.querySelector('.stl').className = 'stl st' + c.cstate; d.querySelector('.stl').textContent = c.cstate === 2 ? (c.side === 0 ? 'SZAŁ' : 'ODWRÓT') : (c.cmdIn ? CS_LABEL[c.cstate] : 'bez dow.');
-      const a = d.querySelector('.ab1'); a.textContent = c.abilType && S.sim.abilityReady(c) ? '✦' : '';
+      const c = sim.comps[+d.dataset.id], st = sim.compStats(c), e = st.entities, hf = st.health.max ? Math.max(0, Math.min(1, st.health.current / st.health.max)) : 0, m = st.morale;
+      d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0); d.classList.toggle('rt', m.retreating);
+      d.title = '';
+      d.querySelector('.n').textContent = Math.min(e.current, e.max) + '/' + e.max;   // żywe mrówki / maksymalna liczebność
+      const hp = d.querySelector('.hp'); hp.style.width = (100 * hf) + '%'; hp.style.background = hpColor(hf);
+      const mo = d.querySelector('.mo'); mo.style.width = Math.max(2, m.value) + '%'; mo.style.background = m.color;
+      const fa = d.querySelector('.fa'); if (st.ammo) { fa.style.width = (st.ammo.max ? 100 * st.ammo.current / st.ammo.max : 0) + '%'; fa.style.background = '#7bd34a'; } else { fa.style.width = c.fatigue + '%'; fa.style.background = '#7aa7ff'; }
+      const sl = d.querySelector('.stl'); sl.className = 'stl st' + c.cstate; sl.innerHTML = '<span class="mi">' + m.icon + '</span>' + (m.retreating ? (c.side === 0 && (!MI.spec || MI.attackerRage) ? 'SZAŁ' : 'ODWRÓT') : m.name.replace('Na granicy ucieczki', 'Granica').replace('Pod presją', 'Presja'));
+      d.querySelector('.ic1').textContent = STATE_ICON[st.state] || ''; d.querySelector('.ic1').style.color = m.retreating ? '#ff8a7a' : '#fff';
+      const a = d.querySelector('.ab1'); a.textContent = c.abilType && sim.abilityReady(c) ? '✦' : '';
+      // krótkotrwałe wyróżnienie przy otrzymaniu obrażeń: raz na pół sekundy, bez ciągłego migania
+      if (c.lastDmgTick > (d._flash || -1) && sim.tick - c.lastDmgTick < 6 && sim.tick - (d._flashAt || -1e9) > 12) { d._flash = c.lastDmgTick; d._flashAt = sim.tick; d.classList.remove('hit'); void d.offsetWidth; d.classList.add('hit'); }
     }
-    updatePortrait(); updateAbilities();
+    updatePortrait(); updateAbilities(); updateUnitPanel(); updateForce();
   }
+
+  // ---------- podpowiedzi: opisy i wartości z mechaniki ----------
+  const tipEl = $('tip'); let tipKey = null, tipComp = -1;
+  const f1 = (v) => (Math.round(v * 10) / 10).toString().replace('.', ','), f0 = (v) => Math.round(v).toString();
+  function tipText(key, c) {
+    const sim = S.sim; if (!sim) return '';
+    const P = sim.defs.params, st = c ? sim.compStats(c) : null, CBp = P.combat;
+    switch (key) {
+      case 'entities': return 'Liczebność: liczba żywych mrówek w oddziale w stosunku do maksymalnej liczebności (' + st.entities.current + ' z ' + st.entities.max + '). Mrówka ranna, ale żywa, liczy się jako żywa.';
+      case 'health': return 'Zdrowie: suma aktualnego zdrowia żywych mrówek (' + f0(st.health.current) + ' z ' + f0(st.health.max) + ' na początku bitwy; jedna mrówka ma maksymalnie ' + f0(st.health.perAntMax) + ' HP). Nie ma osobnego paska oddziału: wartość jest sumą HP mrówek.';
+      case 'morale': {
+        const b = st.morale.breakdown, lab = { regen: 'regeneracja bazowa', cmd: 'dowódca w zasięgu', mass: 'wsparcie masy', side: 'premia strony', loss: 'straty własne', alarm: 'presja walki', noCmd: 'brak dowódcy w zasięgu', cutOff: 'odcięcie od sojuszników', fatigue: 'zmęczenie', captain: 'brak kapitana', flank: 'atak z boku lub od tyłu', rout: 'ucieczka sojuszniczego oddziału' };
+        const lines = Object.keys(lab).filter((k) => b[k]).map((k) => (b[k] > 0 ? '+' : '') + f1(b[k]) + ' /s  ' + lab[k]);
+        const net = Object.keys(lab).reduce((t, k) => t + (b[k] || 0), 0);
+        return 'Morale ' + f0(st.morale.value) + '/100 (' + st.morale.name + '): zdolność oddziału do kontynuowania walki. Przy ' + P.morale.retreatAt + ' oddział ' + (c.side === 0 && P.morale.attackerRage ? 'wpada w szał (atakujący)' : 'rozpoczyna odwrót') + '; zbiera się po ' + P.morale.noThreatSec + ' s bez zagrożenia i morale co najmniej ' + P.morale.rallyMin + '.\nOdporność psychiczna roty: ' + f0(st.morale.resistance * 100) + '% (zmniejsza kary).\nOstatnia sekunda (suma ' + (net > 0 ? '+' : '') + f1(net) + ' /s):\n' + (lines.length ? lines.join('\n') : 'bez zmian');
+      }
+      case 'melee': return 'Atak wręcz: wpływa na szansę trafienia w walce wręcz. Szansa = ' + CBp.hitBase + '% + (atak - obrona celu) x ' + CBp.hitPerPoint + ' pkt proc., w granicach ' + CBp.hitMin + '-' + CBp.hitMax + '%. Aktualny atak ' + f0(st.attack.melee) + ' (bazowy ' + f0(sim.T.matk[c.domType]) + ', zmęczenie obniża go o ' + f0(CBp.fatigueAtk * c.fatigue / 100) + ').';
+      case 'damage': return 'Obrażenia podstawowe (' + f1(st.attack.baseDamage) + ') są redukowane przez pancerz celu. Obrażenia przebijające pancerz (' + f1(st.attack.armourPiercing) + ') omijają redukcję pancerza. Każde trafienie zadaje co najmniej ' + CBp.minDamage + ' HP, nietrafiony atak nic.';
+      case 'interval': return 'Czas pomiędzy atakami: ' + f1(st.attack.interval) + ' s (bazowo ' + f1(sim.T.cd[c.domType] * P.cdScale) + ' s, mnożnik tempa ' + f1(c.cdMod) + ' z morale i zmęczenia). Jednostka wykonuje najwyżej jeden standardowy atak w tym czasie.';
+      case 'range': return st.attack.ranged ? 'Zasięg ' + f0(st.attack.range) + ' (strzał balistyczny, zależny od wysokości i przeszkód); celność ' + f0(st.attack.accuracy * 100) + '%: chybiony pocisk nikogo nie rani.' : 'Zasięg ataku wręcz: ' + f1(st.attack.reach) + ' (plus promienie ciał).';
+      case 'counters': return 'Premie i kary przeciw typom jednostek (mnożnik obrażeń): ' + (st.attack.counters.length ? st.attack.counters.map((k) => k.vs + ' x' + k.mult).join(', ') : 'brak');
+      case 'defence': return 'Obrona wręcz: zmniejsza szansę, że wróg skutecznie trafi tę jednostkę w walce wręcz (nie jest pancerzem i nie chroni przed kwasem). Wartość ' + f0(st.defence.melee) + '.';
+      case 'armour': return 'Pancerz ' + f0(st.defence.armour) + ': ogranicza obrażenia podstawowe o min(' + CBp.armourCap + '%, pancerz x ' + CBp.armourScale + '%) = ' + f1(st.defence.armourReduction) + '%. Nie działa na obrażenia przebijające pancerz.';
+      case 'resist': return 'Odporności (mnożnik po pancerzu): walka wręcz ' + f0(st.defence.resist.melee * 100) + '%, kwas ' + f0(st.defence.resist.acid * 100) + '%, wybuch ' + f0(st.defence.resist.burst * 100) + '%. Osłony (mech x' + P.cover + ', tarcza odźwiernych x' + P.shieldMult + ', zamknięty szyk x' + P.closedMult + ') mnożą dodatkowo; łączna redukcja nie przekroczy ' + f0(CBp.maxReduction * 100) + '%.';
+      case 'speed': return 'Prędkość ruchu: ' + f1(st.speed.current) + ' (bazowo ' + f1(st.speed.base) + '); mnożniki: morale, zmęczenie, nachylenie terenu.';
+      case 'ammo': return st.ammo ? 'Amunicja (kwas): ' + f0(st.ammo.current) + ' z ' + f0(st.ammo.max) + ' strzałów w puli oddziału; uzupełnia się z zapasów strony (' + P.supply.acidRefill + ' na plujkę na sekundę). Bez kwasu plujki nie zadają obrażeń.' : '';
+      case 'state': return 'Stan bojowy z symulacji: ' + st.state + '. Rozkaz: ' + ({ idle: 'bezczynna', moving: 'w ruchu', fighting: 'w walce', blocked: 'zablokowana', noPath: 'brak drogi', rage: 'szał', retreat: 'odwrót' }[st.order] || st.order) + '.';
+      case 'card': return c.name + ' #' + c.num + '\n' + st.entities.current + '/' + st.entities.max + ' mrówek, HP ' + f0(st.health.current) + '/' + f0(st.health.max) + ', morale ' + f0(st.morale.value) + ' (' + st.morale.name + '), stan: ' + st.state + (st.ammo ? ', kwas ' + f0(st.ammo.current) + '/' + f0(st.ammo.max) : '');
+      case 'force': { const F = sim.forces(S.observe ? -1 : SIDES.indexOf(S.side)); return 'Siły (orientacyjnie, nie prognoza wyniku): suma zdrowia żywych mrówek ważona morale (x1; x0,8 pod presją; x0,3 w odwrocie). Własne: ' + f0(F.own.power) + '. Wróg: ' + f0(F.enemy.power) + ' według wiedzy o rotach, które widziałeś (' + F.enemy.known + ' z ' + F.enemy.total + '), ostatnio widziany stan.'; }
+      default: return '';
+    }
+  }
+  document.addEventListener('mouseover', (e) => { const t = e.target.closest && e.target.closest('[data-tip]'); if (t) { tipKey = t.dataset.tip; tipComp = t.dataset.id != null ? +t.dataset.id : (t.dataset.comp != null ? +t.dataset.comp : S.unitPanelComp); } else { tipKey = null; tipEl.classList.add('hidden'); } });
+  document.addEventListener('mousemove', (e) => { if (tipKey == null) return; refreshTip(); tipEl.style.left = Math.min(window.innerWidth - 320, e.clientX + 14) + 'px'; tipEl.style.top = Math.min(window.innerHeight - 120, e.clientY + 14) + 'px'; });
+  function refreshTip() { if (tipKey == null || !S.sim) return; const c = tipComp >= 0 ? S.sim.comps[tipComp] : null; const tx = tipText(tipKey, c); tipEl.textContent = tx; tipEl.classList.toggle('hidden', !tx); }
+
+  // ---------- panel szczegółów zaznaczonej roty (po lewej) ----------
+  S.pOpen = S.pOpen || { stan: true, atak: false, obrona: false, ruch: false, efekty: true };
+  let upKey = '';
+  function updateUnitPanel() {
+    const el = $('unitPanel'), sim = S.sim; if (!sim) return;
+    let c = primary(), enemy = false; if (!c && S.pinned >= 0 && sim.comps[S.pinned].alive > 0 && (S.observe || sim.compVisible(sim.comps[S.pinned], SIDES.indexOf(S.side)))) { c = sim.comps[S.pinned]; enemy = true; }
+    if (!c) { el.classList.add('hidden'); S.unitPanelComp = -1; return; }
+    el.classList.remove('hidden'); S.unitPanelComp = c.id;
+    const st = sim.compStats(c), m = st.morale, key = c.id + ':' + enemy;
+    const row = (label, f, tip) => '<div class="up-row" data-tip="' + tip + '" data-comp="' + c.id + '"><span>' + label + '</span><b data-f="' + f + '"></b></div>';
+    if (upKey !== key) {
+      upKey = key;
+      const grp = (id, title, body) => '<details data-g="' + id + '"' + (S.pOpen[id] ? ' open' : '') + '><summary>' + title + '</summary>' + body + '</details>';
+      el.innerHTML = '<div class="uh">' + (enemy ? '⚠ Wróg: ' : '') + c.name + ' #' + c.num + '</div><div style="opacity:.8;margin-bottom:2px" data-f="kind"></div>' +
+        (enemy ? '<div class="up-row"><span>Wiedza o wrogu</span><b data-f="eknow"></b></div>' : '') +
+        grp('stan', 'Stan', row('Liczebność', 'ent', 'entities') + row('Zdrowie', 'hp', 'health') + '<div class="up-bar"><i data-b="hp"></i></div>' + row('Morale', 'mor', 'morale') + '<div class="up-bar"><i data-b="mor"></i><u></u><u></u><u></u><u></u></div>' + row('Stan bojowy', 'sta', 'state') + (st.ammo ? row('Amunicja (kwas)', 'amm', 'ammo') + '<div class="up-bar"><i data-b="amm"></i></div>' : '')) +
+        (enemy ? '' : grp('atak', 'Atak', row('Atak wręcz', 'atk', 'melee') + row('Obrażenia podst. / przebijające', 'dmg', 'damage') + row('Czas między atakami', 'int', 'interval') + row(st.attack.ranged ? 'Zasięg i celność' : 'Zasięg ataku', 'rng', 'range') + row('Premie przeciw typom', 'cnt', 'counters')) +
+        grp('obrona', 'Obrona', row('Obrona wręcz', 'def', 'defence') + row('Pancerz', 'arm', 'armour') + row('Odporności', 'res', 'resist') + row('Odporność psychiczna', 'mre', 'morale')) +
+        grp('ruch', 'Ruch', row('Prędkość', 'spd', 'speed')) +
+        grp('efekty', 'Aktywne efekty', '<div data-f="eff"></div>'));
+      for (const d of el.querySelectorAll('details')) d.ontoggle = () => { S.pOpen[d.dataset.g] = d.open; };
+      el.querySelectorAll('.up-bar').forEach((bar) => { const us = bar.querySelectorAll('u'); MI.bands.slice(0, 4).forEach((b, i) => { if (us[i]) us[i].style.left = b.min + '%'; }); });
+    }
+    const set = (f, v) => { const n = el.querySelector('[data-f="' + f + '"]'); if (n && n.textContent !== v) n.textContent = v; };
+    const bar = (b, frac, col) => { const n = el.querySelector('[data-b="' + b + '"]'); if (n) { n.style.width = (100 * Math.max(0, Math.min(1, frac))) + '%'; n.style.background = col; } };
+    const hf = st.health.max ? st.health.current / st.health.max : 0;
+    set('kind', DEFS0.units[st.kind] ? DEFS0.units[st.kind].name + (st.elite ? ' (gwardia dowódcy)' : '') : '');
+    set('ent', Math.min(st.entities.current, st.entities.max) + '/' + st.entities.max); set('hp', f0(st.health.current) + '/' + f0(st.health.max)); bar('hp', hf, hpColor(hf));
+    set('mor', enemy ? '?' : f0(m.value) + '/100 ' + m.icon + ' ' + m.name); if (!enemy) bar('mor', m.value / 100, m.color); else bar('mor', 0, '#555');
+    set('sta', enemy ? '?' : st.state + (st.order && st.order !== 'idle' && st.order !== 'moving' && st.order !== 'fighting' ? ' (' + st.order + ')' : ''));
+    if (st.ammo) { set('amm', f0(st.ammo.current) + '/' + f0(st.ammo.max)); bar('amm', st.ammo.max ? st.ammo.current / st.ammo.max : 0, '#7bd34a'); }
+    if (enemy) { const k = c.known[SIDES.indexOf(S.side)]; set('eknow', k ? 'widziana ' + Math.round((sim.tick - k.tick) / 20) + ' s temu' : 'brak'); return; }
+    set('atk', f0(st.attack.melee) + ' (baz. ' + f0(sim.T.matk[c.domType]) + ')'); set('dmg', f1(st.attack.baseDamage) + ' / ' + f1(st.attack.armourPiercing)); set('int', f1(st.attack.interval) + ' s');
+    set('rng', st.attack.ranged ? f0(st.attack.range) + ', ' + f0(st.attack.accuracy * 100) + '%' : f1(st.attack.reach)); set('cnt', st.attack.counters.length ? st.attack.counters.map((k) => k.vs + ' x' + k.mult).join(', ') : 'brak');
+    set('def', f0(st.defence.melee)); set('arm', f0(st.defence.armour) + ' (-' + f1(st.defence.armourReduction) + '%)'); set('res', 'wręcz ' + f0(st.defence.resist.melee * 100) + '% kwas ' + f0(st.defence.resist.acid * 100) + '%'); set('mre', f0(m.resistance * 100) + '%');
+    set('spd', f1(st.speed.current) + ' (baz. ' + f1(st.speed.base) + ')');
+    const ef = el.querySelector('[data-f="eff"]'); const txt = st.effects.length ? st.effects.map((x) => '<div class="up-row" title="' + x.note + '"><span>' + x.name + '</span><b>' + x.value + '</b></div>').join('') : '<div style="opacity:.7">brak</div>'; if (ef.dataset.h !== txt) { ef.dataset.h = txt; ef.innerHTML = txt; }
+    if (tipKey != null) refreshTip();
+  }
+
+  // ---------- wskaźnik sił (orientacyjny) ----------
+  function updateForce() {
+    const sim = S.sim; if (!sim) return; const F = sim.forces(S.observe ? -1 : SIDES.indexOf(S.side)), tot = F.own.power + F.enemy.power, share = tot > 0 ? F.own.power / tot : 0.5;
+    $('forceOwn').style.width = (100 * share) + '%'; $('forceTxt').textContent = (F.enemy.known === 0 && !S.observe ? 'Siły: wróg nieznany' : 'Siły ' + Math.round(100 * share) + '% : ' + Math.round(100 * (1 - share)) + '%' + (F.enemy.known < F.enemy.total && !S.observe ? ' (wróg: ' + F.enemy.known + '/' + F.enemy.total + ' rot)' : ''));
+  }
+
+  // ---------- minimapa: widok z góry, tylko jednostki widoczne dla gracza (tryb obserwatora: wszystkie) ----------
+  let miniBase = null, miniT = 0;
+  function miniSetup() {
+    const sim = S.sim, cv = $('mini'), W = sim.W, H = sim.H, sc = Math.min(196 / W, 120 / H); S.miniScale = sc;
+    cv.width = Math.round(W * sc); cv.height = Math.round(H * sc); cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px';
+    const b = document.createElement('canvas'); b.width = cv.width; b.height = cv.height; const g = b.getContext('2d'); g.fillStyle = '#6b5a3c'; g.fillRect(0, 0, b.width, b.height);
+    const C = sim.CELL, lv = ['#7d6a45', '#a8975a', '#b0814f', '#bf6c52'];
+    for (let r = 0; r < sim.ROWS; r++) for (let c = 0; c < sim.COLS; c++) {
+      const v = sim.grid[r * sim.COLS + c], x = c * C * sc, y = r * C * sc, w = Math.max(1, C * sc + 0.6);
+      if (v === 1 || v === 3 || v === 4 || v === 5 || v === 6) { g.fillStyle = v === 4 ? '#8a9086' : v === 6 ? '#3f6a28' : '#3a2a16'; g.fillRect(x, y, w, w); }
+      else if (v === 7) { g.fillStyle = '#3a6a82'; g.fillRect(x, y, w, w); }
+      else if (sim.mound) { const l = sim.levelAt((c + 0.5) * C, (r + 0.5) * C); if (l !== 0) { g.fillStyle = l < 0 ? '#d2bd86' : lv[Math.min(3, l)]; g.fillRect(x, y, w, w); } }
+    }
+    miniBase = b;
+  }
+  function updateMinimap() {
+    const sim = S.sim, cv = $('mini'); if (!sim || !miniBase) return; const g = cv.getContext('2d'), sc = S.miniScale, me = SIDES.indexOf(S.side);
+    g.drawImage(miniBase, 0, 0); S.miniDrawn = [0, 0];
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i]) {
+      const own = S.observe ? sim.side[i] === 0 : sim.side[i] === me; if (!own && !S.observe && !sim.visibleTo(me, i)) continue;
+      S.miniDrawn[own ? 0 : 1]++; g.fillStyle = sim.side[i] === 0 ? '#ff4a3a' : '#111'; g.fillRect(sim.x[i] * sc - 1, sim.y[i] * sc - 1, 2, 2);
+    }
+    // obszar widoczny na ekranie (rzut rogów ekranu na świat)
+    const w = app.screen.width, h = app.screen.height - 150, pts = [[0, 40], [w, 40], [w, h], [0, h]].map(([sx, sy]) => { const [x, y] = toWorld(sx, sy); return [Math.max(0, Math.min(sim.W, x)) * sc, Math.max(0, Math.min(sim.H, y)) * sc]; });
+    g.strokeStyle = '#ffe08a'; g.lineWidth = 1.2; g.beginPath(); pts.forEach((p, k) => (k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); g.stroke();
+  }
+  function miniMove(e) { const cv = $('mini'), r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / S.miniScale, y = (e.clientY - r.top) / S.miniScale; centerOn(x, y); }
+  { let md = false; const cv = $('mini'); cv.addEventListener('pointerdown', (e) => { md = true; cv.setPointerCapture(e.pointerId); miniMove(e); e.stopPropagation(); }); cv.addEventListener('pointermove', (e) => { if (md) miniMove(e); }); cv.addEventListener('pointerup', () => { md = false; }); }
 
   // ---------- umiejętności: siatka 3x3 ----------
   const ABIL = [
@@ -2962,6 +3233,16 @@ if (typeof module !== 'undefined') module.exports = Sim;
       gOver.lineStyle(1.4 * k, 0x2a2018, 1).moveTo(sx, fy).lineTo(sx, fy - 20 * k);
       gOver.lineStyle(1 * k, c._elite ? 0xf2c230 : (c.side === 0 ? 0xf2c230 : 0xb8b8c4), 1).beginFill(col, 1).drawRect(sx, fy - 20 * k, fw, fh).endFill();
       c._flag.scale.set(k); c._flag.position.set(sx + fw / 2, fy - 20 * k + fh / 2);
+      // kompaktowy wskaźnik pod chorągwią (zawsze): pasek zdrowia (suma HP żywych mrówek / początkowa), znacznik morale (kształt i kolor pasma) i symbol odwrotu
+      { const mband = MBANDS[c.band] || MBANDS[0], hf = c.hp0 ? Math.max(0, Math.min(1, sim.compHp(c) / c.hp0)) : 0, bw = 26 * k, bx = sx - bw / 2, by = fy + 3 * k, hc = hf > 0.6 ? 0x6fbf4a : hf > 0.3 ? 0xe6b422 : 0xe0483a;
+        gOver.lineStyle(0).beginFill(0x000000, 0.7).drawRect(bx - k, by - k, bw + 2 * k, 5 * k).endFill().beginFill(hc, 1).drawRect(bx, by, bw * hf, 3 * k).endFill();
+        const mx = bx + bw + 6 * k, my = by + 1.5 * k, r = 3.4 * k; gOver.lineStyle(0.8 * k, 0x000000, 0.9).beginFill(mband.hex, 1);
+        if (c.cstate === 2) gOver.drawPolygon([mx + r, my - r, mx - r, my, mx + r, my + r]);          // odwrót: strzałka wstecz
+        else if (c.band === 3) gOver.drawPolygon([mx, my - r, mx + r, my + r, mx - r, my + r]);        // na granicy ucieczki: trójkąt
+        else if (c.band === 2) gOver.drawPolygon([mx, my - r, mx + r, my, mx, my + r, mx - r, my]);   // pod presją: romb
+        else if (c.band === 1) gOver.drawRect(mx - r * 0.8, my - r * 0.8, r * 1.6, r * 1.6);          // zachwiane: kwadrat
+        else gOver.drawCircle(mx, my, r * 0.9);                                                        // stabilne: kółko
+        gOver.endFill(); }
       if (info) {
         // panel informacji: nazwa, liczebność (aktualnie/max), pasek zdrowia z podziałem na mrówki, morale i zmęczenie
         const W = 92 * k, x0 = sx - W / 2, yb = fy - 28 * k;
@@ -2975,9 +3256,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
           else if (q < sF + sW) gOver.beginFill(0xe6a028, 1).drawRect(x, yb - 15 * k + bh / 2, w, bh / 2).endFill();
           else gOver.beginFill(0x3a1a14, 1).drawRect(x, yb - 15 * k + bh - 1.2 * k, w, 1.2 * k).endFill();
         }
-        const stCol = [0x6fbf4a, 0xe6b422, 0xe0483a][c.cstate];
+        const stCol = (MBANDS[c.band] || MBANDS[0]).hex;
         gOver.beginFill(0x20201a, 1).drawRect(x0, yb - 15 * k + bh + k, W, bh - k).endFill().beginFill(stCol, 1).drawRect(x0, yb - 15 * k + bh + k, W * c.control / 100, bh - k).endFill();
-        for (const th of [sim.defs.params.control.lostAt, sim.defs.params.control.weakAt]) gOver.beginFill(0xffffff, 0.8).drawRect(x0 + W * th / 100 - 0.4 * k, yb - 15 * k + bh + k, 0.8 * k, bh - k).endFill();
+        for (const th of MBANDS.slice(0, 4).map((b) => b.min)) gOver.beginFill(0xffffff, 0.8).drawRect(x0 + W * th / 100 - 0.4 * k, yb - 15 * k + bh + k, 0.8 * k, bh - k).endFill();
         gOver.beginFill(0x20201a, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W, bh - k).endFill().beginFill(0x7aa7ff, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W * c.fatigue / 100, bh - k).endFill();
       }
       if (sel) {
@@ -3106,7 +3387,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const dt = Math.min(app.ticker.deltaMS, 100) / 1000;
     if (S.started && S.sim) {
       const pxs = 600 * dt;
-      let dx = 0, dy = 0; if (keys.ArrowLeft || keys.KeyA) dx += 1; if (keys.ArrowRight || keys.KeyD) dx -= 1; if (keys.ArrowUp || keys.KeyW) dy += 1; if (keys.ArrowDown || keys.KeyS) dy -= 1;
+      let dx = 0, dy = 0; const kc = keys.ControlLeft || keys.ControlRight || keys.MetaLeft || keys.MetaRight; if (keys.ArrowLeft || (keys.KeyA && !kc)) dx += 1; if (keys.ArrowRight || keys.KeyD) dx -= 1; if (keys.ArrowUp || keys.KeyW) dy += 1; if (keys.ArrowDown || keys.KeyS) dy -= 1;
       if ((dx || dy) && $('menu').classList.contains('hidden')) { cam.x += dx * pxs; cam.y += dy * pxs; applyCam(); }
       if (!S.paused && !S.over && $('menu').classList.contains('hidden')) {
         S.acc += dt * SPEEDS[S.speedIdx]; let n = 0;
@@ -3116,7 +3397,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (S.sim.result && !S.over) { pumpEvents(); showEnd(); }
       const t1 = performance.now(); render(); S.renderMs = S.renderMs * 0.9 + (performance.now() - t1) * 0.1;
       hudT += dt; diagT += dt;
-      if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); }
+      if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); updateMinimap(); }
       if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash() + (S.sim.hills ? '\npod kursorem: wysokość ' + (S.cursorH || 0).toFixed(0) + (S.sim.mound ? ' (' + (S.cursorLv < 0 ? 'rampa' : S.cursorLv === S.sim.defs.world.mound.rings ? 'serce gniazda' : 'poziom ' + S.cursorLv) + ')' : '') : ''); }
     }
   });

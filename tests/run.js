@@ -2,7 +2,7 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 let failed = 0;
-for (const f of ['p1-core.test.js', 'p1-browser.test.js', 'p1-sterowanie.test.js']) {
+for (const f of ['p1-core.test.js', 'p1-etap-b.test.js', 'p1-browser.test.js', 'p1-sterowanie.test.js', 'p1-etap-b-ui.test.js']) {
   console.log('=== ' + f);
   const r = spawnSync(process.execPath, [path.join(__dirname, f)], { stdio: 'inherit' });
   if (r.status !== 0) failed++;

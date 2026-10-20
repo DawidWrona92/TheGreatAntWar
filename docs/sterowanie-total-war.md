@@ -7,7 +7,7 @@ Istniejący system: sterowalną jednostką jest **rota** (oddział wielu mrówek
 Nie utworzyłem drugiego systemu rozkazów: rozszerzyłem istniejący (`c.order` + `c.queue`).
 
 ## 2. Konflikty z wcześniejszymi ustaleniami (zgłoszone i rozstrzygnięte przez użytkownika)
-- PPM na terenie: było atak-marsz, jest ruch bez walki po drodze; atak-marsz zostaje jako **A + klik** (dodatek poza specyfikacją, bo AI i gra go używają).
+- PPM na terenie: było atak-marsz, jest ruch bez walki po drodze; atak-marsz zostaje jako **B + klik** (klawisz A jest zajęty przez przesuwanie kamery WASD) (dodatek poza specyfikacją, bo AI i gra go używają).
 - Shift: było dodawanie do zaznaczenia (LPM) i „sam ruch” (PPM); jest Ctrl+LPM do zaznaczania i Shift+PPM do kolejki.
 - G: było „Zamknij wejście” odźwiernych, jest grupowanie; **Zamknij wejście przeniesione na T**.
 - Szerokość szyku: była z kółka myszy, jest z długości gestu PPM.
@@ -34,7 +34,7 @@ Nie utworzyłem drugiego systemu rozkazów: rozszerzyłem istniejący (`c.order`
 | 12 informacja zwrotna: trasa, cel ataku, podgląd formacji, kolejka, stan roty, komunikat | trasa dokładnie z pathfindingu (`sim.routeOf`), narożniki celu ataku, podgląd formacji (czerwony, gdy nieosiągalna), kolejka, stan roty w opisie karty i portrecie (bezczynna, w ruchu, w walce, zablokowana, brak drogi, szał, odwrót), komunikaty w dzienniku zdarzeń |
 
 ## 4. Mapa przypisań (`ui.controls.keys` w JSON, jedno miejsce)
-Ctrl+A zaznacz wszystko, G grupuj, Ctrl+G zablokuj układ, Backspace i H stój, V odwrót, M ruch (pending), A atak-marsz (pending), Z/X/C szyk, Spacja pauza, +/- prędkość, Esc anuluj, / pomoc; umiejętności Q/E/R/F/T.
+Ctrl+A zaznacz wszystko, G grupuj, Ctrl+G zablokuj układ, Backspace i H stój, V odwrót, M ruch (pending), B atak-marsz (pending), Z/X/C szyk, Spacja pauza, +/- prędkość, Esc anuluj, / pomoc; umiejętności Q/E/R/F/T.
 
 ## 5. Ograniczenia i luki
 - Pojedyncze mrówki nie są sterowalne (zgodnie z zasadą: nie przebudowywać roty w pojedyncze jednostki).

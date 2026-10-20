@@ -104,8 +104,8 @@ test('w walce nikt się nie mija: ciało w kontakcie z wrogiem stoi w miejscu (n
   assert.ok(moves.length > 2000, 'za mało pomiarów walczących: ' + moves.length);
   moves.sort((a, b) => a - b);
   const med = moves[moves.length >> 1], p99 = moves[Math.floor(moves.length * 0.99)];
-  const p90 = moves[Math.floor(moves.length * 0.9)];
-  assert.ok(med < 0.4 && p90 < 1.2, 'walczące ciała się przesuwają: mediana ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2));
+  const p90 = moves[Math.floor(moves.length * 0.9)];   // model walki etapu B (dłuższe starcia, więcej odrzutu): p90 1,20 zamiast 0,99 przy starym modelu, limit podniesiony z 1,2 do 1,3
+  assert.ok(med < 0.4 && p90 < 1.3, 'walczące ciała się przesuwają: mediana ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2));
   return moves.length + ' pomiarów mrówek w kontakcie: mediana przesunięcia na krok ' + med.toFixed(3) + ', p90 ' + p90.toFixed(2) + ', p99 ' + p99.toFixed(2) + ' (odrzut taranów wlicza się)';
 });
 
@@ -236,10 +236,10 @@ test('szerokość przejścia zmienia przebieg: węższe przejście kosztuje atak
 
 test('kontrola feromonowa: roty osłabiają się lub tracą kontrolę, a zdarzenia mają przyczynę', () => {
   const sim = run(make(1, 256), 400); const ev = sim.report().events;
-  const changes = ev.filter((e) => /osłabiona kontrola|utrata kontroli/.test(e.text) && !/odzyskała/.test(e.text));
+  const changes = ev.filter((e) => /morale spadło|morale na zerze/.test(e.text) && !/odzyskała/.test(e.text));
   assert.ok(changes.length > 0, 'żadna rota nie osłabła ani nie straciła kontroli w 400 s');
   assert.ok(changes.every((e) => /przyczyna:/.test(e.text) || /\)$/.test(e.text)), 'zdarzenie bez przyczyny');
-  const lost = changes.filter((e) => /utrata kontroli/.test(e.text));
+  const lost = changes.filter((e) => /morale na zerze/.test(e.text));
   return 'zmian stanu kontroli: ' + changes.length + ', w tym utrat: ' + lost.length + ' (np. ' + changes[0].text + ')';
 });
 
@@ -279,7 +279,7 @@ test('typ mapy 3 to dotychczasowa mapa: ten sam teren i ten sam przebieg co prze
   // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach); dla szerokości 192 przeliczone po zmianie: w oblężeniu uzupełnienia ma tylko obrońca
   const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', '36d141ed'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '575f40d9'] };
   for (const key in base) {
-    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage, (d) => { d.params.visibility.on = false; d.params.facing.on = false; d.params.elevation.on = false; }); // mechaniki etapu 4 wyłączone: stary rdzeń bez zmian
+    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage, (d) => { d.params.visibility.on = false; d.params.facing.on = false; d.params.elevation.on = false; d.params.combat.on = false; d.params.morale.spec = false; }); // mechaniki etapów 4 i B wyłączone: stary rdzeń bez zmian
     let h = 0; for (let i = 0; i < sim.grid.length; i++) h = (Math.imul(h, 31) + sim.grid[i]) | 0;
     for (let k = 0; k < 600; k++) sim.step();
     assert.strictEqual(String(h), base[key][0], 'teren zmienił się dla ' + key);
@@ -467,7 +467,7 @@ test('widoczność: promień 125, mech ukrywa (28), wzgórze zasłania, atak uja
 });
 
 test('ciosy: z tyłu x1,5, z boku x1,25, z przodu x1', () => {
-  const sim = makeScen('bitwa', 2, 1); flat(sim);
+  const sim = makeScen('bitwa', 2, 1, (dd) => { dd.params.combat.hitBase = 100; dd.params.combat.hitMax = 100; }); flat(sim);   // trafienie pewne: test mierzy tylko mnożnik kierunku
   const a = antOf(sim, 0, 'infantry'), d = antOf(sim, 1, 'infantry'); let X = 0, Y = 0; for (let y = 200; y < 1000 && !X; y += 40) for (let x = 560; x < 880 && !X; x += 20) if (openSpot(sim, x, y, 60) && sim.grid[Math.floor(y / 16) * sim.COLS + Math.floor(x / 16)] === 0) { X = x; Y = y; }
   const avg = (deg) => { let tot = 0; const N = 400; for (let k = 0; k < N; k++) { sim.hp[d] = 1e6; put(sim, d, X, Y, 0); put(sim, a, X + Math.cos(deg * Math.PI / 180) * 6, Y + Math.sin(deg * Math.PI / 180) * 6); sim.comps[sim.comp[a]].fatigue = 0; sim.debug.hit(a, d, 2, true); tot += 1e6 - sim.hp[d]; } return tot / N; };
   const front = avg(0), flank = avg(90), rear = avg(180), diag = avg(30);
@@ -811,7 +811,7 @@ test('kopiec: spanikowana rota obrońcy cofa się do serca po korytarzach i ramp
   assert.ok(cands.length >= 3);
   const lines = [];
   for (const c of cands.slice(0, 3)) {
-    const d0 = D[cellOf(sim, c.ax, c.ay)], lvl0 = sim.levelAt(c.ax, c.ay); c.control = 0; c.cstate = sim.CS_LOST;
+    const d0 = D[cellOf(sim, c.ax, c.ay)], lvl0 = sim.levelAt(c.ax, c.ay); c.control = 0; c.cstate = sim.CS_LOST; c.retreating = true;   // odwrót zatrzaskuje się jak po spadku morale do zera (model morale etapu B)
     let wall = 0, worstBack = 0, prev = d0;
     for (let k = 1; k <= 20 * 60; k++) { c.control = Math.min(c.control, 5); sim.step(); if (k % 10 === 0) { const d = D[cellOf(sim, c.ax, c.ay)]; worstBack = Math.max(worstBack, d - prev); prev = Math.min(prev, d); for (const i of c.ants) if (sim.alive[i] && BLKC[sim.grid[cellOf(sim, sim.x[i], sim.y[i])]]) wall++; } }
     const d1 = D[cellOf(sim, c.ax, c.ay)];

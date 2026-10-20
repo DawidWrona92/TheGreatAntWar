@@ -32,6 +32,13 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Rozstawianie ręczne atakującego i obrońcy; strefa startu 840 x 1100 (mieści armię x1,5 budżetu Duży we wszystkich testowanych wzorcach).
 - Balans (obrona vs budżet x1,5 atakującego, limit 1500 s) i wszystkie wymiary kopca do oceny w grze.
 
+## Interfejs, walka i morale (etap B)
+- Etap C (znaczniki i nakładki taktyczne na mapie) czeka na wyraźne polecenie użytkownika.
+- Szał atakujących przy morale 0 (zamiast odwrotu) wynika z wcześniejszych ustaleń; do decyzji, czy atakujący ma też uciekać (`params.morale.attackerRage`).
+- Balans nowego modelu walki (hit chance, pancerz, odporności, pasma morale) wymaga pomiarów na większej próbce i ocenienia w grze; wcześniejsze pomiary AI dotyczą starego modelu.
+- Statystyki pojedynczej mrówki w interfejsie (obecnie tylko rota); tryb porównania dwóch rot; własne ustawienia układu paneli.
+- Minimapa: wysokości wzgórz, markery i polecenia (np. ruch prawym klikiem na minimapie) są poza zakresem etapu B.
+
 ## Armie (etap 3)
 - Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
 - Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).

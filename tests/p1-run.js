@@ -19,7 +19,7 @@ function runBattle({ seed, passage, overrides, maxSeconds, supply, map, scenario
     seed, passage, map: map == null ? 3 : map, scenario: scenario || 'oblezenie', winner: r.result ? r.result.winner : null, reason: r.result ? r.result.reason : 'brak rozstrzygnięcia', seconds: r.seconds,
     lostWK: sum(r.sides.WK.lost), lostLH: sum(r.sides.LH.lost), startWK: sum(r.sides.WK.start), startLH: sum(r.sides.LH.start),
     stepMeanMs: total / Math.max(1, steps), stepMaxMs: worst, hash: sim.hash(),
-    controlLost: r.events.filter((e) => /utrata kontroli/.test(e.text)).length
+    controlLost: r.events.filter((e) => /morale na zerze/.test(e.text)).length
   };
 }
 module.exports = { runBattle };
