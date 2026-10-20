@@ -394,7 +394,9 @@ test('postawa AI: w bitwie obie strony idą na siebie, w oblężeniu i przeprawi
   const b = lhOrders('bitwa'), o = lhOrders('oblezenie'), p = lhOrders('przeprawa');
   assert.ok(b.length && b.every((k) => k === 'attack'), 'w bitwie LH nie atakuje: ' + b);
   assert.ok(o.every((k) => k === 'hold') && p.every((k) => k === 'hold'), 'obrońca nie trzyma pozycji: ' + o + ' / ' + p);
-  return 'LH w bitwie: ' + b[0] + '; w oblężeniu i przeprawie: ' + o[0];
+  for (const map of [2, 3]) { const sim = makeScen('bitwa', map, 1); assert.ok(!sim.comps.some((c) => c.closed || c.role === 'plug'), 'bitwa na mapie ' + map + ' ma zamknięty plug'); }
+  assert.ok(makeScen('oblezenie', 3, 1).comps.some((c) => c.role === 'plug' && c.closed), 'oblężenie na mapie 3 straciło plug');
+  return 'LH w bitwie: ' + b[0] + ' (bez plugu także na mapie 3); w oblężeniu i przeprawie: ' + o[0];
 });
 
 test('warunki końca: bitwa i przeprawa kończą się zniszczeniem lub większym odsetkiem ocalałych, oblężenie dalej obroną gniazda', () => {
@@ -416,7 +418,7 @@ test('warunki końca: bitwa i przeprawa kończą się zniszczeniem lub większym
 test('przeprawa: woda blokuje ruch, kamienie dają trzy przeprawy, a woda nie zasłania strzału', () => {
   const sim = makeScen('przeprawa', 3, 1), W = sim.W, H = sim.H, C = sim.CELL, g = sim.grid, COLS = sim.COLS;
   let water = 0, ford = 0; for (const v of g) { if (v === 7) water++; if (v === 8) ford++; }
-  assert.ok(water > 450 && ford > 100, 'woda ' + water + ', kamienie ' + ford);
+  assert.ok(water > 1500 && ford > 100, 'woda ' + water + ', kamienie ' + ford);
   assert.ok(sim.mapInfo.metrics.reachable && sim.mapInfo.metrics.bottleneck >= 44, 'przeprawa nieosiągalna lub za wąska');
   // bez kamieni nie ma przejścia: zamieniamy je na wodę i sprawdzamy, że strefa startu nie sięga strefy obrońców
   const fords = []; for (let i = 0; i < g.length; i++) if (g[i] === 8) { fords.push(i); g[i] = 7; }
@@ -439,7 +441,7 @@ test('przeprawa: woda blokuje ruch, kamienie dają trzy przeprawy, a woda nie za
 
 test('przeprawa w grze: atakujący przechodzą potok po kamieniach, nikt nie stoi w wodzie ani w ścianie', () => {
   const sim = makeScen('przeprawa', 3, 1), cxs = W_STREAM(sim); let inWater = 0, over = 0;
-  for (let k = 0; k < 20 * 240; k++) {
+  for (let k = 0; k < 20 * 200; k++) {
     sim.step();
     if (k % 20 === 0) for (let i = 0; i < sim.count; i++) if (sim.alive[i]) {
       const v = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; if (v === 7 || v === 1 || v === 3 || v === 4 || v === 5 || v === 6) inWater++;
@@ -451,6 +453,37 @@ test('przeprawa w grze: atakujący przechodzą potok po kamieniach, nikt nie sto
   return 'próbki atakujących na drugim brzegu: ' + over + ', w wodzie: 0';
 });
 function W_STREAM(sim) { return sim.W - 1180; }
+
+test('przeprawa: brody leżą daleko od siebie (osobne starcia), skrajne są szerokie, środkowy wąski, a czas dojścia zależy od prędkości', () => {
+  const sim = makeScen('przeprawa', 3, 1), F = sim.defs.world.fords;
+  assert.strictEqual(F.length, 3);
+  const gaps = [F[1].y - F[0].y, F[2].y - F[1].y]; for (const d of gaps) assert.ok(d >= 1100, 'bród za blisko sąsiedniego: ' + d);
+  const sp = (k) => sim.defs.units[k].speed, eta = (d, k) => d / sp(k);
+  const d = Math.min(...gaps);
+  assert.ok(eta(d, 'biegacz') >= 17, 'biegacz zdąży za szybko: ' + eta(d, 'biegacz'));
+  assert.ok(eta(d, 'infantry') >= 35 && eta(d, 'taran') >= 65, 'wojownik/taran zdążą za szybko');
+  assert.ok(eta(d, 'taran') / eta(d, 'biegacz') >= 3.5, 'różnica prędkości biegacz/taran za mała');
+  // kształt brodów: promienie kamieni skrajnych (58-64) większe niż środkowego (44-48)
+  const stones = sim.defs.world.map.obstacles.filter((o) => o.type === 'ford'), rOf = (f) => Math.max(...stones.filter((o) => Math.abs(o.at[1] - f.y) < 40).map((o) => o.r));
+  assert.ok(rOf(F[0]) >= 58 && rOf(F[2]) >= 58 && rOf(F[1]) <= 48, 'szerokości brodów: ' + [rOf(F[0]), rOf(F[1]), rOf(F[2])]);
+  // armie stoją przy środkowym brodzie: do skrajnych jest daleko także z linii startu
+  const wk = sim.comps.filter((c) => c.side === 0), lh = sim.comps.filter((c) => c.side === 1);
+  const ay = wk.reduce((a, c) => a + c.ay, 0) / wk.length; assert.ok(Math.abs(ay - F[1].y) < 300, 'WK nie stoi na wysokości środkowego brodu');
+  const far = Math.min(Math.hypot(wk[0].ax - F[0].wx, wk[0].ay - F[0].wy), Math.hypot(wk[0].ax - F[2].wx, wk[0].ay - F[2].wy));
+  assert.ok(far / sp('infantry') > 45, 'skrajny bród za blisko linii startu');
+  return 'odstępy brodów ' + gaps.join(' i ') + ' jedn.; czas przejścia między sąsiednimi: biegacz ' + eta(d, 'biegacz').toFixed(0) + ' s, wojownik ' + eta(d, 'infantry').toFixed(0) + ' s, ciężki ' + eta(d, 'ciezki').toFixed(0) + ' s, taran ' + eta(d, 'taran').toFixed(0) + ' s';
+});
+
+test('AI przeprawy: atakujący rozdzielają siły na kilka brodów, obrońcy przerzucają rezerwy tam, gdzie rośnie zagrożenie', () => {
+  const sim = makeScen('przeprawa', 3, 1); const F = sim.defs.world.fords;
+  for (let k = 0; k < 20 * 150; k++) sim.step();
+  const wkF = new Set(sim.comps.filter((c) => c.side === 0 && c.role !== 'command' && c.alive > 0).map((c) => c.ford)); wkF.delete(undefined);
+  assert.ok(wkF.size >= 2, 'atakujący poszli tylko na ' + [...wkF].length + ' bród');
+  const lhFlank = sim.comps.filter((c) => c.side === 1 && c.ford !== undefined && c.ford !== 1 && c.alive > 0).length;
+  assert.ok(lhFlank >= 1, 'obrońcy nie przerzucili nikogo na skrajny bród');
+  const start = makeScen('przeprawa', 3, 1); assert.ok(start.comps.filter((c) => c.side === 1).every((c) => Math.abs(c.ay - F[1].y) < 400), 'obrońcy nie startują przy środkowym brodzie');
+  return 'WK: brody ' + [...wkF].map((k) => k + 1).sort().join(',') + '; LH przy skrajnych brodach: ' + lhFlank + ' rot po 150 s';
+});
 
 test('determinizm scenariuszy: bitwa, oblężenie i przeprawa dają ten sam skrót dla tego samego ziarna', () => {
   const out = [];

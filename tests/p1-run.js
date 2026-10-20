@@ -1,12 +1,12 @@
 // Jedna partia AI przeciw AI w Node (bez grafiki). Używana przez eksperymenty i testy.
 const { loadP1 } = require('./load-core');
 
-function runBattle({ seed, passage, overrides, maxSeconds, supply, map, scenario }) {
+function runBattle({ seed, passage, overrides, maxSeconds, supply, map, scenario, speedMult, fordStats }) {
   const { Sim, defs } = loadP1();
   for (const p in overrides || {}) {
     const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], defs)[last] = overrides[p];
   }
-  const sim = Sim.create({ defs, seed, passage, supply, map, scenario });
+  const sim = Sim.create({ defs, seed, passage, supply, map, scenario, speedMult });
   const limit = (maxSeconds || defs.world.timeLimit + 5) * Sim.HZ;
   let worst = 0, total = 0, steps = 0;
   while (!sim.result && sim.tick < limit) {

@@ -61,8 +61,12 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 40. Przed bitwą wybiera się scenariusz (`world.scenarioTypes`, parametr URL `scenario=bitwa|oblezenie|przeprawa`). Domyślne jest Oblężenie, czyli dotychczasowe zachowanie gry (test regresji: ten sam przebieg co przed etapem 2). Scenariusz określa trzy rzeczy: czy jest gniazdo (cel i mur), postawę AI każdej strony (`advance`: idzie do celu, `hold`: broni pozycji) i sposób zakończenia (`nest` albo `annihilate`).
 41. **Bitwa**: standardowe starcie dwóch armii na dowolnym z pięciu typów map. Nie ma gniazda (ani muru, ani celu terenowego); obie strony mają postawę `advance`: cel marszu to najbliższa rota przeciwnika. Gwardia dowódcy idzie 170 jednostek za najbardziej wysuniętą rotą swojej strony (dla Lake Hodges kierunek jest odwrócony). Wygrywa zniszczenie przeciwnika (poniżej 5% stanu początkowego), a po upływie czasu strona z większym odsetkiem ocalałych (to założenie projektowe, nie zapis z dokumentu).
 42. **Oblężenie**: atakujący (Wielka Kolonia, `advance`) szturmuje gniazdo, obrońca (Lake Hodges, `hold`) broni go i uzupełnia straty; atakujący wygrywa, zajmując gniazdo (co najmniej 15 mrówek przy najwyżej 2 obrońcach przez 8 s) albo niszcząc obrońców, a po upływie czasu wygrywa obrona. Na etapie 2 to tylko wybór scenariusza i podstawowe reguły: atakujący **nie** ma jeszcze przewagi budżetowej (jednostki nie mają kosztów, budżety wprowadza etap 3, i tam atakujący dostanie większy) i nie ma wnętrza kopca (etap 5).
-43. **Przeprawa**: scenariusz z własną, stałą mapą `stream` (2400 x 1200, wybór typu mapy jest wyłączony). Potok o szerokości ok. 176 jednostek przecina pole bitwy między strefą startu a obrońcami. Nowe komórki terenu: woda (7, blokuje ruch jak ściana, ale nie zasłania widoku ani strzału: w ruchu `BLK`, w widoczności osobna tabela `SIGHT`) oraz duży kamień w potoku (8, przejezdny). Trzy przeprawy to łańcuchy trzech dużych kamieni (najwęższe miejsce ok. 50-80 jednostek), więc atakujący musi się przeprawić, a obrońca, trzymając drugi brzeg, ostrzeliwuje przeprawy. Cel starcia zadał użytkownik: zniszczenie przeciwnika jak w Bitwie (zajęcia przyczółka na etapie 2 nie ma).
-44. Kolejność generowania: `applyScenario` (nest, tryb), potem `applyMapType` (przeprawa wymusza mapę `stream`), więc scenariusz i mapa są niezależnymi osiami. Mur gniazda w `rasterize` powstaje tylko gdy `world.nestWall != false`.
+43. **Przeprawa**: scenariusz z własną, stałą mapą `stream` (3000 x 3200, wybór typu mapy jest wyłączony). Potok o szerokości ok. 176 jednostek przecina mapę z północy na południe. Nowe komórki terenu: woda (7, blokuje ruch jak ściana, ale nie zasłania widoku ani strzału: w ruchu `BLK`, w widoczności osobna tabela `SIGHT`) oraz duży kamień w potoku (8, przejezdny). Trzy brody to łańcuchy trzech dużych kamieni, oddalone od siebie o ok. 1200 jednostek (wcześniejsza wersja miała ok. 330 i armia przechodziła między brodami w 5-20 s). Środkowy bród jest wąski (kamienie 44-48, szyjka ok. 60-70 jednostek) i leży przy armiach, skrajne są szerokie (kamienie 58-64, szyjka ok. 100-110) i odległe. Czas przejścia między sąsiednimi brodami: biegacz ok. 19 s, wojownik 39 s, ciężki 53 s, taran 73 s; dojście obrońców ze środka do skrajnego brodu to ok. 45-60 s. Obrońca trzyma wschodni brzeg (wojownicy tuż za kamieniami, plujki ok. 40 jednostek dalej: strzelają w wyjścia z brodów, 24 z 1784 strzałów w teście padło na same kamienie). Cel starcia zadał użytkownik: zniszczenie przeciwnika jak w Bitwie (zajęcia przyczółka nie ma); brody mają znaczenie przez przepustowość kamieni i czas dojścia.
+44. Plug (zamknięty szyk odźwiernych) zostaje tylko tam, gdzie jest główny przesmyk i obrońca ma postawę `hold` (Oblężenie na mapie 3); w pozostałych przypadkach (mapy bez przesmyku, a także Bitwa na mapie 3) odźwierni stają jako zwykła linia, bo nieruchomy zamknięty mur nie może iść do ataku (błąd znaleziony w przeglądzie: w Bitwie na mapie 3 plug dostawał rozkaz ataku i stał zablokowany).
+45. Kolejność generowania: `applyScenario` (nest, tryb), potem `applyMapType` (przeprawa wymusza mapę `stream`), więc scenariusz i mapa są niezależnymi osiami. Mur gniazda w `rasterize` powstaje tylko gdy `world.nestWall != false`.
+46. **AI brodów** (tylko gdy mapa ma `world.fords`): co sekundę AI każdej strony przypisuje roty do brodów, z minimalnym czasem utrzymania przydziału 10 s i premią 35% za dotychczasowy przydział. Atakujący ocenia bród jako siłę roty / (obrońcy już przy lądowisku + 0,6 x obrońcy, którzy zdążą dojść w czasie krótszym od mojego o co najwyżej 8 s + 60), zmniejszoną o połowę za każdą własną rotę już przydzieloną do tego brodu (przepustowość kamieni) i podzieloną przez (1 + czas dojścia / 90 s); wolna rota widzi więc, że obrońcy zdążą wszędzie, a szybka nie. Biegacze liczą bez kary za tłok i z krótszym horyzontem (45 s), więc wybierają najsłabiej obsadzony bród. Atakujący idzie do wschodniego lądowiska brodu, a po przekroczeniu potoku na najbliższego przeciwnika. Obrońca ocenia zagrożenie brodu z pozycji atakujących (waga (1 - odległość od zachodniego brzegu / 1600)^2) i dzieli je przez własną załogę i czas dojścia; odźwierni (linia) nie przerzucają się. Czas dojścia to odległość w linii prostej dzielona przez prędkość roty (z mnożnikiem zmęczenia i morale) razy 0,85.
+47. Pola przepływu (jedno na cel) są trzymane w pamięci podręcznej o rozmiarze 80 (najstarsze wypada): na dużych mapach z ruchomymi celami nieograniczona pamięć rosła zbyt szybko, a brakujące pole jest liczone ponownie (wynik ten sam).
+48. Mnożnik prędkości strony (`opts.speedMult`, domyślnie 1) istnieje tylko do eksperymentów z szybkością (`tests/p1-przeprawa.js`); nie ma go w interfejsie.
 
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
@@ -105,7 +109,7 @@ Przeszkody:
 | 2 | Kilka przeszkód | 2000x1200 | scattered | `count` [8, 11], `sep` 150, `cover` 14 |
 | 3 | Pień z kilkoma trasami | 2000x1200 | legacy |  |
 | 4 | Gęsty i kręty podszyt | 2600x1400 | thicket | `pitch` 128, `wallR` 26, `jitter` 8, `braid` 0.1, `doors` 6, `follow` True, `cover` 40, `minWidth` 52, `mix` {'brush': 0.45, 'wood': 0.25, 'root': 0.15, 'stone': 0.15} |
-| stream | Potok z kamieniami | 2400x1200 | stream | `hidden` True, `crossings` 3, `stoneR` [44, 52], `cover` 12, `minWidth` 44 |
+| stream | Potok z kamieniami | 3000x3200 | stream | `hidden` True, `cover` 40, `minWidth` 44, `scatter` 26, `fords` [{'dy': -1200, 'stoneR': [58, 64]}, {'dy': 0, 'stoneR': [44, 48]}, {'dy': 1200, 'stoneR': [58, 64]}] |
 | 5 | Chaparral: gąszcz wąskich przejść | 3000x1500 | thicket | `pitch` 116, `wallR` 28, `jitter` 6, `braid` 0.04, `doors` 4, `follow` True, `cover` 70, `minWidth` 44, `mix` {'brush': 0.62, 'wood': 0.18, 'root': 0.12, 'stone': 0.08} |
 
 ### Scenariusze (`world.scenarioTypes`)
@@ -713,6 +717,16 @@ checkEnd():
   w przeciwnym razie: zajęcie gniazdo (15+ WK, < 3 LH, 8 s) / zniszczenie obrońców / rozbicie atakujących / limit czasu: wygrywa obrońca
 
 widoczność: losClear sprawdza tablicę SIGHT (woda 0), ruch i pola przepływu tablicę BLK (woda 1)
+
+przeprawa (world.fords = [{ y, wx, wy, ex, ey }]; w = zachodnie, e = wschodnie lądowisko):
+  eta(c, x, y) = odległość(c, (x, y)) / (c.speed * c.spMod * 0.85)
+  atakujący, co 10 s lub przy zmianie: wybierz bród k maksymalizujący
+     siła(c) / (obrońcy w 350 od e_k + 0.6 * obrońcy z eta <= eta(c, e_k) + 8 + 60) / (1 + 0.5 * własne roty przy k) * (1.35 jeśli to bieżący) / (1 + eta / 90)
+  rozkaz: atak na e_k, a po przekroczeniu (x > środek brodu) atak na najbliższego przeciwnika
+  obrońca, co 10 s lub przy zmianie: wybierz bród k maksymalizujący
+     (zagrożenie_k + 4) / (załoga_k + siła(c) + 80) * (1.35 jeśli bieżący) / (1 + eta(c, e_k) / 120),
+     zagrożenie_k = suma siła(w) * max(0, 1 - odległość(w, w_k) / 1600)^2
+  rozkaz: stój przy e_k (+20 jednostek; plujki +60, gwardia dowódcy +90)
 ```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#

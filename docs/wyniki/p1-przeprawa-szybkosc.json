@@ -1,0 +1,1223 @@
+{
+ "generated": "wykonane: node tests/p1-przeprawa.js",
+ "seeds": 5,
+ "summary": {
+  "bazowy": {
+   "runs": 5,
+   "winsWK": 0,
+   "bitwyOBrody": 2,
+   "najwiekszyUdzialStratWJednymBrodzie": 0.45,
+   "brodyZPrzejsciemWK": 3,
+   "sekundy": 600,
+   "zywiWK": 167,
+   "zywiLH": 399
+  },
+  "WK x1,4": {
+   "runs": 5,
+   "winsWK": 0,
+   "bitwyOBrody": 1.4,
+   "najwiekszyUdzialStratWJednymBrodzie": 0.71,
+   "brodyZPrzejsciemWK": 3,
+   "sekundy": 600,
+   "zywiWK": 237,
+   "zywiLH": 399
+  },
+  "LH x1,4": {
+   "runs": 5,
+   "winsWK": 0,
+   "bitwyOBrody": 2,
+   "najwiekszyUdzialStratWJednymBrodzie": 0.45,
+   "brodyZPrzejsciemWK": 3,
+   "sekundy": 600,
+   "zywiWK": 141,
+   "zywiLH": 378
+  },
+  "WK x0,7": {
+   "runs": 5,
+   "winsWK": 0,
+   "bitwyOBrody": 1.4,
+   "najwiekszyUdzialStratWJednymBrodzie": 0.66,
+   "brodyZPrzejsciemWK": 2.4,
+   "sekundy": 600,
+   "zywiWK": 247,
+   "zywiLH": 407
+  },
+  "LH x0,7": {
+   "runs": 5,
+   "winsWK": 0,
+   "bitwyOBrody": 2,
+   "najwiekszyUdzialStratWJednymBrodzie": 0.63,
+   "brodyZPrzejsciemWK": 2.8,
+   "sekundy": 600,
+   "zywiWK": 238,
+   "zywiLH": 544
+  }
+ },
+ "runs": [
+  {
+   "name": "bazowy",
+   "seed": 1,
+   "speedMult": {},
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    122,
+    376
+   ],
+   "deaths": [
+    [
+     544,
+     202
+    ],
+    [
+     228,
+     548
+    ],
+    [
+     278,
+     26
+    ]
+   ],
+   "firstCross": [
+    60.3,
+    510.65,
+    87.3
+   ],
+   "at90": [
+    [
+     361,
+     109
+    ],
+    [
+     111,
+     842
+    ],
+    [
+     227,
+     50
+    ]
+   ]
+  },
+  {
+   "name": "bazowy",
+   "seed": 2,
+   "speedMult": {},
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    228,
+    360
+   ],
+   "deaths": [
+    [
+     460,
+     245
+    ],
+    [
+     272,
+     530
+    ],
+    [
+     272,
+     17
+    ]
+   ],
+   "firstCross": [
+    60.4,
+    450.3,
+    62.95
+   ],
+   "at90": [
+    [
+     419,
+     52
+    ],
+    [
+     115,
+     889
+    ],
+    [
+     213,
+     50
+    ]
+   ]
+  },
+  {
+   "name": "bazowy",
+   "seed": 3,
+   "speedMult": {},
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    205,
+    363
+   ],
+   "deaths": [
+    [
+     293,
+     51
+    ],
+    [
+     172,
+     419
+    ],
+    [
+     558,
+     290
+    ]
+   ],
+   "firstCross": [
+    120,
+    359.75,
+    62.55
+   ],
+   "at90": [
+    [
+     235,
+     51
+    ],
+    [
+     149,
+     720
+    ],
+    [
+     470,
+     229
+    ]
+   ]
+  },
+  {
+   "name": "bazowy",
+   "seed": 4,
+   "speedMult": {},
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    224,
+    522
+   ],
+   "deaths": [
+    [
+     202,
+     39
+    ],
+    [
+     331,
+     331
+    ],
+    [
+     474,
+     260
+    ]
+   ],
+   "firstCross": [
+    59.4,
+    471.45,
+    64.5
+   ],
+   "at90": [
+    [
+     52,
+     51
+    ],
+    [
+     94,
+     720
+    ],
+    [
+     300,
+     225
+    ]
+   ]
+  },
+  {
+   "name": "bazowy",
+   "seed": 5,
+   "speedMult": {},
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    55,
+    376
+   ],
+   "deaths": [
+    [
+     632,
+     245
+    ],
+    [
+     206,
+     511
+    ],
+    [
+     280,
+     20
+    ]
+   ],
+   "firstCross": [
+    58.3,
+    470.5,
+    63.55
+   ],
+   "at90": [
+    [
+     412,
+     176
+    ],
+    [
+     133,
+     773
+    ],
+    [
+     223,
+     50
+    ]
+   ]
+  },
+  {
+   "name": "LH x0,7",
+   "seed": 1,
+   "speedMult": {
+    "LH": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    240,
+    687
+   ],
+   "deaths": [
+    [
+     374,
+     70
+    ],
+    [
+     490,
+     395
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "firstCross": [
+    60.55,
+    212.95,
+    130.3
+   ],
+   "at90": [
+    [
+     329,
+     50
+    ],
+    [
+     99,
+     931
+    ],
+    [
+     244,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "LH x0,7",
+   "seed": 2,
+   "speedMult": {
+    "LH": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    277,
+    602
+   ],
+   "deaths": [
+    [
+     208,
+     52
+    ],
+    [
+     529,
+     447
+    ],
+    [
+     58,
+     23
+    ]
+   ],
+   "firstCross": [
+    60.4,
+    560.65,
+    145.2
+   ],
+   "at90": [
+    [
+     316,
+     53
+    ],
+    [
+     158,
+     934
+    ],
+    [
+     144,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "LH x0,7",
+   "seed": 3,
+   "speedMult": {
+    "LH": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    208,
+    524
+   ],
+   "deaths": [
+    [
+     148,
+     63
+    ],
+    [
+     460,
+     441
+    ],
+    [
+     283,
+     99
+    ]
+   ],
+   "firstCross": [
+    82.5,
+    306.65,
+    71.75
+   ],
+   "at90": [
+    [
+     221,
+     51
+    ],
+    [
+     237,
+     852
+    ],
+    [
+     257,
+     57
+    ]
+   ]
+  },
+  {
+   "name": "LH x0,7",
+   "seed": 4,
+   "speedMult": {
+    "LH": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    226,
+    318
+   ],
+   "deaths": [
+    [
+     196,
+     25
+    ],
+    [
+     380,
+     695
+    ],
+    [
+     430,
+     114
+    ]
+   ],
+   "firstCross": [
+    60.15,
+    null,
+    90.65
+   ],
+   "at90": [
+    [
+     59,
+     51
+    ],
+    [
+     184,
+     866
+    ],
+    [
+     135,
+     59
+    ]
+   ]
+  },
+  {
+   "name": "LH x0,7",
+   "seed": 5,
+   "speedMult": {
+    "LH": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    241,
+    591
+   ],
+   "deaths": [
+    [
+     398,
+     158
+    ],
+    [
+     476,
+     351
+    ],
+    [
+     110,
+     45
+    ]
+   ],
+   "firstCross": [
+    58.95,
+    511.65,
+    154.55
+   ],
+   "at90": [
+    [
+     309,
+     49
+    ],
+    [
+     239,
+     932
+    ],
+    [
+     99,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "LH x1,4",
+   "seed": 1,
+   "speedMult": {
+    "LH": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    152,
+    483
+   ],
+   "deaths": [
+    [
+     498,
+     194
+    ],
+    [
+     213,
+     454
+    ],
+    [
+     279,
+     20
+    ]
+   ],
+   "firstCross": [
+    60.3,
+    407.75,
+    100.75
+   ],
+   "at90": [
+    [
+     376,
+     278
+    ],
+    [
+     111,
+     605
+    ],
+    [
+     205,
+     50
+    ]
+   ]
+  },
+  {
+   "name": "LH x1,4",
+   "seed": 2,
+   "speedMult": {
+    "LH": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    104,
+    212
+   ],
+   "deaths": [
+    [
+     631,
+     328
+    ],
+    [
+     306,
+     604
+    ],
+    [
+     187,
+     8
+    ]
+   ],
+   "firstCross": [
+    60.4,
+    354.95,
+    62.4
+   ],
+   "at90": [
+    [
+     425,
+     229
+    ],
+    [
+     139,
+     653
+    ],
+    [
+     102,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "LH x1,4",
+   "seed": 3,
+   "speedMult": {
+    "LH": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    134,
+    291
+   ],
+   "deaths": [
+    [
+     184,
+     51
+    ],
+    [
+     342,
+     460
+    ],
+    [
+     570,
+     350
+    ]
+   ],
+   "firstCross": [
+    178.35,
+    478.2,
+    62.55
+   ],
+   "at90": [
+    [
+     60,
+     51
+    ],
+    [
+     358,
+     594
+    ],
+    [
+     366,
+     347
+    ]
+   ]
+  },
+  {
+   "name": "LH x1,4",
+   "seed": 4,
+   "speedMult": {
+    "LH": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    203,
+    381
+   ],
+   "deaths": [
+    [
+     173,
+     26
+    ],
+    [
+     328,
+     531
+    ],
+    [
+     512,
+     188
+    ]
+   ],
+   "firstCross": [
+    59.55,
+    365.15,
+    64.5
+   ],
+   "at90": [
+    [
+     53,
+     51
+    ],
+    [
+     172,
+     600
+    ],
+    [
+     299,
+     346
+    ]
+   ]
+  },
+  {
+   "name": "LH x1,4",
+   "seed": 5,
+   "speedMult": {
+    "LH": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    114,
+    525
+   ],
+   "deaths": [
+    [
+     583,
+     137
+    ],
+    [
+     206,
+     462
+    ],
+    [
+     329,
+     27
+    ]
+   ],
+   "firstCross": [
+    58.3,
+    405.35,
+    63.55
+   ],
+   "at90": [
+    [
+     377,
+     350
+    ],
+    [
+     139,
+     598
+    ],
+    [
+     214,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "WK x0,7",
+   "seed": 1,
+   "speedMult": {
+    "WK": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    245,
+    512
+   ],
+   "deaths": [
+    [
+     297,
+     8
+    ],
+    [
+     477,
+     632
+    ],
+    [
+     80,
+     0
+    ]
+   ],
+   "firstCross": [
+    78.7,
+    null,
+    86.35
+   ],
+   "at90": [
+    [
+     253,
+     51
+    ],
+    [
+     100,
+     900
+    ],
+    [
+     82,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "WK x0,7",
+   "seed": 2,
+   "speedMult": {
+    "WK": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    400,
+    381
+   ],
+   "deaths": [
+    [
+     281,
+     15
+    ],
+    [
+     416,
+     756
+    ],
+    [
+     89,
+     0
+    ]
+   ],
+   "firstCross": [
+    79.85,
+    null,
+    81.85
+   ],
+   "at90": [
+    [
+     152,
+     51
+    ],
+    [
+     100,
+     900
+    ],
+    [
+     95,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "WK x0,7",
+   "seed": 3,
+   "speedMult": {
+    "WK": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    252,
+    410
+   ],
+   "deaths": [
+    [
+     29,
+     28
+    ],
+    [
+     433,
+     684
+    ],
+    [
+     428,
+     21
+    ]
+   ],
+   "firstCross": [
+    278.15,
+    390.75,
+    80.25
+   ],
+   "at90": [
+    [
+     0,
+     0
+    ],
+    [
+     222,
+     951
+    ],
+    [
+     184,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "WK x0,7",
+   "seed": 4,
+   "speedMult": {
+    "WK": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    190,
+    411
+   ],
+   "deaths": [
+    [
+     35,
+     0
+    ],
+    [
+     527,
+     555
+    ],
+    [
+     480,
+     186
+    ]
+   ],
+   "firstCross": [
+    146.85,
+    null,
+    82.45
+   ],
+   "at90": [
+    [
+     0,
+     51
+    ],
+    [
+     141,
+     762
+    ],
+    [
+     190,
+     183
+    ]
+   ]
+  },
+  {
+   "name": "WK x0,7",
+   "seed": 5,
+   "speedMult": {
+    "WK": 0.7
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    146,
+    322
+   ],
+   "deaths": [
+    [
+     620,
+     209
+    ],
+    [
+     372,
+     621
+    ],
+    [
+     93,
+     0
+    ]
+   ],
+   "firstCross": [
+    78.45,
+    470.6,
+    95.75
+   ],
+   "at90": [
+    [
+     244,
+     52
+    ],
+    [
+     9,
+     899
+    ],
+    [
+     92,
+     51
+    ]
+   ]
+  },
+  {
+   "name": "WK x1,4",
+   "seed": 1,
+   "speedMult": {
+    "WK": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    281,
+    626
+   ],
+   "deaths": [
+    [
+     444,
+     67
+    ],
+    [
+     490,
+     459
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "firstCross": [
+    47.6,
+    124.6,
+    91.1
+   ],
+   "at90": [
+    [
+     378,
+     101
+    ],
+    [
+     100,
+     893
+    ],
+    [
+     253,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "WK x1,4",
+   "seed": 2,
+   "speedMult": {
+    "WK": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    258,
+    247
+   ],
+   "deaths": [
+    [
+     464,
+     149
+    ],
+    [
+     504,
+     752
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "firstCross": [
+    47.95,
+    179.35,
+    89.15
+   ],
+   "at90": [
+    [
+     318,
+     89
+    ],
+    [
+     40,
+     860
+    ],
+    [
+     340,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "WK x1,4",
+   "seed": 3,
+   "speedMult": {
+    "WK": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    199,
+    82
+   ],
+   "deaths": [
+    [
+     13,
+     15
+    ],
+    [
+     805,
+     991
+    ],
+    [
+     210,
+     20
+    ]
+   ],
+   "firstCross": [
+    69.05,
+    181.15,
+    63.9
+   ],
+   "at90": [
+    [
+     140,
+     0
+    ],
+    [
+     267,
+     730
+    ],
+    [
+     156,
+     114
+    ]
+   ]
+  },
+  {
+   "name": "WK x1,4",
+   "seed": 4,
+   "speedMult": {
+    "WK": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    233,
+    198
+   ],
+   "deaths": [
+    [
+     29,
+     79
+    ],
+    [
+     601,
+     855
+    ],
+    [
+     260,
+     20
+    ]
+   ],
+   "firstCross": [
+    53.15,
+    255.7,
+    63.8
+   ],
+   "at90": [
+    [
+     243,
+     0
+    ],
+    [
+     171,
+     860
+    ],
+    [
+     143,
+     43
+    ]
+   ]
+  },
+  {
+   "name": "WK x1,4",
+   "seed": 5,
+   "speedMult": {
+    "WK": 1.4
+   },
+   "winner": null,
+   "reason": "bez rozstrzygnięcia w 600 s",
+   "seconds": 600.05,
+   "alive": [
+    214,
+    844
+   ],
+   "deaths": [
+    [
+     473,
+     52
+    ],
+    [
+     422,
+     256
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "firstCross": [
+    46.35,
+    471.75,
+    119.75
+   ],
+   "at90": [
+    [
+     296,
+     94
+    ],
+    [
+     115,
+     849
+    ],
+    [
+     113,
+     0
+    ]
+   ]
+  }
+ ]
+}

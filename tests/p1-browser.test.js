@@ -156,8 +156,15 @@ const { openPage, ROOT } = require('./browser-lib');
       await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 30000 });
       const si = await page.evaluate(() => ({ sc: __P1.S.sim.scenarioInfo.id, label: document.getElementById('mapName').textContent, w: __P1.S.sim.W }));
       assert.strictEqual(si.sc, sc); assert.ok(si.label.length > 5, si.label);
+      const nb = await page.$$eval('#fordBtns button', (b) => b.length); assert.strictEqual(nb, sc === 'przeprawa' ? 3 : 0, 'przyciski brodów: ' + nb);
+
       await page.evaluate(() => { __P1.S.speedIdx = 4; }); await page.waitForTimeout(2500); await page.evaluate(() => { __P1.S.paused = true; });
       await page.screenshot({ path: path.join(shots, 'p1-scenariusz-' + sc + '.png') });
+      if (sc === 'przeprawa') {
+        const c0 = await page.evaluate(() => [__P1.cam.x, __P1.cam.y]); await page.click('#fordBtns button:nth-child(3)'); const c1 = await page.evaluate(() => [__P1.cam.x, __P1.cam.y, __P1.cam.z]);
+        assert.ok(Math.abs(c1[0] - c0[0]) + Math.abs(c1[1] - c0[1]) > 100 && c1[2] >= 0.5, 'przycisk brodu nie przesunął kamery');
+        await page.waitForTimeout(300); await page.screenshot({ path: path.join(shots, 'p1-przeprawa-brod.png') });
+      }
       await page.evaluate(() => { __P1.S.paused = false; __P1.S.speedIdx = 1; });
       ok('scenariusz ' + sc + ' startuje i jest rysowany (' + si.label + ', ' + si.w + ' szerokości)');
     }
