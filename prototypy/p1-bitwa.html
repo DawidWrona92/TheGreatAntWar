@@ -201,17 +201,17 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Pięć typów mapy, od najprostszej do najbardziej złożonej. Wszystkie mają gniazdo na wschodzie i strefę startu atakującego na zachodzie; układ rot z sekcji scenario jest zapisany dla mapy 2000x1200 i przesuwany (strona zachodnia o dy, wschodnia o dx i dy) na inne rozmiary. Typ 3 używa układu z world.map bez zmian.",
       "1": { "name": "Otwarta polana", "gen": "open", "w": 2000, "h": 1200, "pebbles": [4, 6], "cover": 10,
              "desc": "Prawie pusty teren: kilka drobnych kamyków i plamy mchu. Brak przesmyków, a odźwierni stają jako zwykła linia. Wszystko zależy od manewru." },
-      "2": { "name": "Kilka przeszkód", "gen": "scattered", "w": 2000, "h": 1200, "count": [8, 11], "sep": 150, "cover": 14,
+      "2": { "name": "Kilka przeszkód", "gen": "scattered", "w": 2000, "h": 1200, "count": [8, 11], "sep": 150, "cover": 14, "hills": { "n": [2, 3], "h": [22, 36], "r": [220, 340] },
              "desc": "Otwarty teren z pojedynczymi głazami, korzeniami i kłodami rozstawionymi co najmniej 150 jednostek od siebie. Lokalne utrudnienia, brak wąskich gardeł." },
       "3": { "name": "Pień z kilkoma trasami", "gen": "legacy", "w": 2000, "h": 1200,
              "desc": "Dotychczasowa mapa: pień z głównym przesmykiem (suwak szerokości), wąska bocznica i obejścia wokół głazów. Układ stały, ziarno zmienia tylko plamy mchu." },
-      "4": { "name": "Gęsty i kręty podszyt", "gen": "thicket", "w": 2600, "h": 1400, "pitch": 128, "wallR": 26, "jitter": 8, "braid": 0.1, "doors": 6, "follow": true, "cover": 40, "minWidth": 52,
+      "4": { "name": "Gęsty i kręty podszyt", "gen": "thicket", "w": 2600, "h": 1400, "hills": { "n": [3, 4], "h": [22, 38], "r": [260, 400] }, "pitch": 128, "wallR": 26, "jitter": 8, "braid": 0.1, "doors": 6, "follow": true, "cover": 40, "minWidth": 52,
              "mix": { "brush": 0.45, "wood": 0.25, "root": 0.15, "stone": 0.15 },
              "desc": "Pas zarośli między strefą startu a gniazdem: kręte korytarze o szerokości ok. 60-100 jednostek (najszersza trasa przez pas zwęża się do ok. 75), ślepe zaułki i pętle dające kilka tras, sześć wejść w czołowych ścianach pasa. Mapa powiększona (o ok. 40% więcej terenu do chodzenia niż typ 3), bo strefy rozmieszczenia armii są stałe." },
-      "stream": { "name": "Potok z kamieniami", "gen": "stream", "hidden": true, "w": 3000, "h": 3200, "cover": 40, "minWidth": 44, "scatter": 26,
+      "stream": { "name": "Potok z kamieniami", "gen": "stream", "hidden": true, "w": 3000, "h": 3200, "hills": { "n": [3, 5], "h": [20, 34], "r": [260, 400], "banks": { "east": [26, 300], "west": [16, 280] } }, "cover": 40, "minWidth": 44, "scatter": 26,
                   "fords": [ { "dy": -1200, "stoneR": [58, 64] }, { "dy": 0, "stoneR": [44, 48] }, { "dy": 1200, "stoneR": [58, 64] } ],
                   "desc": "Potok o szerokości ok. 176 jednostek przecina mapę z północy na południe. Trzy brody (łańcuchy trzech dużych kamieni) leżą ok. 1200 jednostek od siebie: środkowy jest wąski (łatwy do obrony) i najbliższy armiom, dwa skrajne są szerokie i odległe. Przejście armii z brodu na bród trwa od ok. 20 s (biegacze) do ponad 70 s (tarany), więc o każdy bród toczy się osobna bitwa." },
-      "5": { "name": "Chaparral: gąszcz wąskich przejść", "gen": "thicket", "w": 3000, "h": 1500, "pitch": 116, "wallR": 28, "jitter": 6, "braid": 0.04, "doors": 4, "follow": true, "cover": 70, "minWidth": 44,
+      "5": { "name": "Chaparral: gąszcz wąskich przejść", "gen": "thicket", "w": 3000, "h": 1500, "hills": { "n": [3, 5], "h": [22, 38], "r": [260, 400] }, "pitch": 116, "wallR": 28, "jitter": 6, "braid": 0.04, "doors": 4, "follow": true, "cover": 70, "minWidth": 44,
              "mix": { "brush": 0.62, "wood": 0.18, "root": 0.12, "stone": 0.08 },
              "desc": "Gęsty podszyt w stylu kalifornijskiego chaparralu: ściany z krzewów, pni i kamieni tworzą wąskie, kręte korytarze o szerokości ok. 48-60 jednostek (najszersza trasa zwęża się do ok. 48), z wieloma ślepymi zaułkami i czterema wejściami w czołowych ścianach pasa. To korytarze między ścianami, a nie zadaszone tunele: nic tu jeszcze nie ukrywa jednostek (to etap 4). Największa mapa (o ok. 57% więcej terenu do chodzenia niż typ 3)." }
     }
@@ -232,6 +232,22 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     },
     "supply": { "WK": 60, "LH": 60, "reinfPerSec": 3, "acidRefill": 0.02, "acidStart": 3, "acidCap": 6 },
     "fatigue": { "move": 0.35, "fight": 2, "rest": 3, "effCd": 0.6, "effSpeed": 0.35, "effDmg": 0.25, "effControl": 4 },
+    "elevation": {
+      "comment": "Etap 4. Wartości liczbowe to założenia prototypu. Mnożnik prędkości: pod górę 1/(1+upK*s) (nie mniej niż minUp), z góry 1+downK*|s| (nie więcej niż maxDown), s = nachylenie wzdłuż ruchu; zmęczenie marszu x(1+fatUp*s_pod_górę) lub x(1-fatDown*|s|_z_góry).",
+      "on": true, "upK": 2.5, "downK": 1.2, "minUp": 0.45, "maxDown": 1.35, "fatUp": 3, "fatDown": 0.5
+    },
+    "ballistics": {
+      "comment": "Pocisk kwasu leci po paraboli: prędkość wylotu z zasięgu na płaskim (v^2 = g*R0), kąt dowolny; tor płaski, a gdy zablokuje go wzgórze, stromy (>45 stopni, krótszy zasięg). Wysokość oczu strzelca i celu nad terenem, krok próbkowania toru.",
+      "R0": 80, "g": 1, "eyeShooter": 4, "eyeTarget": 2, "step": 8, "clearance": 0.5
+    },
+    "visibility": {
+      "comment": "Widoczność wspólna dla strony: wróg jest widoczny, gdy widzi go któryś z próbkowanych własnych obserwatorów (1 na every mrówek) w promieniu radius z czystą linią wzroku 3D. Mrówka na mchu jest widoczna tylko z mossRadius. Mrówka, która zaatakowała, jest widoczna revealSec sekund. AI zna rotę wroga przez memorySec sekund od ostatniego zobaczenia.",
+      "on": true, "radius": 125, "mossRadius": 28, "revealSec": 3, "period": 5, "every": 4, "memorySec": 15, "eyeHeight": 3
+    },
+    "facing": {
+      "comment": "Obrażenia zależne od kierunku ciosu względem kierunku mrówki (heading): przód x1, flanka x flank, tył x rear. frontDeg i rearDeg to progi w stopniach.",
+      "on": true, "flank": 1.25, "rear": 1.5, "frontDeg": 60, "rearDeg": 120
+    },
     "aiPeriod": 20
   },
   "units": {
@@ -586,6 +602,37 @@ const Sim = (function () {
       make: (r, rc) => { const x = r.range(rc[0], rc[2]), y = r.range(rc[1], rc[3]), k = r.next(); return k < 0.5 ? { type: 'stone', r: Math.round(r.range(34, 60)), at: [x, y] } : { type: 'root', r: Math.round(r.range(40, 64)), at: [x, y] }; } });
     const out = obs.concat(extra); out.fords = fords; return out;
   }
+  // ---------- wzgórza i balistyka ----------
+  // wysokości w środkach komórek: gładkie wzgórza (funkcje Gaussa); na mapie z brodami dodatkowo podwyższone brzegi przy brodach
+  function genHeights(world, hs, rng) {
+    const W = world.w, H = world.h, COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL), Z = zonesFor(W, H, world.nest), bumps = [];
+    const n = Math.round(rng.range(hs.n[0], hs.n[1] + 0.999));
+    for (let k = 0; k < n; k++) for (let tries = 0; tries < 80; tries++) {
+      const cx = rng.range(520, W - 380), cy = rng.range(140, H - 140), r = rng.range(hs.r[0], hs.r[1]), h = rng.range(hs.h[0], hs.h[1]);
+      if (cx < Z.wk[2] + 60 && cy > Z.wk[1] - 60 && cy < Z.wk[3] + 60) continue;
+      bumps.push({ cx, cy, s: r / 2, h }); break;
+    }
+    if (hs.banks && world.fords) for (const f of world.fords) {
+      bumps.push({ cx: f.ex + hs.banks.east[1], cy: f.y, s: 140, h: hs.banks.east[0] });
+      bumps.push({ cx: f.wx - hs.banks.west[1], cy: f.y, s: 140, h: hs.banks.west[0] });
+    }
+    const out = new Float32Array(COLS * ROWS);
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const x = (c + 0.5) * CELL, y = (r + 0.5) * CELL; let h = 0;
+      for (const b of bumps) { const dx = x - b.cx, dy = y - b.cy; h += b.h * Math.exp(-(dx * dx + dy * dy) / (2 * b.s * b.s)); }
+      const dn = Math.hypot(x - world.nest[0], y - world.nest[1]), m = Math.max(0, Math.min(1, (dn - 100) / 70)); // gniazdo stoi na płaskim
+      out[r * COLS + c] = h * m;
+    }
+    return out;
+  }
+  // tory pocisku: dla odległości d i różnicy wysokości dh (cel minus strzelec) zwraca tangensy kąta [niski, stromy] albo null, gdy cel jest poza zasięgiem
+  // (prędkość wylotu z zasięgu na płaskim: v^2 = g R0; maksymalny zasięg R = R0 sqrt(1 + 2 dh / R0) liczony ze strzelca do celu)
+  function ballistic(R0, g, d, dh) {
+    const v2 = g * R0, disc = v2 * v2 - g * (g * d * d + 2 * dh * v2);
+    if (disc < 0) return null;
+    const sq = Math.sqrt(disc);
+    return [(v2 - sq) / (g * d), (v2 + sq) / (g * d)];
+  }
   const GENERATORS = { open: genOpen, scattered: genScattered, thicket: genThicket, stream: genStream };
 
   // Rodzaj scenariusza: czy jest gniazdo, postawa AI każdej strony i sposób zakończenia bitwy (world.scenarioTypes).
@@ -604,7 +651,7 @@ const Sim = (function () {
     const world = defs.world, mt = world.mapTypes[mapId];
     if (!mt) throw new Error('Nieznany typ mapy: ' + mapId);
     const W = mt.w || world.w, H = mt.h || world.h, dx = W - 2000, dy = (H - 1200) / 2;
-    world.followAnchor = !!mt.follow; world.w = W; world.h = H; world.nest = [1800 + dx, 600 + dy]; world.retreatWK = [world.retreatWK[0], world.retreatWK[1] + dy];
+    world.hills = mt.hills || null; world.followAnchor = !!mt.follow; world.w = W; world.h = H; world.nest = [1800 + dx, 600 + dy]; world.retreatWK = [world.retreatWK[0], world.retreatWK[1] + dy];
     for (const sn of SIDES) {
       const sd = defs.scenario.sides[sn], sx = sn === 'WK' ? 0 : dx;
       for (const cd of sd.companies) { cd.at = [cd.at[0] + sx, cd.at[1] + dy]; }
@@ -820,7 +867,7 @@ const Sim = (function () {
     // Dowódca może być dowolnego typu: gwardia dowódcy to elitarna wersja każdego typu bazowego (generowana tu)
     for (const k of Object.keys(defs.units)) if (k !== 'dowodca' && !defs.units[k].base) defs.units['gwardia_' + k] = { name: 'Gwardzista: ' + defs.units[k].name.toLowerCase(), base: k };
     const aiSides = new Set(opts.aiSides || SIDES);
-    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor;
+    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor, EL = P.elevation, BL = P.ballistics, VS = P.visibility, FC = P.facing, VIS = !!VS.on;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
     const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
     const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo, scenarioInfo: scenInfo, armyInfo };
@@ -870,6 +917,54 @@ const Sim = (function () {
       }
     })();
     sim.grid = grid; sim.losClear = losClear;
+    // ---- elewacja (etap 4): wysokości w środkach komórek, gradient, wysokość z interpolacją dwuliniową
+    const HILLS = !!(defs.world.hills && EL.on);
+    let height = null, gradX = null, gradY = null;
+    if (HILLS) {
+      height = genHeights(defs.world, defs.world.hills, rng.fork('terrain'));
+      gradX = new Float32Array(COLS * ROWS); gradY = new Float32Array(COLS * ROWS);
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        const i = r * COLS + c, cl = c > 0 ? c - 1 : c, cr = c < COLS - 1 ? c + 1 : c, ru = r > 0 ? r - 1 : r, rd = r < ROWS - 1 ? r + 1 : r;
+        gradX[i] = (height[r * COLS + cr] - height[r * COLS + cl]) / ((cr - cl || 1) * CELL); gradY[i] = (height[rd * COLS + c] - height[ru * COLS + c]) / ((rd - ru || 1) * CELL);
+      }
+    }
+    function heightAt(x, y) {
+      if (!HILLS) return 0;
+      const fx = Math.max(0, Math.min(COLS - 1.001, x / CELL - 0.5)), fy = Math.max(0, Math.min(ROWS - 1.001, y / CELL - 0.5)), c = fx | 0, r = fy | 0, tx = fx - c, ty = fy - r, i = r * COLS + c;
+      return (height[i] * (1 - tx) + height[i + 1] * tx) * (1 - ty) + (height[i + COLS] * (1 - tx) + height[i + COLS + 1] * tx) * ty;
+    }
+    // nachylenie wzdłuż kierunku ruchu (dodatnie pod górę) i mnożnik prędkości
+    function slopeAt(x, y, dx, dy) { const i = cellAt(x, y); return gradX[i] * dx + gradY[i] * dy; }
+    function slopeMul(sl) { return sl > 0 ? Math.max(EL.minUp, 1 / (1 + EL.upK * sl)) : Math.min(EL.maxDown, 1 - EL.downK * sl); }
+    sim.hills = HILLS; sim.height = height; sim.heightAt = heightAt; sim.COLS_H = COLS; sim.slopeAt = slopeAt; sim.slopeMul = slopeMul;
+    // linia wzroku 3D: ściany blokują jak dotąd (SIGHT), a z wzgórzami także teren powyżej linii od oczu do celu; z1, z2 to wysokości absolutne
+    function sightClear3(x0, y0, z0, x1, y1, z1) {
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
+      for (let k = 1; k < n; k++) { const t = k / n, x = x0 + dx * t, y = y0 + dy * t; if (sightBlocked(x, y)) return false; if (HILLS && heightAt(x, y) > z0 + (z1 - z0) * t) return false; }
+      return true;
+    }
+    const seeClear = (i, j) => !HILLS ? losClear(ax[i], ay[i], ax[j], ay[j]) : sightClear3(ax[i], ay[i], heightAt(ax[i], ay[i]) + VS.eyeHeight, ax[j], ay[j], heightAt(ax[j], ay[j]) + VS.eyeHeight);
+    // strzał kwasem: wierzchołek toru (wysokość absolutna) albo -1, gdy się nie da (ściana, wzgórze zasłania oba tory lub cel poza zasięgiem balistycznym)
+    // bez wzgórz obowiązuje dotychczasowa reguła: zasięg i linia wzroku 2D
+    function shotApex(i, j) {
+      const x0 = ax[i], y0 = ay[i], x1 = ax[j], y1 = ay[j], dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), R0 = T.range[type[i]];
+      if (!HILLS) return d <= R0 && losClear(x0, y0, x1, y1) ? 0 : -1;
+      if (!losClear(x0, y0, x1, y1)) return -1;
+      const z0 = heightAt(x0, y0) + BL.eyeShooter, z1 = heightAt(x1, y1) + BL.eyeTarget, sol = ballistic(R0, BL.g, Math.max(d, 0.5), z1 - z0);
+      if (!sol) return -1;
+      const n = Math.max(2, Math.ceil(d / BL.step)), v2 = BL.g * R0;
+      for (const tn of sol) {
+        let ok = true, apex = Math.max(z0, z1);
+        for (let k = 1; k < n; k++) {
+          const xx = d * k / n, z = z0 + xx * tn - BL.g * xx * xx * (1 + tn * tn) / (2 * v2);
+          if (z > apex) apex = z;
+          if (heightAt(x0 + dx * k / n, y0 + dy * k / n) + BL.clearance > z) { ok = false; break; }
+        }
+        if (ok) return apex;
+      }
+      return -1;
+    }
+    sim.shotApex = shotApex;
     function cellAt(x, y) { return ((y / CELL) | 0) * COLS + ((x / CELL) | 0); }
     function blocked(x, y) {
       if (x < 0 || y < 0 || x >= W || y >= H) return true;
@@ -950,6 +1045,9 @@ const Sim = (function () {
     const slotU = new Float32Array(cap), slotV = new Float32Array(cap), shield = new Int32Array(cap);
     const type = new Uint8Array(cap), side = new Uint8Array(cap), alive = new Uint8Array(cap);
     const compOf = new Int16Array(cap), target = new Int32Array(cap).fill(-1);
+    // widoczność (etap 4): do kiedy mrówka jest widoczna dla danej strony i do kiedy jest ujawniona własnym atakiem
+    const seen = [new Int32Array(cap), new Int32Array(cap)], stamp = [new Int32Array(cap).fill(-1), new Int32Array(cap).fill(-1)], revealUntil = new Int32Array(cap);
+    const visibleTo = (s, j) => !VIS || side[j] === s || seen[s][j] > tick || revealUntil[j] > tick;
     let count = 0;
     Object.assign(sim, { x: ax, y: ay, hp, type, side, alive, heading, comp: compOf, cap });
     Object.defineProperty(sim, 'count', { get: () => count });
@@ -991,7 +1089,8 @@ const Sim = (function () {
             control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
             deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
-            captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9
+            captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9,
+            slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null]
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -1017,6 +1116,8 @@ const Sim = (function () {
         });
       });
       for (const c of comps) c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: true };
+      // środek rozstawienia każdej strony (publiczna wiedza: cel zastępczy AI, gdy nikogo nie widzi)
+      sim.initCenter = [0, 1].map((s) => { const cs = comps.filter((c) => c.side === s); return [cs.reduce((t, c) => t + c.ax, 0) / cs.length, cs.reduce((t, c) => t + c.ay, 0) / cs.length]; });
     })();
     function slotWorld(c, i) {
       return [c.ax + c.fx * slotU[i] - c.fy * slotV[i], c.ay + c.fy * slotU[i] + c.fx * slotV[i]];
@@ -1079,6 +1180,13 @@ const Sim = (function () {
       let dmg = base * (1 - P.dmgVariance / 2 + P.dmgVariance * rngCombat.next());
       if (a >= 0) { dmg *= mult[type[a] * nT + type[d]]; dmg *= 1 - P.fatigue.effDmg * comps[compOf[a]].fatigue / 100; }
       if (melee) dmg *= 1 - T.armor[type[d]];
+      if (a >= 0) {
+        revealUntil[a] = tick + VS.revealSec * HZ;   // kto atakuje, ten się ujawnia
+        if (FC.on) {   // cios z przodu x1, z flanki x flank, od tyłu x rear (kąt między kierunkiem mrówki a kierunkiem do atakującego)
+          const bx = ax[a] - ax[d], by = ay[a] - ay[d];
+          if (bx !== 0 || by !== 0) { let da = Math.atan2(by, bx) - heading[d]; da = Math.abs(Math.atan2(Math.sin(da), Math.cos(da))) * 57.29578; dmg *= da <= FC.frontDeg ? 1 : da <= FC.rearDeg ? FC.flank : FC.rear; }
+        }
+      }
       const g = grid[cellAt(ax[d], ay[d])];
       if (g === 2) dmg *= P.cover;
       if (shield[d] > tick) dmg *= P.shieldMult;
@@ -1106,8 +1214,9 @@ const Sim = (function () {
       }
       kill(i, -1, 'burst');
     }
-    function acid(i, tx, ty) {
-      addFx({ k: 'acid', x0: ax[i], y0: ay[i], x1: tx, y1: ty, r: T.aoe[type[i]] });
+    function acid(i, tx, ty, apex) {
+      revealUntil[i] = tick + VS.revealSec * HZ;
+      addFx({ k: 'acid', x0: ax[i], y0: ay[i], x1: tx, y1: ty, r: T.aoe[type[i]], lob: apex > 0 ? apex - Math.max(heightAt(ax[i], ay[i]) + BL.eyeShooter, heightAt(tx, ty)) : 12 });
       const u = T.aoe[type[i]], s = side[i], r = Math.ceil(u / HASH), cx = (tx / HASH) | 0, cy = (ty / HASH) | 0;
       for (let yy = clampH(cy - r, HR); yy <= clampH(cy + r, HR); yy++) for (let xx = clampH(cx - r, HC); xx <= clampH(cx + r, HC); xx++) {
         const c = yy * HC + xx;
@@ -1129,14 +1238,18 @@ const Sim = (function () {
           if (!alive[j] || side[j] === s) continue;
           const dx = ax[j] - ax[i], dy = ay[j] - ay[i], d2 = dx * dx + dy * dy;
           if (d2 > r2) continue;
+          if (VIS && !visibleTo(s, j)) continue;                     // niewidocznego nie da się wziąć na cel (uczciwe AI i gracz)
+          if (HILLS && T.ranged[ty] && shotApex(i, j) < 0) continue;  // strzał musi być możliwy balistycznie
           const m = mult[ty * nT + type[j]];
           const sc = d2 - (m > 1.4 ? 900 : 0) + (m < 0.6 ? 900 : 0);
           if (sc < bestScore) { bestScore = sc; best = j; }
         }
       }
-      if (best >= 0 && !losClear(ax[i], ay[i], ax[best], ay[best])) return -1;
+      if (best >= 0 && !(HILLS && T.ranged[ty]) && !seeClear(i, best)) return -1;
       return best;
     }
+
+    sim.debug = { hit, acquire, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
 
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
@@ -1177,9 +1290,41 @@ const Sim = (function () {
     sim.flush = () => { while (queue.length) applyCommand(queue.shift()); };
 
     // ---------- aktualizacja rot (raz na sekundę): kontrola, rozstrzyganie stanu ----------
+    // ---------- widoczność (etap 4) ----------
+    // Co `period` kroków: każdy próbkowany obserwator strony widzi wrogów w promieniu (na mchu tylko z bliska) z czystą linią wzroku 3D.
+    // Dla każdej roty zapamiętana jest ostatnia widziana pozycja (środek widocznych mrówek); AI i interfejs korzystają tylko z tego.
+    const memTicks = VS.memorySec * HZ, vsx = [], vsy = [], vsn = [];
+    function updateVisibility() {
+      const R = VS.radius, Rm = VS.mossRadius, rc = Math.ceil(R / HASH);
+      for (let s = 0; s < 2; s++) {
+        const e = 1 - s;
+        for (let i = 0; i < count; i++) {
+          if (!alive[i] || side[i] !== s || i % VS.every !== 0) continue;
+          const zi = heightAt(ax[i], ay[i]) + VS.eyeHeight, cx = (ax[i] / HASH) | 0, cy = (ay[i] / HASH) | 0;
+          for (let yy = clampH(cy - rc, HR); yy <= clampH(cy + rc, HR); yy++) for (let xx = clampH(cx - rc, HC); xx <= clampH(cx + rc, HC); xx++) {
+            const cc = yy * HC + xx;
+            for (let k = cellStart[cc]; k < cellStart[cc + 1]; k++) {
+              const j = cellItems[k]; if (!alive[j] || side[j] !== e || stamp[s][j] === tick) continue;
+              const dx = ax[j] - ax[i], dy = ay[j] - ay[i], lim = grid[cellAt(ax[j], ay[j])] === 2 ? Rm : R;
+              if (dx * dx + dy * dy > lim * lim) continue;
+              if (sightClear3(ax[i], ay[i], zi, ax[j], ay[j], heightAt(ax[j], ay[j]) + VS.eyeHeight)) { seen[s][j] = tick + VS.period + 1; stamp[s][j] = tick; }
+            }
+          }
+        }
+        vsx.length = vsy.length = vsn.length = comps.length; vsx.fill(0); vsy.fill(0); vsn.fill(0);
+        for (let j = 0; j < count; j++) if (alive[j] && side[j] === e && visibleTo(s, j)) { const ci = compOf[j]; vsx[ci] += ax[j]; vsy[ci] += ay[j]; vsn[ci]++; }
+        for (const o of comps) if (o.side === e && vsn[o.id] > 0) {
+          o.seenAt[s] = tick; o.lastX[s] = vsx[o.id] / vsn[o.id]; o.lastY[s] = vsy[o.id] / vsn[o.id];
+          if (!o.vw[s]) o.vw[s] = Object.create(o);   // widok roty dla strony s: te same pola, ale pozycja ostatnio widziana
+          o.vw[s].ax = o.lastX[s]; o.vw[s].ay = o.lastY[s];
+        }
+      }
+    }
+    const compView = (o, s) => (!VIS ? o : tick - o.seenAt[s] <= memTicks ? o.vw[s] : null);
+    sim.visibleTo = visibleTo; sim.compVisible = (c, s) => !VIS || c.side === s || tick - c.seenAt[s] <= VS.period * 2;
     function nearestEnemyComp(c) {
       let best = null, bd = 1e18;
-      for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const d = Math.hypot(o.ax - c.ax, o.ay - c.ay); if (d < bd) { bd = d; best = o; } }
+      for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const v = compView(o, c.side); if (!v) continue; const d = Math.hypot(v.ax - c.ax, v.ay - c.ay); if (d < bd) { bd = d; best = v; } }
       return best ? { c: best, d: bd } : null;
     }
     function updateControl(c) {
@@ -1202,7 +1347,13 @@ const Sim = (function () {
       d += defs.scenario.sides[sn].regenBonus || 0;
       // zmęczenie: rośnie w marszu i walce, spada na odpoczynku; obniża tempo ataku, prędkość, obrażenia i kontrolę
       const FP = P.fatigue;
-      let fg = FP.fight * eng; if (c.moving) fg += FP.move * (c.abilUntil > tick ? 2.5 : 1); else if (eng < 0.05) fg -= FP.rest;
+      let fg = FP.fight * eng;
+      if (c.moving) {
+        let slopeMulF = 1;
+        if (HILLS && c.slopeN > 0) { const sv = c.slopeSum / c.slopeN; slopeMulF = sv > 0 ? 1 + EL.fatUp * sv : Math.max(0.3, 1 + EL.fatDown * sv); }   // pod górę bardziej męczące, z góry mniej
+        fg += FP.move * (c.abilUntil > tick ? 2.5 : 1) * slopeMulF;
+      } else if (eng < 0.05) fg -= FP.rest;
+      c.slopeSum = 0; c.slopeN = 0;
       c.fatigue = Math.max(0, Math.min(100, c.fatigue + fg));
       const fat = c.fatigue / 100; d -= FP.effControl * fat;
       const capOut = tick < c.captainPenaltyUntil; if (capOut) d -= P.captain.regenPenalty;
@@ -1259,7 +1410,7 @@ const Sim = (function () {
       if (dist > 3 && !attackHalt && tick >= c.delayTick) {
         let dirx = dx / dist, diry = dy / dist;
         if (!(dist < CELL * 2 && moveClear(c.ax, c.ay, o.x, o.y)) && c.field && flowDir(c.field, c.ax, c.ay)) { dirx = flow.x; diry = flow.y; }
-        const step = Math.min(dist, c.speed * c.spMod * abilMul * c.cohesion * DT);
+        const step = Math.min(dist, c.speed * c.spMod * abilMul * c.cohesion * DT * (HILLS ? slopeMul(slopeAt(c.ax, c.ay, dirx, diry)) : 1));
         const nx = c.ax + dirx * step, ny = c.ay + diry * step;
         if (!blocked(nx, ny)) { c.ax = nx; c.ay = ny; moved = true; }
         else if (!blocked(nx, c.ay)) { c.ax = nx; moved = true; }
@@ -1381,6 +1532,7 @@ const Sim = (function () {
         cdT[i] -= DT; if (stuck[i] > 0) stuck[i] -= DT; contact[i] = 0;
         let tgt = target[i];
         if (tgt >= 0 && !alive[tgt]) tgt = -1;
+        if (VIS && tgt >= 0 && !visibleTo(side[i], tgt)) tgt = -1;   // cel zniknął z widoku
         const eff = c.eff, engage = eff.engage;
         const isPek = tn === 'pekacz', burstMode = isPek && (c.abilUntil > tick || c.berserk);
         let gx, gy, speed = T.speed[ty] * c.spMod, goalSet = false;
@@ -1393,8 +1545,8 @@ const Sim = (function () {
           if ((burstMode || c.startBy.dowodca) && ((tick + i) & 3) === 0 && tgt < 0) tgt = acquire(i, burstMode ? defs.units.pekacz.burst.seek : 30, c);
         } else if (engage && T.ranged[ty] && eff.kind !== 'retreat') {
           if (c.acid > 0 && (tgt < 0 || ((tick + i) & 7) === 0)) {
-            if (tgt >= 0 && Math.hypot(ax[tgt] - ax[i], ay[tgt] - ay[i]) <= T.range[ty] && losClear(ax[i], ay[i], ax[tgt], ay[tgt])) { /* zostaje */ }
-            else tgt = acquire(i, T.range[ty], c);
+            if (tgt >= 0 && (HILLS ? shotApex(i, tgt) >= 0 : Math.hypot(ax[tgt] - ax[i], ay[tgt] - ay[i]) <= T.range[ty] && losClear(ax[i], ay[i], ax[tgt], ay[tgt]))) { /* zostaje */ }
+            else tgt = acquire(i, HILLS ? T.range[ty] * 1.5 : T.range[ty], c);
           } else if (c.acid <= 0) tgt = -1;
         } else if (engage) {
           // w odwrocie rota odpiera tylko to, co jest tuż przy niej
@@ -1412,9 +1564,10 @@ const Sim = (function () {
             if (d <= T.radius[ty] + T.radius[type[tgt]] + 3) { burst(i); continue; }
             gx = tx; gy = ty2; speed *= 1.3; goalSet = true; fighting = true;
           } else if (T.ranged[ty]) {
-            if (d <= T.range[ty]) {
+            const apex = HILLS ? shotApex(i, tgt) : (d <= T.range[ty] ? 0 : -1);   // z wzgórzami: balistyka (zasięg zależy od różnicy wysokości, tor ominąć wzgórze)
+            if (apex >= 0) {
               fighting = true; speed = 0; goalSet = true; gx = ax[i]; gy = ay[i]; contact[i] = 1;
-              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
+              if (cdT[i] <= 0 && c.acid > 0) { acid(i, tx, ty2, apex); c.acid = Math.max(0, c.acid - 1); cdT[i] = T.cd[ty] * c.cdMod * P.cdScale; }
             }
           } else {
             const reach = T.reach[ty] + T.radius[ty] + T.radius[type[tgt]];
@@ -1443,7 +1596,9 @@ const Sim = (function () {
         if (stuck[i] > 0) speed = 0;
         let vx = 0, vy = 0;
         const ddx = gx - ax[i], ddy = gy - ay[i], dd = Math.hypot(ddx, ddy);
-        if (dd > 1.2 && speed > 0) { const s = Math.min(speed, dd / DT); vx = ddx / dd * s; vy = ddy / dd * s; if (!fighting || tgt < 0) heading[i] = Math.atan2(vy, vx); }
+        if (dd > 1.2 && speed > 0) {
+          if (HILLS && !fighting) { const sl = slopeAt(ax[i], ay[i], ddx / dd, ddy / dd); speed *= slopeMul(sl); c.slopeSum += sl; c.slopeN++; }   // pod górę wolniej, z góry szybciej
+          const s = Math.min(speed, dd / DT); vx = ddx / dd * s; vy = ddy / dd * s; if (!fighting || tgt < 0) heading[i] = Math.atan2(vy, vx); }
         vx += avx[i]; vy += avy[i]; avx[i] *= 0.8; avy[i] *= 0.8;
         const fixed = tn === 'odzwierny' && c.closed;
         if (fixed) { avx[i] = 0; avy[i] = 0; }
@@ -1537,8 +1692,8 @@ const Sim = (function () {
     }
     function strength(c) { return c.alive * (c.cstate === CS_LOST ? 0.3 : c.cstate === CS_WEAK ? 0.8 : 1); }
     function aiStep(s) {
-      const sn = SIDES[s], t = tick / HZ, mine = comps.filter((c) => c.side === s && c.alive > 0), foes = comps.filter((c) => c.side !== s && c.alive > 0);
-      if (!foes.length) return;
+      const sn = SIDES[s], t = tick / HZ, mine = comps.filter((c) => c.side === s && c.alive > 0), foes = comps.filter((c) => c.side !== s && c.alive > 0).map((c) => compView(c, s)).filter(Boolean);
+      if (!foes.length && !(VIS && comps.some((c) => c.side !== s && c.alive > 0))) return;   // uczciwe AI zna tylko widzianych wrogów (z pamięcią)
       const attacker = MODE.posture[sn] === 'advance';
       const dir = s === 0 ? 1 : -1;
       // atakujący w przeprawie: najpierw lądowisko wybranego brodu, po przejściu na drugi brzeg najbliższy przeciwnik
@@ -1548,7 +1703,7 @@ const Sim = (function () {
         return c.ax < (f.wx + f.ex) / 2 + 20 ? [f.ex, f.ey] : null;
       };
       // cel marszu: gniazdo (scenariusz z gniazdem) albo najbliższa rota przeciwnika
-      const goal = (c) => { if (MODE.nest) return nestC; if (FORDS) { const ft = fordTarget(c, c.role === 'raider'); if (ft) return ft; } let b = foes[0], bd = 1e18; for (const e of foes) { const d = dist(c, e); if (d < bd) { bd = d; b = e; } } return [b.ax, b.ay]; };
+      const goal = (c) => { if (MODE.nest) return nestC; if (FORDS) { const ft = fordTarget(c, c.role === 'raider'); if (ft) return ft; } if (!foes.length) return sim.initCenter[1 - s]; let b = foes[0], bd = 1e18; for (const e of foes) { const d = dist(c, e); if (d < bd) { bd = d; b = e; } } return [b.ax, b.ay]; };
       for (const c of mine) {
         if (c.cstate === CS_LOST) continue;
         const foeNear = foes.filter((e) => dist(c, e) < 260).sort((a, b) => dist(c, a) - dist(c, b));
@@ -1558,7 +1713,7 @@ const Sim = (function () {
           if (c.role === 'raider') {
             if (tick >= c.aiUntil) {
               const art = foes.filter((e) => e.acidMax > 0)[0] || foes[0], ft = FORDS ? fordTarget(c, true) : null;
-              if (ft) order(c, 'attack', ft[0], ft[1], 3); else order(c, 'attack', art.ax, art.ay, 3);
+              if (ft) order(c, 'attack', ft[0], ft[1], 3); else { const g = art ? [art.ax, art.ay] : goal(c); order(c, 'attack', g[0], g[1], 3); }
             }
             if (nearestFoe && nearestFoe.acidMax > 0 && dist(c, nearestFoe) < 220) useAbility(c);
           } else if (c.role === 'command' || c.startBy.dowodca) {
@@ -1639,6 +1794,7 @@ const Sim = (function () {
       for (let s = 0; s < 2; s++) if (aiSides.has(SIDES[s]) && tick % P.aiPeriod === s * 7) aiStep(s);
       while (queue.length) applyCommand(queue.shift());
       buildHash();
+      if (VIS && tick % VS.period === 0) updateVisibility();
       if (tick % 10 === 0) updateShields();
       if (tick % HZ === 0) for (const c of comps) if (c.alive > 0) updateControl(c);
       for (const c of comps) if (c.alive > 0) updateAnchor(c);
@@ -1672,7 +1828,7 @@ const Sim = (function () {
     };
     return sim;
   }
-  return { create, HZ, DT, CELL, SIDES, mapMetrics, rasterize, createRng, army: { archetypes: archetypesFor, pick: pickArchetype, score: archetypeScore, profile: armyProfile, pool: armyPool, cost: armyCost, commanderCost, companyCost, budgetFor, problems: armyProblems, layout: layoutArmy, compose: composeArmy, context: armyContext, footprint } };
+  return { create, HZ, DT, CELL, SIDES, mapMetrics, rasterize, createRng, ballistic, army: { archetypes: archetypesFor, pick: pickArchetype, score: archetypeScore, profile: armyProfile, pool: armyPool, cost: armyCost, commanderCost, companyCost, budgetFor, problems: armyProblems, layout: layoutArmy, compose: composeArmy, context: armyContext, footprint } };
 })();
 if (typeof module !== 'undefined') module.exports = Sim;
 /*SIM-END*/
@@ -1771,15 +1927,24 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const ISO = {
     S: 2, pad: 24,
     H: 960, // wysokość świata (ustawiana przy starcie sceny)
+    hf: null, top: 0, // funkcja wysokości terenu (null bez wzgórz) i margines na szczyty (ustawiane przy starcie sceny)
     get ox() { return this.H * 0.5 * this.S + this.pad; },
     sx(x, y) { return this.ox + (x - y) * 0.5 * this.S; },
-    sy(x, y) { return (x + y) * 0.25 * this.S + this.pad; },
-    wx(cx, cy) { const u = (cx - this.ox) * 2 / this.S, v = (cy - this.pad) * 4 / this.S; return (u + v) / 2; },
-    wy(cx, cy) { const u = (cx - this.ox) * 2 / this.S, v = (cy - this.pad) * 4 / this.S; return (v - u) / 2; },
-    size(sim) { return [Math.ceil((sim.W + sim.H) * 0.5 * this.S + this.pad * 2), Math.ceil((sim.W + sim.H) * 0.25 * this.S + this.pad * 2 + 24)]; },
+    // wysokość terenu unosi punkt na ekranie o h * 0.5 * S pikseli (wszystko, co liczy pozycję ekranową, korzysta z tej funkcji)
+    sy(x, y) { return (x + y) * 0.25 * this.S + this.pad + this.top - (this.hf ? this.hf(x, y) * 0.5 * this.S : 0); },
+    // odwrotność: z pozycji ekranowej do świata; z wzgórzami iteracyjnie (wysokość zależy od szukanego punktu)
+    inv(cx, cy) {
+      const u = (cx - this.ox) * 2 / this.S; let h = 0, x = 0, y = 0;
+      for (let it = 0; it < (this.hf ? 5 : 1); it++) { const v = (cy - this.pad - this.top + h * 0.5 * this.S) * 4 / this.S; x = (u + v) / 2; y = (v - u) / 2; h = this.hf ? this.hf(Math.max(0, x), Math.max(0, y)) : 0; }
+      return [x, y];
+    },
+    wx(cx, cy) { return this.inv(cx, cy)[0]; },
+    wy(cx, cy) { return this.inv(cx, cy)[1]; },
+    size(sim) { return [Math.ceil((sim.W + sim.H) * 0.5 * this.S + this.pad * 2), Math.ceil((sim.W + sim.H) * 0.25 * this.S + this.pad * 2 + 24 + this.top)]; },
     // elipsa, w którą rzutuje się okrąg o promieniu R na ziemi
     rx(R) { return R * 0.7071 * this.S; }, ry(R) { return R * 0.3536 * this.S; }
   };
+
   const PAL = {
     WK: { base: '#2b2b32', hi: '#8a8a98', dark: '#0b0b0f', leg: '#16161b', trim: '#b8b8c4' },
     LH: { base: '#c4352c', hi: '#ffa088', dark: '#560c08', leg: '#74140f', trim: '#f2c27a' }
@@ -1852,6 +2017,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
     for (let px = hw; px < 2 * hw; px++) { c.fillStyle = cR; c.fillRect(cx - hw + px, top + rows - 1 - ((px - hw) >> 1) - h + 1, 1, h); }
     tile(c, cx, top - h, cTop);
   }
+  // boczne ściany terenu: gdy sąsiednia komórka jest niższa, odsłania się pionowa ściana (lewa: sąsiad o rząd dalej, prawa: sąsiad o kolumnę dalej)
+  function wallL(c, cx, top, d, col) { const hw = 8 * ISO.S, half = 4 * ISO.S; c.fillStyle = col; for (let px = 0; px < hw; px++) c.fillRect(cx - hw + px, top + half + (px >> 1), 1, d + 1); }
+  function wallR(c, cx, top, d, col) { const hw = 8 * ISO.S, rows = 8 * ISO.S; c.fillStyle = col; for (let px = hw; px < 2 * hw; px++) c.fillRect(cx - hw + px, top + rows - 1 - ((px - hw) >> 1), 1, d + 1); }
   function makeIsoTerrain(sim) {
     const C = sim.CELL, cols = sim.COLS, rows = sim.ROWS, S = ISO.S;
     const [cw, ch] = ISO.size(sim);
@@ -1866,6 +2034,14 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
       const px = (i) => cx - 6 * S + Math.floor(nz(col, r, i) * 12 * S) % (12 * S), py = (i) => top + 1 + Math.floor(nz(col, r, i + 50) * (8 * S - 3));
       const borderWall = r === 0 || c === 0 || r === rows - 1 || col === 0 || col === cols - 1;
+      let shade = () => {};
+      if (ISO.hf) {
+        const hf = ISO.hf, x0 = col * C, y0 = r * C, hA = hf(x0, y0), dL = (hA - hf(x0, y0 + C)) * 0.5 * S, dR = (hA - hf(x0 + C, y0)) * 0.5 * S;
+        if (dL > 0.4) wallL(c, cx, top, dL, '#5b4a31'); if (dR > 0.4) wallR(c, cx, top, dR, '#463822');
+        // oświetlenie z lewej-góry: zbocza rosnące ku +x jaśniejsze, ku -x ciemniejsze
+        const gx = (hf(x0 + C, y0) - hf(x0 - C, y0)) / (2 * C), gy = (hf(x0, y0 + C) - hf(x0, y0 - C)) / (2 * C), a = Math.max(-0.42, Math.min(0.42, gx * 5 - gy * 1.5 + (hA - 16) * 0.007));   // zbocze i wysokość: wyżej jaśniej
+        shade = () => { if (Math.abs(a) > 0.02) tile(c, cx, top, a > 0 ? 'rgba(255,246,205,' + a + ')' : 'rgba(25,16,6,' + (-a) + ')'); };
+      }
       if (v === 1) {
         // pień, kłoda lub drzewo na brzegu: kora w trzech tonach z pionowymi rysami
         const h = borderWall ? 22 : 16;
@@ -1899,13 +2075,13 @@ if (typeof module !== 'undefined') module.exports = Sim;
         c.fillStyle = '#6b4a2a'; c.fillRect(cx - 3 + (k % 3) * 2, top - h + 3, 1, 4);
       } else if (v === 3) { tile(c, cx, top, DIRT[k]); isoBox(c, cx, top, 8, '#8a6238', '#6c4a2a', '#4e351f'); c.fillStyle = '#b08350'; c.fillRect(cx - 4, top - 6, 3, 1); }
       else if (v === 2) {
-        tile(c, cx, top, MOSS[k]);
+        tile(c, cx, top, MOSS[k]); shade();
         for (let t = 0; t < 8; t++) { c.fillStyle = t % 3 ? '#35581f' : '#8fbc5a'; c.fillRect(px(10 + t), py(10 + t), 1, 2 + (t % 2)); }
         if (n > 0.9) { // grzyb: czerwony kapelusz z kropkami na jasnej nóżce
           const gx = px(40), gy = py(41); c.fillStyle = '#e8dfc8'; c.fillRect(gx, gy + 2, 2, 3); c.fillStyle = '#c0392b'; c.fillRect(gx - 2, gy, 6, 3); c.fillStyle = '#fff1e0'; c.fillRect(gx - 1, gy + 1, 1, 1); c.fillRect(gx + 2, gy, 1, 1);
         }
       } else {
-        tile(c, cx, top, hasNest && dn < nestR + 14 ? DIRT[k] : HUM[k]);
+        tile(c, cx, top, hasNest && dn < nestR + 14 ? DIRT[k] : HUM[k]); shade();
         // ściółka: liście w ciepłych barwach, patyki, kamyki
         for (let t = 0; t < 5; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.7 ? '#a8672c' : nn > 0.4 ? '#8d6b2f' : '#6b5a2a'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 3 : 2, 1); }
         if (n > 0.93) { c.fillStyle = '#2f2418'; c.fillRect(cx - 5, top + 9, 8, 1); c.fillStyle = '#6a4d2a'; c.fillRect(cx - 5, top + 8, 7, 1); }
@@ -1933,7 +2109,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   /*ISO-END*/
 
   function setupScene(sim) {
-    ISO.H = sim.H; world.removeChildren(); gGround.clear(); labels.removeChildren().forEach((t) => t.destroy({ children: true }));
+    ISO.H = sim.H; ISO.hf = sim.hills ? sim.heightAt : null; ISO.top = sim.hills ? Math.ceil(Math.max(...sim.height) * 0.5 * ISO.S) + 4 : 0; world.removeChildren(); gGround.clear(); labels.removeChildren().forEach((t) => t.destroy({ children: true }));
     if (fordLayerRef) { fordLayerRef.destroy({ children: true }); fordLayerRef = null; }
     if (!atlas) atlas = makeAntAtlas(sim.names, sim.kinds);
     if (terrainSpr) terrainSpr.destroy({ children: true, texture: true, baseTexture: true });
@@ -1980,7 +2156,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     world.scale.set(cam.z); world.position.set(cam.x, cam.y);
   }
   const toContainer = (sx, sy) => [(sx - cam.x) / cam.z, (sy - cam.y) / cam.z];
-  const toWorld = (sx, sy) => { const [cx, cy] = toContainer(sx, sy); return [ISO.wx(cx, cy), ISO.wy(cx, cy)]; };
+  const toWorld = (sx, sy) => { const [cx, cy] = toContainer(sx, sy); return ISO.inv(cx, cy); };
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
@@ -2065,7 +2241,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (drag.on) { const sx = e.clientX - r.left, sy = e.clientY - r.top; if (Math.hypot(sx - drag.sx, sy - drag.sy) > 14) { const [wx, wy] = toWorld(sx, sy); drag.active = true; drag.face = Math.atan2(wy - drag.wy, wx - drag.wx); } }
     if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
       const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
-      for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 5 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
+      for (let i = 0; i < sim.count; i++) if (sim.alive[i] && (S.observe || sim.side[i] === SIDES.indexOf(S.side) || sim.visibleTo(SIDES.indexOf(S.side), i))) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 5 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
       S.hover = best >= 0 ? sim.comp[best] : -1;
     }
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
@@ -2128,7 +2304,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera';
+  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -2342,10 +2518,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const HEX = { WK: 0x222222, LH: 0xc0392b };
   function render() {
     const sim = S.sim; if (!sim) return;
-    const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2), k = 1 / cam.z;
+    const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2), k = 1 / cam.z, me = SIDES.indexOf(S.side), showAll = S.observe;
+    const seenByMe = (i) => showAll || sim.side[i] === me || sim.visibleTo(me, i);   // wrogów poza polem widzenia nie rysujemy (tryb obserwatora pokazuje wszystko)
     for (let i = 0; i < cnt; i++) {
       const sp = p[i];
-      if (sim.alive[i]) {
+      if (sim.alive[i] && seenByMe(i)) {
         const d = ((Math.round(sim.heading[i] * K) % DIRS) + DIRS) % DIRS;
         if (!shown[i] || dirOf[i] !== d) { shown[i] = 1; dirOf[i] = d; sp.texture = atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]] + d]; sp.alpha = 1; }
         sp.x = ISO.sx(sim.x[i], sim.y[i]); sp.y = ISO.sy(sim.x[i], sim.y[i]);
@@ -2354,11 +2531,11 @@ if (typeof module !== 'undefined') module.exports = Sim;
     gGround.clear(); gOver.clear();
     const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R));
     // zasięg dowódców na ziemi
-    for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.kinds[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s) {
+    for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.kinds[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s && seenByMe(i)) {
       const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 * k, s === 'WK' ? 0x111111 : 0xe0483a, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
     }
     for (const c of sim.comps) {
-      const show = c.alive > 0, sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id);
+      const show = c.alive > 0 && (showAll || c.side === me || sim.compVisible(c, me)), sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id);
       c._label.visible = c._cnt.visible = info; c._flag.visible = show;
       if (!show) continue;
       const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 2.2 + 16 * k;
@@ -2425,7 +2602,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const e = fx[q], age = tick - e.t; if (age > 14) break;
       if (e.k === 'acid') {
         const flight = 8;
-        if (age < flight) { const p = age / flight, x = e.x0 + (e.x1 - e.x0) * p, y = e.y0 + (e.y1 - e.y0) * p, h = 46 * Math.sin(Math.PI * p); gOver.lineStyle(0).beginFill(0x1a3a0a, 0.35).drawEllipse(ISO.sx(x, y), ISO.sy(x, y), 3 * k * 2, 1.5 * k * 2).endFill(); gOver.beginFill(0x7bd34a, 1).drawCircle(ISO.sx(x, y), ISO.sy(x, y) - h, 2.6).endFill(); gOver.beginFill(0xd4ff9e, 0.9).drawCircle(ISO.sx(x, y) - 0.8, ISO.sy(x, y) - h - 0.8, 0.9).endFill(); }
+        if (age < flight) { const p = age / flight, x = e.x0 + (e.x1 - e.x0) * p, y = e.y0 + (e.y1 - e.y0) * p, h = (8 + (e.lob == null ? 12 : e.lob)) * 1.6 * Math.sin(Math.PI * p); gOver.lineStyle(0).beginFill(0x1a3a0a, 0.35).drawEllipse(ISO.sx(x, y), ISO.sy(x, y), 3 * k * 2, 1.5 * k * 2).endFill(); gOver.beginFill(0x7bd34a, 1).drawCircle(ISO.sx(x, y), ISO.sy(x, y) - h, 2.6).endFill(); gOver.beginFill(0xd4ff9e, 0.9).drawCircle(ISO.sx(x, y) - 0.8, ISO.sy(x, y) - h - 0.8, 0.9).endFill(); }
         else { const p = (age - flight) / 6, a = Math.max(0, 0.55 * (1 - p)); gOver.lineStyle(0).beginFill(0x7bd34a, a).drawEllipse(ISO.sx(e.x1, e.y1), ISO.sy(e.x1, e.y1), ISO.rx(e.r) * (0.6 + 0.4 * p), ISO.ry(e.r) * (0.6 + 0.4 * p)).endFill(); }
       } else if (e.k === 'burst') {
         const p = age / 8; if (p <= 1) { gOver.lineStyle(2.4 * k, 0xe8c84a, 0.9 * (1 - p)).beginFill(0xe8c84a, 0.18 * (1 - p)).drawEllipse(ISO.sx(e.x, e.y), ISO.sy(e.x, e.y), ISO.rx(e.r) * p, ISO.ry(e.r) * p).endFill(); }

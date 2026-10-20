@@ -77,6 +77,15 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 54. **AI dobiera armię wg nazwanych wzorców** (`army.archetypes`, nie losowo): zrównoważona, ciężka, lekka masa, flankująca (WK, biegacze), szturmowa (WK, tarany i pękacze), wytrwała (na wyczerpanie: odźwierni, ciężcy, plujki, pękacze) i dystansowa (LH, plujki). Wzorzec to udział budżetu na typ jednostki, typ gwardii i przydatność w scenariuszu i roli (atakujący/obrońca). Przeciwnika (AI) można ustawić w menu na konkretny wzorzec albo `auto`; gracz też może zastosować wzorzec do swojej armii w ekranie konfiguracji i dalej ją edytować.
 55. Wzorzec `auto`: bierze wzorzec o najwyższym wyniku przydatności w scenariuszu i roli, z premią z tabeli `army.counters`, jeśli znana jest armia przeciwnika (np. wobec co najmniej 25% plujek flankująca x1,5, bo biegacze polują na plujki; wobec 45% ciężkich dystansowa x1,4, bo kwas ignoruje pancerz). Wzorce w granicach 8% od najlepszego rozstrzyga ziarno, więc różne ziarna dają różne, ale rozsądne armie. Armię przeciwnika AI zna tylko wtedy, gdy ją skonfigurował gracz (zwiad przed bitwą); gdy obie strony dobiera AI, żadna nie kontruje drugiej.
 
+**Elewacja, widoczność, balistyka i kierunek ciosu (etap 4 rozszerzenia P1)**
+56. **Wzgórza**: siatka wysokości w środkach komórek (Float32) z gładkich wzgórz (funkcje Gaussa), generowana z osobnego strumienia `terrain`. Mają je typy map 2, 4, 5 i potok (na potoku dodatkowo podwyższone brzegi przy brodach: wschodni +26, zachodni +16); typ 1 zostaje płaski (z etapu 1), typ 3 płaski (kotwica regresji). Szczyty 20-38 jednostek, nachylenie do ok. 0,25. Skala wynika z balistyki (decyzja 58): najwyższy punkt toru w ogóle to R0/2 = 40 jednostek, więc wzgórze 40 byłoby już nie do przestrzelenia. Gniazdo stoi na płaskim.
+57. **Ruch i zmęczenie**: nachylenie `s` liczone z gradientu wzdłuż kierunku ruchu mrówki. Mnożnik prędkości: pod górę `1/(1+2,5 s)` (nie mniej niż 0,45), z góry `1+1,2 |s|` (nie więcej niż 1,35); kotwica roty ma ten sam mnożnik. Zmęczenie marszu x`(1 + 3 s)` pod górę lub x`(1 - 0,5 |s|)` z góry (średnia z poruszających się mrówek roty w ciągu sekundy). W teście ta sama rota przechodzi 150 jednostek zbocza z góry w 4,7 s, a pod górę w 6,5 s, z dwukrotnie większym przyrostem zmęczenia. Pola przepływu nie liczą kosztu nachylenia (obchodzenie stromych zboczy jest w TODO).
+58. **Balistyka plujki**: pocisk leci po paraboli, prędkość wylotu z zasięgu na płaskim (`v^2 = g R0`, `R0 = 80`). Dla odległości `d` i różnicy wysokości `dh` (cel minus strzelec, z oczami +4 i +2) kąt wynika ze wzoru `tan θ = (v^2 ± sqrt(v^4 - g (g d^2 + 2 dh v^2))) / (g d)`; ujemny wyróżnik oznacza cel poza zasięgiem. Z tego wynika zasięg `R = R0 sqrt(1 + 2 Δh / R0)` (Δh = strzelec minus cel): z wzgórza o 20 wyżej 98, z dołu o 20 tylko 57, cel 40 wyżej jest nieosiągalny. Najpierw sprawdzany jest tor niski (poniżej 45 stopni), a gdy zasłania go wzgórze, tor stromy (powyżej 45 stopni: krótszy zasięg, ale przechodzi nad wzgórzem); gdy oba są zablokowane, strzału nie ma. Ściany (pnie, kamienie, korzenie, zarośla, mur gniazda) nadal blokują tory całkowicie (strzał łukiem nie przechodzi nad ścianą; to możliwa późniejsza opcja). Obrażenia są zadawane natychmiast (czas lotu pominięty, TODO); wyliczony wierzchołek toru służy do narysowania łuku. Mapy bez wzgórz (typy 1 i 3) używają dotychczasowej reguły (zasięg 80 i linia wzroku 2D).
+59. **Widoczność** (`params.visibility`, wspólna dla gracza i AI; AI gra uczciwie): wróg jest widoczny dla strony, gdy któryś z próbkowanych własnych obserwatorów (co czwarta mrówka) widzi go w promieniu 125 (więcej niż zasięg plujki) z czystą linią wzroku 3D (ściany, zarośla i teren zasłaniają, woda nie). Mrówka na mchu (komórka osłony) jest widoczna tylko z 28 jednostek: mech to dla mrówek gęste krzaki, ale sam nie blokuje widoku między innymi komórkami. Trawa i ściółka to dekoracja. Mrówka, która zaatakowała (wręcz albo kwasem), jest widoczna dla wszystkich przez 3 s. Nie ma bonusu obrażeń za zasadzkę (decyzja użytkownika: wystarczy niewidoczność). Widoczność jest liczona co 5 kroków w stałej kolejności (część stanu symulacji, deterministyczna).
+60. **AI a widoczność**: AI i namierzanie mrówek używają tylko widocznych wrogów; AI zna rotę wroga przez 15 s od ostatniego zobaczenia (ostatnia widziana pozycja środka widocznych mrówek, liczebność znana naprawdę: uproszczenie). Ukryty cel jest gubiony. Gdy AI nikogo nie widzi, jego cel zastępczy to środek rozstawienia wroga (publiczna wiedza), w Oblężeniu gniazdo, w Przeprawie lądowisko wybranego brodu. Interfejs nie rysuje niewidocznych wrogów, ich chorągwi, kart ani paneli; tryb obserwatora (AI przeciw AI) pokazuje wszystko.
+61. **Kierunek ciosu** (`params.facing`): kąt między kierunkiem mrówki (`heading`) a kierunkiem do atakującego: do 60 stopni przód (x1), 60-120 flanka (x1,25), powyżej 120 tył (x1,5). Dotyczy ciosów wręcz i kwasu (kierunek z miejsca strzału). Mnożniki są założeniem prototypu (użytkownik: od tyłu największe, z flanki mniejsze, z przodu mrówka jest przygotowana). Obrażenia wręcz z wysokości nie są zmieniane.
+62. **Bezpieczniki**: `params.elevation.on`, `params.visibility.on`, `params.facing.on` (domyślnie włączone); z wyłączonymi mechanikami etapu 4 przebieg typu 3 jest identyczny jak przed etapem (test regresji). Domyślnie włączone wpływają też na typ 3 (widoczność i kierunek ciosu).
+
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
 ## 2. Dane
@@ -92,7 +101,7 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 | `world.nest` | [1800, 600] |
 | `world.nestR` | 64 |
 | `world.retreatWK` | [110, 600] |
-| `world.scenarioTypes` | {'comment': 'Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).', 'bitwa': {'name': 'Bitwa', 'nest': False, 'posture': {'WK': 'advance', 'LH': 'advance'}, 'end': 'annihilate', 'desc': 'Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych.'}, 'oblezenie': {'name': 'Oblężenie', 'nest': True, 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'nest', 'desc': 'Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i uzupełnia straty. Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5).'}, 'przeprawa': {'name': 'Przeprawa', 'nest': False, 'map': 'stream', 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'annihilate', 'desc': 'Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa.'}} |
+| `world.scenarioTypes` | {'comment': 'Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).', 'bitwa': {'name': 'Bitwa', 'nest': False, 'posture': {'WK': 'advance', 'LH': 'advance'}, 'end': 'annihilate', 'desc': 'Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych.'}, 'oblezenie': {'name': 'Oblężenie', 'nest': True, 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'nest', 'reinforce': {'WK': False, 'LH': True}, 'desc': 'Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i jako jedyny uzupełnia straty (atakujący nie ma uzupełnień). Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5).'}, 'przeprawa': {'name': 'Przeprawa', 'nest': False, 'map': 'stream', 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'annihilate', 'desc': 'Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa.'}} |
 
 Mapa typu 3 („dno lasu”) 2000 x 1200 i jej przeszkody (poniżej). Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla; blokują wszystkie poza 0 i 2. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica: światło między kapsułami wynosi ok. 17 jednostek, czyli jedną komórkę siatki (wcześniejsze opisy podawały błędnie ok. 65). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
 
@@ -115,11 +124,11 @@ Przeszkody:
 | Typ | Nazwa | Rozmiar | Generator | Parametry |
 |---|---|---|---|---|
 | 1 | Otwarta polana | 2000x1200 | open | `pebbles` [4, 6], `cover` 10 |
-| 2 | Kilka przeszkód | 2000x1200 | scattered | `count` [8, 11], `sep` 150, `cover` 14 |
+| 2 | Kilka przeszkód | 2000x1200 | scattered | `count` [8, 11], `sep` 150, `cover` 14, `hills` {'n': [2, 3], 'h': [22, 36], 'r': [220, 340]} |
 | 3 | Pień z kilkoma trasami | 2000x1200 | legacy |  |
-| 4 | Gęsty i kręty podszyt | 2600x1400 | thicket | `pitch` 128, `wallR` 26, `jitter` 8, `braid` 0.1, `doors` 6, `follow` True, `cover` 40, `minWidth` 52, `mix` {'brush': 0.45, 'wood': 0.25, 'root': 0.15, 'stone': 0.15} |
-| stream | Potok z kamieniami | 3000x3200 | stream | `hidden` True, `cover` 40, `minWidth` 44, `scatter` 26, `fords` [{'dy': -1200, 'stoneR': [58, 64]}, {'dy': 0, 'stoneR': [44, 48]}, {'dy': 1200, 'stoneR': [58, 64]}] |
-| 5 | Chaparral: gąszcz wąskich przejść | 3000x1500 | thicket | `pitch` 116, `wallR` 28, `jitter` 6, `braid` 0.04, `doors` 4, `follow` True, `cover` 70, `minWidth` 44, `mix` {'brush': 0.62, 'wood': 0.18, 'root': 0.12, 'stone': 0.08} |
+| 4 | Gęsty i kręty podszyt | 2600x1400 | thicket | `hills` {'n': [3, 4], 'h': [22, 38], 'r': [260, 400]}, `pitch` 128, `wallR` 26, `jitter` 8, `braid` 0.1, `doors` 6, `follow` True, `cover` 40, `minWidth` 52, `mix` {'brush': 0.45, 'wood': 0.25, 'root': 0.15, 'stone': 0.15} |
+| stream | Potok z kamieniami | 3000x3200 | stream | `hidden` True, `hills` {'n': [3, 5], 'h': [20, 34], 'r': [260, 400], 'banks': {'east': [26, 300], 'west': [16, 280]}}, `cover` 40, `minWidth` 44, `scatter` 26, `fords` [{'dy': -1200, 'stoneR': [58, 64]}, {'dy': 0, 'stoneR': [44, 48]}, {'dy': 1200, 'stoneR': [58, 64]}] |
+| 5 | Chaparral: gąszcz wąskich przejść | 3000x1500 | thicket | `hills` {'n': [3, 5], 'h': [22, 38], 'r': [260, 400]}, `pitch` 116, `wallR` 28, `jitter` 6, `braid` 0.04, `doors` 4, `follow` True, `cover` 70, `minWidth` 44, `mix` {'brush': 0.62, 'wood': 0.18, 'root': 0.12, 'stone': 0.08} |
 
 ### Scenariusze (`world.scenarioTypes`)
 | Scenariusz | Gniazdo | Postawa AI (WK / LH) | Koniec |
@@ -214,6 +223,36 @@ Dodatkowo: Taran odrzuca (`knock` 45), Pękacz ma `burst` (promień 22, obrażen
 | `params.fatigue.effSpeed` | 0.35 |
 | `params.fatigue.effDmg` | 0.25 |
 | `params.fatigue.effControl` | 4 |
+| `params.elevation.comment` | Etap 4. Wartości liczbowe to założenia prototypu. Mnożnik prędkości: pod górę 1/(1+upK*s) (nie mniej niż minUp), z góry 1+downK*|s| (nie więcej niż maxDown), s = nachylenie wzdłuż ruchu; zmęczenie marszu x(1+fatUp*s_pod_górę) lub x(1-fatDown*|s|_z_góry). |
+| `params.elevation.on` | True |
+| `params.elevation.upK` | 2.5 |
+| `params.elevation.downK` | 1.2 |
+| `params.elevation.minUp` | 0.45 |
+| `params.elevation.maxDown` | 1.35 |
+| `params.elevation.fatUp` | 3 |
+| `params.elevation.fatDown` | 0.5 |
+| `params.ballistics.comment` | Pocisk kwasu leci po paraboli: prędkość wylotu z zasięgu na płaskim (v^2 = g*R0), kąt dowolny; tor płaski, a gdy zablokuje go wzgórze, stromy (>45 stopni, krótszy zasięg). Wysokość oczu strzelca i celu nad terenem, krok próbkowania toru. |
+| `params.ballistics.R0` | 80 |
+| `params.ballistics.g` | 1 |
+| `params.ballistics.eyeShooter` | 4 |
+| `params.ballistics.eyeTarget` | 2 |
+| `params.ballistics.step` | 8 |
+| `params.ballistics.clearance` | 0.5 |
+| `params.visibility.comment` | Widoczność wspólna dla strony: wróg jest widoczny, gdy widzi go któryś z próbkowanych własnych obserwatorów (1 na every mrówek) w promieniu radius z czystą linią wzroku 3D. Mrówka na mchu jest widoczna tylko z mossRadius. Mrówka, która zaatakowała, jest widoczna revealSec sekund. AI zna rotę wroga przez memorySec sekund od ostatniego zobaczenia. |
+| `params.visibility.on` | True |
+| `params.visibility.radius` | 125 |
+| `params.visibility.mossRadius` | 28 |
+| `params.visibility.revealSec` | 3 |
+| `params.visibility.period` | 5 |
+| `params.visibility.every` | 4 |
+| `params.visibility.memorySec` | 15 |
+| `params.visibility.eyeHeight` | 3 |
+| `params.facing.comment` | Obrażenia zależne od kierunku ciosu względem kierunku mrówki (heading): przód x1, flanka x flank, tył x rear. frontDeg i rearDeg to progi w stopniach. |
+| `params.facing.on` | True |
+| `params.facing.flank` | 1.25 |
+| `params.facing.rear` | 1.5 |
+| `params.facing.frontDeg` | 60 |
+| `params.facing.rearDeg` | 120 |
 | `params.aiPeriod` | 20 |
 
 ### Scenariusz (liczebność i role rot)
@@ -775,6 +814,36 @@ layoutArmy(strona, a):
   w klasie z kilkoma rotami: szerokość = (wysokość strefy + 14) / k - 14, kolumny = szerokość / odstęp
   kolumny stref od frontu do tyłu, klasy osobno, rota pod rotą, kolumna wyśrodkowana w osi
   brak miejsca: ponów z odstępem 9.5, potem błąd
+```
+
+### 4.17 Elewacja, balistyka, widoczność, kierunek ciosu
+```
+height[komórka] = suma wzgórz Gaussa (h * exp(-d^2 / (2 sigma^2))), sigma = promień / 2; gniazdo spłaszczone; gradient (różnice centralne)
+heightAt(x, y) = interpolacja dwuliniowa
+
+ruch mrówki, bez walki:
+  s = gradient(komórka) . kierunek_ruchu
+  prędkość *= s > 0 ? max(minUp, 1 / (1 + upK s)) : min(maxDown, 1 - downK s)
+  roty: slopeSum += s, slopeN++  ->  zmęczenie marszu *= s_śr > 0 ? 1 + fatUp s_śr : max(0.3, 1 + fatDown s_śr)
+
+strzał(i, j):   # kwas
+  jeśli ściana na odcinku (2D): -1
+  jeśli bez wzgórz: odległość <= R0 ? 0 : -1
+  z0 = h(i) + 4, z1 = h(j) + 2, v2 = g R0
+  tg = ballistic(R0, g, d, z1 - z0)    # [niski, stromy] albo null
+  dla każdego kąta (niski, potem stromy):
+     tor(x) = z0 + x tg - g x^2 (1 + tg^2) / (2 v2), próbkowany co 8 jednostek
+     jeśli tor(x) > h(punkt) + 0.5 na całej drodze: zwróć wierzchołek toru
+  zwróć -1
+
+widoczność (co 5 kroków), dla strony s:
+  dla obserwatora (co czwarta mrówka s), dla wroga e w promieniu 125 (28, gdy e stoi na mchu):
+     jeśli linia wzroku 3D czysta (ściany SIGHT, teren powyżej linii oko-oko): widoczny do tick + 6
+  widoczny(e, s) = e swoja, albo widziana, albo ujawniona atakiem (3 s)
+  rota: seenAt, ostatnia widziana pozycja = środek widocznych mrówek; AI zna rotę 15 s od ostatniego zobaczenia
+
+cios(a -> d):
+  kąt = |kąt(kierunek do a) - heading[d]|; mnożnik = kąt <= 60 ? 1 : kąt <= 120 ? flank : rear; a ujawnia się na 3 s
 ```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#

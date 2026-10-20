@@ -10,6 +10,16 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Bitwa: AI obu stron idzie na najbliższą rotę, bez koncentracji i bez wykorzystania terenu.
 - Do rozważenia: osobne doktryny frakcji w AI (masa i centralne dowodzenie kontra jakość i samodzielne oddziały).
 
+## Etap 4 (elewacja, widoczność, balistyka)
+- Strzał łukiem nie przechodzi nad ścianami (pnie, kamienie, zarośla, mur gniazda): tylko wzgórza można przestrzelić. Opcja: nadać ścianom wysokości i pozwolić im być przestrzelonym.
+- Czas lotu pocisku jest pominięty (obrażenia natychmiast); łuk jest tylko rysowany.
+- Pola przepływu nie uwzględniają nachylenia (rota nie obchodzi stromych zboczy, chyba że to konieczne): dodać koszt nachylenia do `buildField`.
+- Plujka nie zmienia pozycji, żeby zdobyć strzał (np. wejść na wzgórze lub zejść z linii wzgórza); brak takiego zachowania w AI.
+- AI zna prawdziwą liczebność rot, które widziało w ciągu ostatnich 15 s (uproszczenie widoczności).
+- Wzgórza mają tylko typy map 2, 4, 5 i potok; typ 1 i 3 są płaskie z założenia. Strefy rozmieszczenia mogą leżeć na zboczu.
+- Do rozstrzygnięcia: czy w Przeprawie atakujący też ma tracić uzupełnienia (użytkownik powiedział „w oblężeniach”).
+- Mrówki nie ukrywają się same (brak rozkazu „ukryj się”): ukrycie wynika z miejsca, w którym stoją.
+
 ## Do pamiętania w etapie 5 (rework oblężenia)
 - Strefa rozstawienia atakującego musi być adekwatnie duża (obecna strefa WK ma 470 jednostek szerokości i mieści najwyżej ok. 2000 mrówek, więc przewaga budżetowa atakującego x1,5 na budżecie Duży bywa nierealizowalna).
 - Rozstawianie rot ręcznie przez gracza: na razie automatyczne (decyzja użytkownika: „dojdziemy do tego”).

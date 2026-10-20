@@ -153,7 +153,7 @@ const { openPage, ROOT } = require('./browser-lib');
       await page.selectOption('#mScen', sc); if (sc !== 'przeprawa') await page.selectOption('#mMap', String(mapId));
       const dis = await page.$eval('#mMap', (e) => e.disabled); assert.strictEqual(dis, sc === 'przeprawa', 'lista map wyłączona tylko w przeprawie (' + sc + ')');
       await page.click('#mStart'); await page.evaluate(() => { __P1.S.paused = false; });
-      await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 30000 });
+      await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 120000 });   // Przeprawa (3000x3200) rysuje się w programowym GL nawet 20 s
       const si = await page.evaluate(() => ({ sc: __P1.S.sim.scenarioInfo.id, label: document.getElementById('mapName').textContent, w: __P1.S.sim.W }));
       assert.strictEqual(si.sc, sc); assert.ok(si.label.length > 5, si.label);
       const nb = await page.$$eval('#fordBtns button', (b) => b.length); assert.strictEqual(nb, sc === 'przeprawa' ? 3 : 0, 'przyciski brodów: ' + nb);
@@ -197,6 +197,24 @@ const { openPage, ROOT } = require('./browser-lib');
     await page.screenshot({ path: path.join(shots, 'p1-armia-start.png') });
     await page.evaluate(() => { document.getElementById('menu').classList.remove('hidden'); }); await page.click('#mArmy'); await page.waitForSelector('#army:not(.hidden)'); await page.screenshot({ path: path.join(shots, 'p1-konfiguracja-armii.png') }); await page.click('#aDone');
     ok('konfiguracja armii: budżet, pula frakcji, wzorce, limit budżetu, usuwanie rot i start z własną armią', 'koszt ' + shown + '/2200, LH: wzorzec ' + ai.lhStyle);
+    // etap 4: wzgórza (rysowanie z wysokością, wybieranie myszą na szczycie) i ukrywanie wrogów poza polem widzenia
+    await page.evaluate(() => { document.getElementById('army').classList.add('hidden'); __P1.S.map = 2; __P1.S.scenario = 'bitwa'; __P1.S.budget = ''; __P1.S.observe = false; __P1.S.side = 'WK'; __P1.S.paused = false; __P1.startBattle(); });
+    await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 25, null, { timeout: 30000 });
+    const geo = await page.evaluate(() => {
+      const sim = __P1.S.sim, I = __P1.ISO; let best = null, mx = -1;
+      for (let y = 100; y < sim.H - 100; y += 40) for (let x = 100; x < sim.W - 100; x += 40) { const h = sim.heightAt(x, y); if (h > mx) { mx = h; best = [x, y]; } }
+      let err = 0; for (const [x, y] of [best, [500, 300], [1200, 700], [1700, 900], [300, 1000]]) { const [wx, wy] = I.inv(I.sx(x, y), I.sy(x, y)); err = Math.max(err, Math.hypot(wx - x, wy - y)); }
+      let shownEnemy = 0, shownOwn = 0; const p = __P1.world.children.find((c) => c.children && c.children.length === sim.cap) || null;
+      return { hills: sim.hills, top: mx, hf: !!I.hf, err, best };
+    });
+    assert.ok(geo.hills && geo.hf && geo.top > 15, 'wzgórza nie zostały wczytane: ' + JSON.stringify(geo)); assert.ok(geo.err < 0.6, 'wybieranie myszą na wzgórzu niedokładne (błąd ' + geo.err + ')');
+    const vis = await page.evaluate(() => { const sim = __P1.S.sim; const ants = __P1.world.children.find((c) => c.children && c.children.length === sim.cap); let en = 0, own = 0; for (let i = 0; i < sim.count; i++) if (sim.alive[i] && ants.children[i].alpha > 0) { if (sim.side[i] === 0) own++; else en++; } return { own, en }; });
+    assert.ok(vis.own > 500 && vis.en === 0, 'na starcie wróg poza polem widzenia nie powinien być rysowany: ' + JSON.stringify(vis));
+    await page.evaluate(() => { __P1.S.observe = true; __P1.startBattle(); }); await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 25, null, { timeout: 30000 });
+    const vis2 = await page.evaluate(() => { const sim = __P1.S.sim; const ants = __P1.world.children.find((c) => c.children && c.children.length === sim.cap); let en = 0; for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === 1 && ants.children[i].alpha > 0) en++; return en; });
+    assert.ok(vis2 > 500, 'tryb obserwatora powinien pokazywać wszystkich: ' + vis2);
+    await page.screenshot({ path: path.join(shots, 'p1-wzgorza.png') });
+    ok('wzgórza: rysowane z wysokością, wybieranie myszą dokładne (błąd ' + geo.err.toFixed(2) + '), wróg poza polem widzenia ukryty, obserwator widzi wszystko', 'szczyt ' + geo.top.toFixed(0));
     assert.deepStrictEqual(errors, [], 'błędy w konsoli: ' + errors.join('; '));
     ok('brak błędów w konsoli przeglądarki');
   } catch (e) { failed++; out.push('FAIL ' + e.message + '\n' + (errors.length ? '       błędy: ' + errors.join('; ') : '')); }

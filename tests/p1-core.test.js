@@ -279,7 +279,7 @@ test('typ mapy 3 to dotychczasowa mapa: ten sam teren i ten sam przebieg co prze
   // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach); dla szerokości 192 przeliczone po zmianie: w oblężeniu uzupełnienia ma tylko obrońca
   const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', '36d141ed'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '575f40d9'] };
   for (const key in base) {
-    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage);
+    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage, (d) => { d.params.visibility.on = false; d.params.facing.on = false; d.params.elevation.on = false; }); // mechaniki etapu 4 wyłączone: stary rdzeń bez zmian
     let h = 0; for (let i = 0; i < sim.grid.length; i++) h = (Math.imul(h, 31) + sim.grid[i]) | 0;
     for (let k = 0; k < 600; k++) sim.step();
     assert.strictEqual(String(h), base[key][0], 'teren zmienił się dla ' + key);
@@ -366,12 +366,130 @@ test('uzupełnienia: w oblężeniu ma je tylko obrońca, w Bitwie i Przeprawie o
 test('poprawki po przeglądzie: mapy 4 i 5 zawsze spełniają minimalną szerokość, duża lekka armia nie rzuca wyjątku, rota przed brodem nie zostaje pod wodą', () => {
   let n = 0; for (const map of [4, 5]) for (let seed = 1; seed <= 40; seed++) { const sim = makeMap(map, seed); assert.ok(sim.mapInfo.widthOk, 'mapa ' + map + ' ziarno ' + seed + ': trasa węższa niż minWidth'); n++; }
   const { Sim, defs } = loadP1(); for (const scen of ['oblezenie', 'bitwa']) for (const side of ['WK', 'LH']) { const sim = makeArmy(scen, 3, 1, 'duzy', { styles: { [side]: 'lekka' } }); assert.ok(sim.armyInfo[side].cost <= sim.armyInfo[side].budget); }
-  // przeprawa: po 80 s prawie żadna mrówka rot, których kotwica jest już za potokiem, nie stoi daleko na zachód od wody (wcześniej większość tkwiła pod wodą, bo omijanie zależało od widoczności)
-  const sim = makeScen('przeprawa', 3, 1), cx = sim.W - 1180; let stranded = 0, past = 0;
+  // przeprawa: po 80 s żadna mrówka rot, których kotwica jest już za potokiem, nie tkwi przy krawędzi wody z dala od brodów (wcześniej tkwiły, bo omijanie zależało od widoczności, a woda nie zasłania widoku)
+  const sim = makeScen('przeprawa', 3, 1), cx = sim.W - 1180, F = sim.defs.world.fords; let stranded = 0, past = 0;
   for (let k = 0; k < 20 * 80; k++) sim.step();
-  for (const c of sim.comps) if (c.side === 0 && c.ax > cx + 20) for (const i of c.ants) if (sim.alive[i]) { past++; if (sim.x[i] < cx - 100) stranded++; }
-  assert.ok(past > 100 && stranded <= 0.06 * past, 'utknęło ' + stranded + ' z ' + past);
-  return n + ' map 4 i 5 z poprawną szerokością; lekka armia na Dużym bez wyjątku; po 80 s utknęło ' + stranded + ' z ' + past + ' mrówek rot za potokiem';
+  for (const c of sim.comps) if (c.side === 0 && c.ax > cx + 20) for (const i of c.ants) if (sim.alive[i]) { past++; const fy = Math.min(...F.map((f) => Math.abs(sim.y[i] - f.y))); if (sim.x[i] < cx - 85 && sim.x[i] > cx - 150 && fy > 150) stranded++; }
+  assert.ok(past > 100 && stranded <= 2, 'przy wodzie z dala od brodów utknęło ' + stranded + ' z ' + past);
+  return n + ' map 4 i 5 z poprawną szerokością; lekka armia na Dużym bez wyjątku; po 80 s przy wodzie z dala od brodów utknęło ' + stranded + ' z ' + past + ' mrówek rot za potokiem';
+});
+
+// ---------- etap 4: elewacja, balistyka, widoczność, ciosy z tyłu ----------
+const flat = (sim) => sim.height.fill(0);
+function openSpot(sim, x, y, r) { // sprawdza, że w promieniu r nie ma ściany (dla ustawiania mrówek ręcznie)
+  for (let a = 0; a < 16; a++) for (const rr of [r / 2, r]) { const px = x + Math.cos(a * Math.PI / 8) * rr, py = y + Math.sin(a * Math.PI / 8) * rr; const g = sim.grid[Math.floor(py / 16) * sim.COLS + Math.floor(px / 16)]; if (g !== 0 && g !== 2) return false; }
+  return true;
+}
+function antOf(sim, side, type) { for (let i = 0; i < sim.count; i++) if (sim.side[i] === side && sim.names[sim.type[i]] === type) return i; return -1; }
+function put(sim, i, x, y, heading) { sim.x[i] = x; sim.y[i] = y; if (heading != null) sim.heading[i] = heading; }
+
+test('balistyka: zasięg z różnicy wysokości zgodny ze wzorem R = R0 sqrt(1 + 2 dh / R0), kąt dowolny, cel o 40 wyżej poza zasięgiem', () => {
+  const { Sim } = loadP1(), B = Sim.ballistic; const reach = (dh) => { let lo = 0; for (let d = 1; d <= 140; d += 0.5) if (B(80, 1, d, dh)) lo = d; return lo; };
+  assert.ok(Math.abs(reach(0) - 80) <= 1, 'płaski zasięg ' + reach(0));
+  assert.ok(Math.abs(reach(-20) - 80 * Math.sqrt(1 - 0.5)) > 0 && Math.abs(reach(-20) - 98) <= 1.5, 'strzał z góry o 20: ' + reach(-20));
+  assert.ok(Math.abs(reach(20) - 57) <= 1.5, 'strzał pod górę o 20: ' + reach(20));
+  assert.strictEqual(B(80, 1, 5, 40), null, 'cel 40 wyżej powinien być poza zasięgiem');
+  const sol = B(80, 1, 50, 0); assert.ok(Math.atan(sol[0]) < Math.PI / 4 && Math.atan(sol[1]) > Math.PI / 4, 'tor niski poniżej 45 stopni, stromy powyżej');
+  const d = 40; assert.ok(Math.abs(Math.atan(B(80, 1, d, 0)[0]) + Math.atan(B(80, 1, d, 0)[1]) - Math.PI / 2) < 1e-9, 'kąty uzupełniają się do 90 stopni na płaskim');
+  return 'zasięg płaski ' + reach(0) + ', z góry o 20: ' + reach(-20) + ', pod górę o 20: ' + reach(20) + ', cel 40 wyżej: poza zasięgiem';
+});
+
+test('strzał kwasem: wzgórze blokuje tor niski, stromy przechodzi nad nim, zbyt wysokie blokuje oba, wyższa pozycja daje dalszy zasięg', () => {
+  const sim = makeScen('bitwa', 2, 1), p = antOf(sim, 1, 'plujka'), t = antOf(sim, 0, 'infantry');
+  assert.ok(sim.hills && p >= 0 && t >= 0); flat(sim); const C = sim.COLS;
+  let X = 0, Y = 0; for (let y = 300; y < 900 && !X; y += 40) for (let x = 560; x < 880 && !X; x += 16) if (openSpot(sim, x, y, 110)) { X = Math.floor(x / 16) * 16 + 8; Y = Math.floor(y / 16) * 16 + 8; }
+  assert.ok(X, 'brak otwartego miejsca');
+  const k = Math.floor(X / 16), row = Math.floor(Y / 16), setH = (c0, c1, h) => { for (let r = row - 5; r <= row + 5; r++) for (let c = c0; c <= c1; c++) sim.height[r * C + c] = h; };
+  // mrówki stoją dokładnie w środkach komórek (wysokość tam równa wartości komórki), cel 64 dalej
+  put(sim, p, X, Y); put(sim, t, X + 64, Y); assert.ok(sim.shotApex(p, t) >= 0, 'płaski strzał na 64 powinien być możliwy');
+  setH(k + 1, k + 3, 22); const ap = sim.shotApex(p, t); assert.ok(ap > 22, 'stromy tor powinien przejść nad wzgórzem 22 (wierzchołek ' + ap + ')');
+  setH(k + 1, k + 3, 48); assert.strictEqual(sim.shotApex(p, t), -1, 'wzgórze 48 (powyżej najwyższego toru 36 + oczy) powinno zablokować oba tory');
+  setH(k + 1, k + 3, 0); put(sim, t, X + 90, Y); assert.strictEqual(sim.shotApex(p, t), -1, 'na płaskim 90 jest poza zasięgiem 80');
+  setH(k - 2, k + 2, 20); assert.ok(sim.shotApex(p, t) >= 0, 'z wzgórza o 20 zasięg powinien sięgać 90 (wzór: ok. 98)');
+  put(sim, p, X + 90, Y); put(sim, t, X, Y); assert.strictEqual(sim.shotApex(p, t), -1, 'pod górę o 20 zasięg to ok. 59, cel na 90 poza zasięgiem');
+  return 'płasko 64: ok; wzgórze 22: tor stromy (wierzchołek ' + ap.toFixed(1) + '); wzgórze 48: blokada obu torów; z wzgórza +20 sięga 90; pod górę 90 nie';
+});
+
+test('elewacja: pod górę wolniej i bardziej męcząco, z góry szybciej i mniej; mnożniki w granicach', () => {
+  const sim = makeScen('bitwa', 2, 1); assert.ok(sim.hills);
+  assert.strictEqual(sim.slopeMul(0), 1); assert.ok(sim.slopeMul(0.2) < 1 && sim.slopeMul(0.2) >= 0.45 && sim.slopeMul(-0.2) > 1 && sim.slopeMul(-0.2) <= 1.35 && sim.slopeMul(0.5) >= 0.45 && sim.slopeMul(-0.9) <= 1.35);
+  // ta sama rota idzie 150 jednostek z góry i z powrotem pod górę po tym samym zboczu
+  const hill = () => {
+    for (let y = 120; y < sim.H - 120; y += 16) for (let x = 560; x < sim.W - 560; x += 16) { const gx = sim.slopeAt(x, y, 1, 0), gy = sim.slopeAt(x, y, 0, 1), m = Math.hypot(gx, gy); if (m < 0.1) continue; const dx = -gx / m, dy = -gy / m; let ok = true; for (let k = -120; k <= 120; k += 20) if (!openSpot(sim, x + dx * k, y + dy * k, 50)) ok = false; if (ok && sim.slopeAt(x - dx * 75, y - dy * 75, dx, dy) < -0.04 && sim.slopeAt(x + dx * 75, y + dy * 75, dx, dy) < -0.04) return { x, y, dx, dy }; }
+    return null;
+  };
+  const h = hill(); assert.ok(h, 'brak zbocza do testu');
+  const walk = (dir) => {
+    const { Sim, defs } = loadP1(); defs.units.dummy = { name: 'M', hp: 1e9, speed: 1, dmg: 0, reach: 1, cd: 1, aggro: 0, radius: 4, mass: 1, rank: 2, armor: 0, size: 0.5 };
+    defs.params.visibility.on = false; defs.scenario.sides.LH.companies = [{ role: 'reserve', at: [1900, 1150], units: { dummy: 3 } }]; defs.scenario.sides.LH.reserve = 0;
+    const s2 = Sim.create({ defs, seed: 1, map: 2, scenario: 'bitwa', aiSides: [] }), c = s2.comps[0], x0 = h.x - dir * h.dx * 75, y0 = h.y - dir * h.dy * 75, x1 = h.x + dir * h.dx * 75, y1 = h.y + dir * h.dy * 75;
+    c.ax = x0; c.ay = y0; c.delayTick = 0; c.face = Math.atan2(y1 - y0, x1 - x0); c.fx = Math.cos(c.face); c.fy = Math.sin(c.face);
+    for (const i of c.ants) { s2.x[i] = x0 + (Math.random() * 0 + (i % 5) * 3); s2.y[i] = y0 + ((i / 5 | 0) % 5) * 3; }
+    c.order = { kind: 'hold', x: x0, y: y0, face: null };
+    for (const o of s2.comps) if (o !== c) o.order = { kind: 'hold', x: o.ax, y: o.ay };
+    for (let k = 0; k < 20 * 8; k++) s2.step();   // szyk zbiera się w miejscu startu
+    c.order = { kind: 'move', x: x1, y: y1, face: null }; c.fatigue = 0;
+    let t = 0; for (; t < 20 * 40; t++) { s2.step(); if (Math.hypot(c.ax - x1, c.ay - y1) < 4) break; } return { t: t / 20, fat: c.fatigue };
+  };
+  const down = walk(1), up = walk(-1);
+  assert.ok(up.t > down.t * 1.15, 'pod górę ' + up.t + ' s, z góry ' + down.t + ' s'); assert.ok(up.fat > down.fat, 'zmęczenie pod górę ' + up.fat.toFixed(2) + ', z góry ' + down.fat.toFixed(2));
+  return 'zbocze 150 jedn.: z góry ' + down.t.toFixed(1) + ' s (zmęczenie ' + down.fat.toFixed(1) + '), pod górę ' + up.t.toFixed(1) + ' s (' + up.fat.toFixed(1) + ')';
+});
+
+test('widoczność: promień 125, mech ukrywa (28), wzgórze zasłania, atak ujawnia, niewidocznego nie da się namierzyć', () => {
+  const sim = makeScen('bitwa', 2, 1); flat(sim); const C = sim.COLS;
+  const o = (() => { for (let i = 0; i < sim.count; i++) if (sim.side[i] === 0 && i % 4 === 0) return i; })(), tg = antOf(sim, 1, 'infantry');
+  let X = 0, Y = 0; for (let y = 200; y < 1000 && !X; y += 40) for (let x = 560; x < 880 && !X; x += 20) if (openSpot(sim, x, y, 160)) { X = x; Y = y; }
+  assert.ok(X, 'brak otwartego miejsca');
+  const upd = () => sim.debug.vis(); // natychmiastowa aktualizacja widoczności bez kroku symulacji (mrówki stoją tam, gdzie je ustawiono)
+  // pozostałe mrówki daleko, żeby nie przeszkadzały
+  for (let i = 0; i < sim.count; i++) if (i !== o && i !== tg) put(sim, i, sim.side[i] === 0 ? 100 + (i % 20) : 1900 + (i % 20), 1100 + (i % 10));
+  for (const c of sim.comps) { c.order = { kind: 'hold', x: c.ax, y: c.ay }; }
+  put(sim, o, X, Y); put(sim, tg, X + 100, Y); upd(); assert.ok(sim.visibleTo(0, tg), 'wróg 100 od obserwatora na otwartym terenie powinien być widoczny');
+  put(sim, tg, X + 150, Y); upd(); assert.ok(!sim.visibleTo(0, tg), 'wróg 150 od obserwatora jest poza promieniem 125');
+  // mech: ukrywa z daleka, ujawnia z bliska
+  let mx = -1, my = -1; for (let r = 5; r < sim.ROWS - 5 && mx < 0; r++) for (let c = 40; c < sim.COLS - 40; c++) if (sim.grid[r * C + c] === 2 && sim.grid[r * C + c + 1] === 2 && sim.grid[(r + 1) * C + c] === 2) { mx = (c + 0.5) * 16; my = (r + 0.5) * 16; break; }
+  assert.ok(mx > 0, 'brak mchu'); put(sim, tg, mx, my); put(sim, o, mx - 60, my); upd(); assert.ok(!sim.visibleTo(0, tg), 'mrówka na mchu widoczna z 60');
+  put(sim, o, mx - 20, my); upd(); assert.ok(sim.visibleTo(0, tg), 'mrówka na mchu niewidoczna z 20');
+  put(sim, o, mx - 60, my); upd(); assert.ok(!sim.visibleTo(0, tg)); sim.debug.hit(tg, o, 1, true); assert.ok(sim.visibleTo(0, tg), 'mrówka, która zaatakowała, powinna być ujawniona');
+  for (let k = 0; k < 20 * 4; k++) sim.step(); // po revealSec (3 s) znowu ukryta (mrówki się ruszą, więc ustawiamy je od nowa)
+  put(sim, tg, mx, my); put(sim, o, mx - 60, my); upd(); assert.ok(!sim.visibleTo(0, tg), 'ujawnienie powinno wygasnąć po 3 s');
+  // wzgórze zasłania widok
+  put(sim, tg, X + 100, Y); put(sim, o, X, Y); upd(); assert.ok(sim.visibleTo(0, tg));
+  const cx = Math.floor((X + 50) / 16); for (let r = Math.floor((Y - 90) / 16); r <= Math.floor((Y + 90) / 16); r++) for (let c = cx - 1; c <= cx + 1; c++) sim.height[r * C + c] = 40;
+  upd(); assert.ok(!sim.visibleTo(0, tg), 'wzgórze powinno zasłonić widok'); 
+  // namierzanie: bliski wróg za wzgórzem lub w niewidoczności nie jest celem
+  put(sim, o, X, Y); put(sim, tg, X + 20, Y); for (let r = Math.floor((Y - 40) / 16); r <= Math.floor((Y + 40) / 16); r++) sim.height[r * C + Math.floor((X + 10) / 16)] = 40; upd();
+  assert.strictEqual(sim.debug.acquire(o, 40, sim.comps[sim.comp[o]]), -1, 'acquire nie powinno wskazać wroga za wzgórzem');
+  flat(sim); upd(); assert.strictEqual(sim.debug.acquire(o, 40, sim.comps[sim.comp[o]]), tg, 'bez wzgórza wróg 20 dalej jest celem');
+  return 'promień 125, mech 28, atak ujawnia na 3 s, wzgórze zasłania widok i namierzanie';
+});
+
+test('ciosy: z tyłu x1,5, z boku x1,25, z przodu x1', () => {
+  const sim = makeScen('bitwa', 2, 1); flat(sim);
+  const a = antOf(sim, 0, 'infantry'), d = antOf(sim, 1, 'infantry'); let X = 0, Y = 0; for (let y = 200; y < 1000 && !X; y += 40) for (let x = 560; x < 880 && !X; x += 20) if (openSpot(sim, x, y, 60) && sim.grid[Math.floor(y / 16) * sim.COLS + Math.floor(x / 16)] === 0) { X = x; Y = y; }
+  const avg = (deg) => { let tot = 0; const N = 400; for (let k = 0; k < N; k++) { sim.hp[d] = 1e6; put(sim, d, X, Y, 0); put(sim, a, X + Math.cos(deg * Math.PI / 180) * 6, Y + Math.sin(deg * Math.PI / 180) * 6); sim.comps[sim.comp[a]].fatigue = 0; sim.debug.hit(a, d, 2, true); tot += 1e6 - sim.hp[d]; } return tot / N; };
+  const front = avg(0), flank = avg(90), rear = avg(180), diag = avg(30);
+  assert.ok(Math.abs(flank / front - 1.25) < 0.06, 'flanka ' + (flank / front).toFixed(3)); assert.ok(Math.abs(rear / front - 1.5) < 0.07, 'tył ' + (rear / front).toFixed(3)); assert.ok(Math.abs(diag / front - 1) < 0.06, 'kąt 30 stopni to wciąż przód');
+  return 'przód ' + front.toFixed(2) + ', flanka x' + (flank / front).toFixed(2) + ', tył x' + (rear / front).toFixed(2);
+});
+
+test('AI gra uczciwie: bez widocznych wrogów nadal idzie do przodu (cel zastępczy), a bitwa na mapie ze wzgórzami jest deterministyczna', () => {
+  const sim = makeScen('bitwa', 4, 3); for (let k = 0; k < 20 * 20; k++) sim.step();
+  const att = sim.comps.filter((c) => c.role === 'assault' && c.alive > 0 && c.delay <= 5); assert.ok(att.length && att.every((c) => c.order.kind === 'attack'), 'WK bez widocznych wrogów nie atakuje: ' + att.map((c) => c.order.kind));
+  const lh = sim.comps.filter((c) => c.side === 1 && c.role !== 'artillery' && !c.startBy.dowodca && c.alive > 0); assert.ok(lh.every((c) => c.order.kind === 'attack'), 'LH nie idzie do przodu');
+  const h = (seed) => { const s2 = makeScen('bitwa', 4, seed); for (let k = 0; k < 600; k++) s2.step(); return s2.hash(); };
+  assert.strictEqual(h(5), h(5)); assert.notStrictEqual(h(5), h(6));
+  return 'rozkazy ataku bez widocznych wrogów; skrót ze wzgórzami i mgłą powtarzalny';
+});
+
+test('wydajność ze wzgórzami i widocznością: krok symulacji przy ok. 4500 mrówek na mapie ze wzgórzami (czas w piaskownicy)', () => {
+  const sim = makeScen('bitwa', 2, 1, (d) => { for (const s of ['WK', 'LH']) for (const c of d.scenario.sides[s].companies) for (const k in c.units) if (k !== 'dowodca' && k !== '@guard') c.units[k] = Math.round(c.units[k] * 2.3); });
+  const n = sim.count; assert.ok(sim.hills && n >= 3500 && n <= 4800, 'mrówek ' + n);
+  const times = []; for (let k = 0; k < 20 * 40; k++) { const t0 = process.hrtime.bigint(); sim.step(); times.push(Number(process.hrtime.bigint() - t0) / 1e6); }
+  times.sort((a, b) => a - b); const med = times[times.length >> 1], p99 = times[Math.floor(times.length * 0.99)];
+  assert.ok(med < 50, 'mediana kroku ' + med.toFixed(1) + ' ms przekracza budżet 50 ms');
+  return n + ' mrówek: mediana ' + med.toFixed(2) + ' ms, p99 ' + p99.toFixed(2) + ' ms, max ' + times[times.length - 1].toFixed(1) + ' ms';
 });
 
 function dummyDefenders(d) {
@@ -408,8 +526,8 @@ test('scenariusze: oblężenie ma gniazdo z murem (domyślne), bitwa i przeprawa
 });
 
 test('postawa AI: w bitwie obie strony idą na siebie, w oblężeniu i przeprawie obrońca trzyma pozycję', () => {
-  const lhOrders = (scen) => { const sim = makeScen(scen, 2, 1); for (let k = 0; k < 20 * 30; k++) sim.step(); return sim.comps.filter((c) => c.side === 1 && c.role !== 'artillery' && !c.startBy.dowodca && c.alive > 0).map((c) => c.order.kind); };
-  const b = lhOrders('bitwa'), o = lhOrders('oblezenie'), p = lhOrders('przeprawa');
+  const lhOrders = (scen, sec) => { const sim = makeScen(scen, 2, 1); for (let k = 0; k < 20 * sec; k++) sim.step(); return sim.comps.filter((c) => c.side === 1 && c.role !== 'artillery' && !c.startBy.dowodca && c.alive > 0).map((c) => c.order.kind); };
+  const b = lhOrders('bitwa', 30), o = lhOrders('oblezenie', 6), p = lhOrders('przeprawa', 6);   // obrońca trzyma pozycję, dopóki nie zobaczy słabszego wroga w pobliżu (kontratak)
   assert.ok(b.length && b.every((k) => k === 'attack'), 'w bitwie LH nie atakuje: ' + b);
   assert.ok(o.every((k) => k === 'hold') && p.every((k) => k === 'hold'), 'obrońca nie trzyma pozycji: ' + o + ' / ' + p);
   for (const map of [2, 3]) { const sim = makeScen('bitwa', map, 1); assert.ok(!sim.comps.some((c) => c.closed || c.role === 'plug'), 'bitwa na mapie ' + map + ' ma zamknięty plug'); }

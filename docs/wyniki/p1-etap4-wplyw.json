@@ -1,0 +1,350 @@
+{
+ "generated": "wykonane: node tests/p1-etap4.js",
+ "seeds": 4,
+ "map": 2,
+ "scenario": "bitwa",
+ "summary": {
+  "wszystko wyłączone": {
+   "runs": 4,
+   "winsWK": 2,
+   "sekundy": 357,
+   "roznicaOcalalych": 0.07,
+   "strzalyKwasem": 398,
+   "tory_strome": 0
+  },
+  "tylko elewacja": {
+   "runs": 4,
+   "winsWK": 2,
+   "sekundy": 386,
+   "roznicaOcalalych": 0.01,
+   "strzalyKwasem": 413,
+   "tory_strome": 0
+  },
+  "tylko widoczność": {
+   "runs": 4,
+   "winsWK": 1,
+   "sekundy": 357,
+   "roznicaOcalalych": 0.07,
+   "strzalyKwasem": 404,
+   "tory_strome": 0
+  },
+  "tylko kierunek ciosu": {
+   "runs": 4,
+   "winsWK": 3,
+   "sekundy": 324,
+   "roznicaOcalalych": 0.04,
+   "strzalyKwasem": 374,
+   "tory_strome": 0
+  },
+  "wszystko włączone": {
+   "runs": 4,
+   "winsWK": 2,
+   "sekundy": 326,
+   "roznicaOcalalych": 0.06,
+   "strzalyKwasem": 384,
+   "tory_strome": 0
+  }
+ },
+ "runs": [
+  {
+   "name": "tylko elewacja",
+   "seed": 1,
+   "flags": {
+    "e": 1,
+    "v": 0,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.159846547314578,
+   "fracLH": 0.26366120218579236,
+   "acid": 294,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko elewacja",
+   "seed": 2,
+   "flags": {
+    "e": 1,
+    "v": 0,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.08985024958402663,
+   "fracLH": 0.08743169398907104,
+   "acid": 252,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko elewacja",
+   "seed": 3,
+   "flags": {
+    "e": 1,
+    "v": 0,
+    "f": 0
+   },
+   "winner": "WK",
+   "seconds": 350,
+   "fracWK": 0.11835748792270531,
+   "fracLH": 0.04915730337078652,
+   "acid": 699,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko elewacja",
+   "seed": 4,
+   "flags": {
+    "e": 1,
+    "v": 0,
+    "f": 0
+   },
+   "winner": "WK",
+   "seconds": 394,
+   "fracWK": 0.1111111111111111,
+   "fracLH": 0.04935622317596566,
+   "acid": 405,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko kierunek ciosu",
+   "seed": 1,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 1
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.31585677749360613,
+   "fracLH": 0.42896174863387976,
+   "acid": 255,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko kierunek ciosu",
+   "seed": 2,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 1
+   },
+   "winner": "WK",
+   "seconds": 310,
+   "fracWK": 0.08652246256239601,
+   "fracLH": 0.04918032786885246,
+   "acid": 223,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko kierunek ciosu",
+   "seed": 3,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 1
+   },
+   "winner": "WK",
+   "seconds": 275,
+   "fracWK": 0.18035426731078905,
+   "fracLH": 0.047752808988764044,
+   "acid": 662,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko kierunek ciosu",
+   "seed": 4,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 1
+   },
+   "winner": "WK",
+   "seconds": 309,
+   "fracWK": 0.1537842190016103,
+   "fracLH": 0.04935622317596566,
+   "acid": 355,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko widoczność",
+   "seed": 1,
+   "flags": {
+    "e": 0,
+    "v": 1,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.3171355498721228,
+   "fracLH": 0.16666666666666666,
+   "acid": 303,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko widoczność",
+   "seed": 2,
+   "flags": {
+    "e": 0,
+    "v": 1,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.08652246256239601,
+   "fracLH": 0.1051912568306011,
+   "acid": 222,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko widoczność",
+   "seed": 3,
+   "flags": {
+    "e": 0,
+    "v": 1,
+    "f": 0
+   },
+   "winner": "WK",
+   "seconds": 226,
+   "fracWK": 0.20128824476650564,
+   "fracLH": 0.04915730337078652,
+   "acid": 657,
+   "highLobs": 0
+  },
+  {
+   "name": "tylko widoczność",
+   "seed": 4,
+   "flags": {
+    "e": 0,
+    "v": 1,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.06682769726247988,
+   "fracLH": 0.08690987124463519,
+   "acid": 435,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko włączone",
+   "seed": 1,
+   "flags": {
+    "e": 1,
+    "v": 1,
+    "f": 1
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.1265984654731458,
+   "fracLH": 0.15163934426229508,
+   "acid": 295,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko włączone",
+   "seed": 2,
+   "flags": {
+    "e": 1,
+    "v": 1,
+    "f": 1
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.07737104825291181,
+   "fracLH": 0.09016393442622951,
+   "acid": 222,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko włączone",
+   "seed": 3,
+   "flags": {
+    "e": 1,
+    "v": 1,
+    "f": 1
+   },
+   "winner": "WK",
+   "seconds": 159,
+   "fracWK": 0.2826086956521739,
+   "fracLH": 0.04915730337078652,
+   "acid": 606,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko włączone",
+   "seed": 4,
+   "flags": {
+    "e": 1,
+    "v": 1,
+    "f": 1
+   },
+   "winner": "WK",
+   "seconds": 345,
+   "fracWK": 0.10305958132045089,
+   "fracLH": 0.04935622317596566,
+   "acid": 412,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko wyłączone",
+   "seed": 1,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.20588235294117646,
+   "fracLH": 0.24316939890710382,
+   "acid": 259,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko wyłączone",
+   "seed": 2,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 0
+   },
+   "winner": null,
+   "seconds": 400.05,
+   "fracWK": 0.19633943427620631,
+   "fracLH": 0.05191256830601093,
+   "acid": 220,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko wyłączone",
+   "seed": 3,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 0
+   },
+   "winner": "WK",
+   "seconds": 312,
+   "fracWK": 0.10064412238325282,
+   "fracLH": 0.04915730337078652,
+   "acid": 705,
+   "highLobs": 0
+  },
+  {
+   "name": "wszystko wyłączone",
+   "seed": 4,
+   "flags": {
+    "e": 0,
+    "v": 0,
+    "f": 0
+   },
+   "winner": "WK",
+   "seconds": 315,
+   "fracWK": 0.16344605475040258,
+   "fracLH": 0.04935622317596566,
+   "acid": 408,
+   "highLobs": 0
+  }
+ ]
+}
