@@ -864,6 +864,69 @@ test('korytarze: rota po zakręcie o 90°, na rampie i przy wejściu wraca do sz
   return 'odsetek mrówek na miejscu w szyku przed i po poprawce: ' + lines.join(', ');
 });
 
+
+// ---------- sterowanie wzorowane na Total War: logika rozkazów w symulacji ----------
+const ctl = (extra) => { const { Sim, defs } = loadP1(); return Sim.create(Object.assign({ defs, seed: 1, scenario: 'bitwa', map: 1, aiSides: [] }, extra || {})); };
+const BLKS = [0, 1, 0, 1, 1, 1, 1, 1, 0];
+test('sterowanie: rozkaz ruchu z kolejką (Shift) wykonuje punkty po kolei, a nowy rozkaz bez kolejki ją czyści; szybki ruch jest szybszy i bardziej męczy', () => {
+  const sim = ctl(), c = sim.comps.find((q) => q.side === 0 && q.role === 'assault'), A = [c.ax + 200, c.ay], B = [c.ax + 200, c.ay + 200];
+  sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: A[0], y: A[1] }); sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: B[0], y: B[1], queue: true });
+  sim.step(); assert.strictEqual(c.queue.length, 1, 'kolejka nie ma punktu B'); let reachedA = false;
+  for (let k = 0; k < 20 * 40 && !(Math.hypot(c.ax - B[0], c.ay - B[1]) < 4); k++) { sim.step(); if (Math.hypot(c.ax - A[0], c.ay - A[1]) < 6) reachedA = true; }
+  assert.ok(reachedA, 'rota nie odwiedziła punktu A'); assert.ok(Math.hypot(c.ax - B[0], c.ay - B[1]) < 4, 'rota nie doszła do B'); assert.strictEqual(c.queue.length, 0);
+  sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: A[0], y: A[1] }); sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: B[0], y: B[1], queue: true }); sim.command({ k: 'order', side: 'WK', comps: [c.id], kind: 'move', x: A[0] - 50, y: A[1] }); sim.step();
+  assert.strictEqual(c.queue.length, 0, 'rozkaz bez Shift nie wyczyścił kolejki');
+  const t = (run) => { const s2 = ctl(), d = s2.comps.find((q) => q.side === 0 && q.role === 'assault'), tx = d.ax + 400; s2.command({ k: 'order', side: 'WK', comps: [d.id], kind: 'move', x: tx, y: d.ay, run }); let tt = null, fat = 0; for (let k = 1; k <= 20 * 60; k++) { s2.step(); if (tt === null && Math.abs(d.ax - tx) < 4) tt = k / 20; if (tt !== null && k > 20 * 30) { fat = d.fatigue; break; } } return { tt, fat }; };
+  const walk = t(false), run = t(true); assert.ok(run.tt < walk.tt * 0.9, 'szybki ruch nie jest szybszy: ' + run.tt + ' vs ' + walk.tt);
+  const f = (run2) => { const s2 = ctl(), d = s2.comps.find((q) => q.side === 0 && q.role === 'assault'); s2.command({ k: 'order', side: 'WK', comps: [d.id], kind: 'move', x: d.ax + 900, y: d.ay, run: run2 }); for (let k = 0; k < 20 * 20; k++) s2.step(); return d.fatigue; };
+  const fw = f(false), fr = f(true); assert.ok(fr > fw * 1.5, 'szybki ruch nie zwiększa zmęczenia: ' + fr.toFixed(1) + ' vs ' + fw.toFixed(1));
+  return 'punkty A i B po kolei; 400 jedn.: marsz ' + walk.tt + ' s, szybki ruch ' + run.tt + ' s; zmęczenie po 20 s: ' + fw.toFixed(1) + ' vs ' + fr.toFixed(1);
+});
+
+test('sterowanie: rozkaz ataku na wskazaną rotę ściga cel, wiele rot atakuje bez trwałego zakleszczenia, po zniszczeniu celu rozkaz się kończy i idzie następny z kolejki', () => {
+  const defsMod = (d) => { d.params.visibility.on = false; };
+  const { Sim, defs } = loadP1(); defsMod(defs); const sim = Sim.create({ defs, seed: 1, scenario: 'bitwa', map: 1, aiSides: [] });
+  const foe = sim.comps.find((q) => q.side === 1 && q.role === 'reserve'), mine = sim.comps.filter((q) => q.side === 0 && q.role === 'assault').slice(0, 3);
+  // wróg blisko, żeby test dotyczył podejścia i walki, a nie długiego marszu
+  const dx = mine[0].ax + 220 - foe.ax, dy = mine[0].ay - foe.ay; for (const i of foe.ants) { sim.x[i] += dx; sim.y[i] += dy; } foe.ax += dx; foe.ay += dy; foe.order = { kind: 'hold', x: foe.ax, y: foe.ay, face: null, done: false };
+  for (const m of mine) sim.command({ k: 'order', side: 'WK', comps: [m.id], kind: 'attackTarget', target: foe.id });
+  sim.command({ k: 'order', side: 'WK', comps: [mine[0].id], kind: 'move', x: mine[0].ax + 40, y: mine[0].ay, queue: true });
+  sim.step(); for (const m of mine) assert.strictEqual(m.order.kind, 'attackTarget');
+  let stuck = 0, fighting = 0; for (let k = 0; k < 20 * 90 && foe.alive > 0; k++) { sim.step(); if (k % 20 === 19) for (const m of mine) { if (m.ostate === 'blocked' || m.ostate === 'noPath') stuck++; if (m.ostate === 'fighting') fighting++; } }
+  assert.ok(foe.alive < foe.initial * 0.5 || foe.alive === 0, 'cel prawie nietknięty po 90 s: ' + foe.alive + '/' + foe.initial); assert.strictEqual(stuck, 0, 'rota była zablokowana lub bez drogi (' + stuck + ' próbek)'); assert.ok(fighting > 0, 'żadna rota nie weszła w walkę');
+  // zniszczenie celu: rozkaz kończy się, pierwsza rota przechodzi do ruchu z kolejki (osobna, świeża bitwa, żeby rota nie była po walce w stanie utraty kontroli)
+  const { Sim: S2, defs: d2 } = loadP1(); d2.params.visibility.on = false; const s2 = S2.create({ defs: d2, seed: 1, scenario: 'bitwa', map: 1, aiSides: [] });
+  const f2 = s2.comps.find((q) => q.side === 1 && q.role === 'reserve'), m2 = s2.comps.filter((q) => q.side === 0 && q.role === 'assault').slice(0, 2);
+  const ddx = m2[0].ax + 220 - f2.ax, ddy = m2[0].ay - f2.ay; for (const i of f2.ants) { s2.x[i] += ddx; s2.y[i] += ddy; } f2.ax += ddx; f2.ay += ddy;
+  for (const m of m2) s2.command({ k: 'order', side: 'WK', comps: [m.id], kind: 'attackTarget', target: f2.id });
+  s2.command({ k: 'order', side: 'WK', comps: [m2[0].id], kind: 'move', x: m2[0].ax + 40, y: m2[0].ay, queue: true });
+  for (let k = 0; k < 20 * 3; k++) s2.step();
+  for (const i of f2.ants) { s2.alive[i] = 0; s2.hp[i] = 0; } f2.alive = 0; for (let k = 0; k < 40; k++) s2.step();
+  assert.ok(m2.every((m) => m.order.kind !== 'attackTarget' || m.order.done), 'rozkaz ataku martwego celu pozostał aktywny'); assert.strictEqual(m2[0].order.kind, 'move', 'po zniszczeniu celu nie ruszył następny rozkaz z kolejki'); assert.strictEqual(m2[0].queue.length, 0);
+  return 'trzy roty atakują jedną; cel ' + foe.initial + ' -> ' + foe.alive + ' w 90 s, próbek zakleszczenia 0, rot w walce ' + fighting + ' próbek; zniszczenie celu kończy rozkaz i uruchamia następny z kolejki';
+});
+
+test('sterowanie: trasa z pathfindingu omija ściany i nie przechodzi przez nie, a rozkaz bez drogi jest odrzucony z komunikatem; brak postępu kończy rozkaz zamiast pętli', () => {
+  const sim = mound(1, { aiSides: [] }), c = sim.comps.find((q) => q.side === 0), M = sim.defs.world.mound, hx = M.center[0] * 16, hy = M.center[1] * 16;
+  // trasa z pola startu do serca musi obejść mur, rampy i pierścienie: każdy punkt na podłodze, odcinki bez ścian, trasa dłuższa niż prosta
+  const route = sim.routeOf(c.ax, c.ay, hx, hy, 24); assert.ok(route && route.length > 20, 'brak trasy do serca');
+  let len = 0; for (let i = 0; i + 1 < route.length; i++) { const a = route[i], b = route[i + 1]; len += Math.hypot(b[0] - a[0], b[1] - a[1]); assert.ok(!BLKS[sim.grid[cellOf(sim, a[0], a[1])]], 'punkt trasy w ścianie');
+    const n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 4); for (let k = 1; k < n; k++) assert.ok(!BLKS[sim.grid[cellOf(sim, a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n)]], 'odcinek trasy przecina ścianę'); }
+  const straight = Math.hypot(c.ax - hx, c.ay - hy); assert.ok(len > 1.5 * straight, 'trasa nie obchodzi ścian: ' + len.toFixed(0) + ' vs prosta ' + straight.toFixed(0));
+  // zamknięta kieszeń: cel osiągalny tylko dla punktu, więc rozkaz jest odrzucony, rota stoi, jest komunikat
+  const s2 = ctl(), d = s2.comps.find((q) => q.side === 0 && q.role === 'assault'), px = 1400, py = 300, C2 = s2.COLS; const keep = JSON.stringify(d.order);
+  for (let yy = Math.floor(py / 16) - 3; yy <= Math.floor(py / 16) + 3; yy++) for (let xx = Math.floor(px / 16) - 3; xx <= Math.floor(px / 16) + 3; xx++) if (Math.max(Math.abs(yy - Math.floor(py / 16)), Math.abs(xx - Math.floor(px / 16))) === 3) s2.grid[yy * C2 + xx] = 1;
+  s2.command({ k: 'order', side: 'WK', comps: [d.id], kind: 'move', x: px, y: py }); s2.step();
+  assert.strictEqual(JSON.stringify(d.order), keep, 'rozkaz bez drogi został przyjęty'); assert.strictEqual(d.ostate, 'noPath'); assert.ok(/brak drogi/.test(d.notice), 'brak komunikatu: ' + d.notice); assert.ok(!s2.reachable(d, px, py));
+  // brak postępu: po wydaniu rozkazu droga zostaje zamknięta murem, rota nie może iść; po przeliczeniu trasy kończy rozkaz z komunikatem (bez pętli)
+  const s3 = ctl(), e = s3.comps.find((q) => q.side === 0 && q.role === 'assault'), C3 = s3.COLS, gx = Math.floor((e.ax + 200) / 16);
+  s3.command({ k: 'order', side: 'WK', comps: [e.id], kind: 'move', x: e.ax + 500, y: e.ay }); s3.step();
+  for (let yy = 1; yy < s3.ROWS - 1; yy++) for (let dx = 0; dx < 3; dx++) s3.grid[yy * C3 + gx + dx] = 1;
+  let ended = null; for (let k = 0; k < 20 * 40; k++) { s3.step(); if (e.order.kind === 'hold' && e.ostate === 'noPath') { ended = k / 20; break; } }
+  assert.ok(ended !== null, 'rozkaz bez postępu nie został zakończony'); assert.ok(/brak postępu/.test(e.notice), e.notice); for (let k = 0; k < 40; k++) s3.step(); assert.strictEqual(e.order.kind, 'hold', 'rota ponawia próby bez końca');
+  return 'trasa do serca ' + len.toFixed(0) + ' jedn. (prosta ' + straight.toFixed(0) + '), bez drogi: rozkaz odrzucony z komunikatem, brak postępu: koniec rozkazu po ' + ended + ' s';
+});
+
 let failed = 0;
 for (const r of results) { console.log((r.ok ? 'OK   ' : 'FAIL ') + r.name + (r.note ? '\n       ' + r.note : '') + '  [' + r.ms + ' ms]'); if (!r.ok) failed++; }
 console.log('\n' + (results.length - failed) + '/' + results.length + ' testów rdzenia przeszło');

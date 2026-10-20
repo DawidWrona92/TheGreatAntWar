@@ -79,15 +79,15 @@ const { openPage, ROOT } = require('./browser-lib');
     assert.strictEqual(await page.$$eval('#abGrid .ab', (els) => els.length), 9, 'siatka umiejętności ma mieć 9 pól');
     ok('siatka umiejętności 3x3: klik uruchamia umiejętność roty, są 9 pól (5 umiejętności + miejsca na kolejne)');
 
-    // przeciągnięcie PPM ustawia kierunek szyku, kółko w trakcie przeciągania zmienia szerokość
+    // przeciągnięcie PPM ustawia środek, kierunek i szerokość szyku (długość gestu); szczegółowe testy sterowania: tests/p1-sterowanie.test.js
     await page.evaluate(() => { const S = __P1.S; S.selected.clear(); S.selected.add(0); });
     const colsBefore = await page.evaluate(() => __P1.S.sim.comps[0].fcols);
     await page.mouse.move(600, 380); await page.mouse.down({ button: 'right' }); await page.mouse.move(690, 340, { steps: 6 });
-    await page.mouse.wheel(0, -100); await page.mouse.wheel(0, -100); await page.mouse.up({ button: 'right' }); await page.waitForTimeout(300);
+    await page.mouse.up({ button: 'right' }); await page.waitForTimeout(300);
     const od = await page.evaluate(() => { const c = __P1.S.sim.comps[0]; return { face: c.order.face, cols: c.fcols }; });
     assert.ok(od.face != null && isFinite(od.face), 'przeciągnięcie nie ustawiło kierunku');
-    assert.ok(od.cols > (colsBefore || 0) && od.cols >= 4, 'kółko w trakcie przeciągania nie zmieniło szerokości: ' + JSON.stringify(od));
-    ok('przeciągnięcie PPM: kierunek szyku i szerokość (kółko)', 'kierunek ' + od.face.toFixed(2) + ' rad, kolumny ' + od.cols);
+    assert.ok(od.cols > (colsBefore || 0) && od.cols >= 4, 'długość gestu nie zmieniła szerokości: ' + JSON.stringify(od));
+    ok('przeciągnięcie PPM: kierunek szyku i szerokość (długość gestu)', 'kierunek ' + od.face.toFixed(2) + ' rad, kolumny ' + od.cols);
 
     // grupy: Ctrl+1 zapisuje, 1 przywołuje
     await page.evaluate(() => { __P1.S.selected.clear(); __P1.S.selected.add(0); __P1.S.selected.add(1); });

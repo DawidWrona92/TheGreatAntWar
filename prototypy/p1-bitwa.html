@@ -255,11 +255,24 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Obrażenia zależne od kierunku ciosu względem kierunku mrówki (heading): przód x1, flanka x flank, tył x rear. frontDeg i rearDeg to progi w stopniach.",
       "on": true, "flank": 1.25, "rear": 1.5, "frontDeg": 60, "rearDeg": 120
     },
+    "run": { "comment": "Szybki ruch (dwukrotny PPM na terenie): mnożnik prędkości i mnożnik przyrostu zmęczenia w marszu. Wartości są założeniem projektu.", "mult": 1.5, "fatigue": 2.5 },
+    "orders": { "comment": "Rozkazy gracza: sekundy bez postępu zanim rota próbuje przeliczyć trasę, a potem kończy rozkaz z komunikatem o braku drogi; odstęp odświeżania celu ataku (kroki).", "stuckSec": 4, "retargetTicks": 5, "chargeRange": 160 },
     "corridor": {
       "comment": "Ruch w korytarzach (mapy z followAnchor: 4, 5 i kopiec). Pole przepływu omija ściany (koszt komórek przy ścianie: penalty dla odległości 1 i 2 komórek), a szyk, którego miejsca wpadają w ściany lub jest za szeroki dla korytarza, zmienia się w kolumnę o liczbie kolumn dopasowanej do szerokości korytarza i podąża śladem kotwicy (miejsce o głębokości U leży na śladzie U jednostek za kotwicą, a nie na prostej).",
       "on": true, "penalty": [9, 4], "trailStep": 3, "trailMax": 400, "holdSec": 3, "probe": 40, "margin": 2
     },
     "aiPeriod": 20
+  },
+  "ui": {
+    "controls": {
+      "comment": "Sterowanie wzorowane na Total War (specyfikacja projektu, nie oficjalne wartości gry). Próg przeciągnięcia w pikselach ekranu, okno i tolerancja dwukrotnego kliknięcia oraz jedna mapa przypisań klawiszy (akcja -> skróty; skrót to kod klawisza z prefiksami Ctrl+, Alt+, Shift+).",
+      "dragPx": 6, "doubleClickMs": 350, "doubleClickPx": 14,
+      "keys": {
+        "selectAll": ["Ctrl+KeyA"], "group": ["KeyG"], "lockGroup": ["Ctrl+KeyG"], "stop": ["Backspace"], "hold": ["KeyH"], "retreat": ["KeyV"],
+        "move": ["KeyM"], "attackMove": ["KeyA"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
+        "pause": ["Space"], "faster": ["Equal", "NumpadAdd"], "slower": ["Minus", "NumpadSubtract"], "cancel": ["Escape"], "help": ["Slash"]
+      }
+    }
   },
   "units": {
     "infantry":  { "name": "Wojownik",   "hp": 10, "speed": 30, "dmg": 2.0, "reach": 2,   "cd": 1.0, "aggro": 28, "radius": 4.0, "mass": 1,   "rank": 2,   "armor": 0,   "size": 0.55 },
@@ -1250,7 +1263,8 @@ const Sim = (function () {
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
             captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9,
             slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null],
-            trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4
+            trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4,
+            queue: [], ostate: 'idle', blockT: 0, pgx: at[0], pgy: at[1], replanned: false, chargeUsed: false, notice: ''
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -1401,7 +1415,7 @@ const Sim = (function () {
           if (VIS && !visibleTo(s, j)) continue;                     // niewidocznego nie da się wziąć na cel (uczciwe AI i gracz)
           if (HILLS && T.ranged[ty] && shotApex(i, j) < 0) continue;  // strzał musi być możliwy balistycznie
           const m = mult[ty * nT + type[j]];
-          const sc = d2 - (m > 1.4 ? 900 : 0) + (m < 0.6 ? 900 : 0);
+          const sc = d2 - (m > 1.4 ? 900 : 0) + (m < 0.6 ? 900 : 0) - (c && c.order.target != null && compOf[j] === c.order.target ? 4000 : 0);   // rozkaz ataku wskazanej roty: jej mrówki są preferowanym celem
           if (sc < bestScore) { bestScore = sc; best = j; }
         }
       }
@@ -1414,16 +1428,62 @@ const Sim = (function () {
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
     function command(cmd) { queue.push(cmd); }
+    // ---------- rozkazy gracza: tworzenie, kolejka, kończenie ----------
+    // makeOrder zamienia polecenie z interfejsu na rozkaz roty (cel rozwiązany do osiągalnego punktu); zwraca null i zgłasza komunikat, gdy rozkaz jest niewykonalny
+    function notify(c, text) { c.notice = text; logEvent(c.name + ': ' + text, SIDES[c.side], c.id); }
+    function makeOrder(c, cmd) {
+      if (cmd.kind === 'attackTarget') {
+        const tc = comps[cmd.target];
+        if (!tc || tc.side === c.side || tc.alive <= 0) { notify(c, 'cel ataku jest nieprawidłowy'); return null; }
+        const v = compView(tc, c.side); if (!v) { notify(c, 'cel ataku jest niewidoczny'); return null; }
+        const fld = getField(v.ax, v.ay); if (fld[cellAt(c.ax, c.ay)] < 0) { c.ostate = 'noPath'; notify(c, 'brak drogi do celu ataku'); return null; }
+        return { kind: 'attackTarget', target: cmd.target, x: v.ax, y: v.ay, face: null, charge: !!cmd.charge, done: false };
+      }
+      const p = cmd.kind === 'retreat' ? retreatPoint(c) : nearestOpen(cmd.x, cmd.y);
+      if (cmd.kind !== 'retreat' && cmd.kind !== 'hold' && getField(p[0], p[1])[cellAt(c.ax, c.ay)] < 0) { c.ostate = 'noPath'; notify(c, 'brak drogi do wskazanego miejsca'); return null; }
+      return { kind: cmd.kind, x: p[0], y: p[1], face: cmd.face != null ? cmd.face : null, cols: cmd.cols, run: !!cmd.run, done: false };
+    }
+    function setOrder(c, o) {
+      c.order = o; c.aiUntil = Math.max(c.aiUntil, tick); c.ostate = 'idle'; c.notice = ''; c.blockT = 0; c.replanned = false; c.chargeUsed = false; c.pgx = c.ax; c.pgy = c.ay;
+      if (o.kind === 'retreat' || o.kind === 'hold') c.queue.length = 0;
+      if (o.cols != null && c.role !== 'plug') { c.fcols = o.cols; c.dirty = true; }
+    }
+    // po wykonaniu bieżącego rozkazu bierze następny poprawny z kolejki; nieprawidłowe cele (martwa rota, brak drogi) są pomijane
+    function advanceQueue(c) {
+      while (c.queue.length) {
+        const o = c.queue.shift();
+        if (o.kind === 'attackTarget') { const tc = comps[o.target]; if (!tc || tc.alive <= 0 || !compView(tc, c.side)) continue; const v = compView(tc, c.side); o.x = v.ax; o.y = v.ay; if (getField(v.ax, v.ay)[cellAt(c.ax, c.ay)] < 0) { notify(c, 'pominięto cel z kolejki: brak drogi'); continue; } }
+        else if (o.kind === 'move' && getField(o.x, o.y)[cellAt(c.ax, c.ay)] < 0) { notify(c, 'pominięto punkt z kolejki: brak drogi'); continue; }
+        setOrder(c, o); return true;
+      }
+      return false;
+    }
+    // droga wg pola przepływu do (x, y) od (fx, fy): punkty co ~step jednostek po tej samej trasie, którą pójdzie rota; null, gdy nie ma drogi
+    sim.routeOf = (fx, fy, x, y, step) => {
+      const p = nearestOpen(x, y), f = getField(p[0], p[1]);
+      if (f[cellAt(fx, fy)] < 0) return null;
+      const out = [[fx, fy]]; let px = fx, py = fy; step = step || 24;
+      for (let k = 0; k < 400; k++) {
+        if (Math.hypot(p[0] - px, p[1] - py) < step * 0.8) break;
+        let dx, dy;
+        if (Math.hypot(p[0] - px, p[1] - py) < CELL * 2 && moveClear(px, py, p[0], p[1])) { const d = Math.hypot(p[0] - px, p[1] - py) || 1; dx = (p[0] - px) / d; dy = (p[1] - py) / d; }
+        else if (flowDir(f, px, py)) { dx = flow.x; dy = flow.y; } else break;
+        const nx = px + dx * step, ny = py + dy * step; if (blocked(nx, ny)) break;
+        px = nx; py = ny; out.push([px, py]);
+      }
+      out.push([p[0], p[1]]); return out;
+    };
+    sim.reachable = (c, x, y) => { const p = nearestOpen(x, y); return getField(p[0], p[1])[cellAt(c.ax, c.ay)] >= 0; };
     function applyCommand(cmd) {
       sim.log.push({ tick, cmd });
       const list = (cmd.comps || []).map((id) => comps[id]).filter((c) => c && c.alive > 0 && (cmd.side == null || SIDES[c.side] === cmd.side));
       if (cmd.k === 'order') {
         for (const c of list) {
-          const p = cmd.kind === 'retreat' ? retreatPoint(c) : nearestOpen(cmd.x, cmd.y);
-          // kierunek (rad) i liczba kolumn szyku po dotarciu na miejsce: rozkaz ruchu z przeciągnięciem myszy
-          c.order = { kind: cmd.kind, x: p[0], y: p[1], face: cmd.face != null ? cmd.face : null };
-          if (cmd.cols != null && c.role !== 'plug') { c.fcols = cmd.cols; c.dirty = true; }
-          c.aiUntil = Math.max(c.aiUntil, tick);
+          const o = makeOrder(c, cmd);
+          if (!o) continue;
+          // Shift: rozkaz trafia do kolejki, jeśli rota ma jeszcze coś do wykonania; inaczej (albo bez Shift) zastępuje bieżący i czyści kolejkę
+          if (cmd.queue && !c.order.done && c.order.kind !== 'hold') c.queue.push(o);
+          else { c.queue.length = 0; setOrder(c, o); }
         }
       } else if (cmd.k === 'formation') {
         for (const c of list) { c.formation = cmd.f; c.fcols = cmd.cols || 0; c.dirty = true; }
@@ -1487,6 +1547,17 @@ const Sim = (function () {
       for (const o of comps) { if (o.side === c.side || o.alive <= 0) continue; const v = compView(o, c.side); if (!v) continue; const d = Math.hypot(v.ax - c.ax, v.ay - c.ay); if (d < bd) { bd = d; best = v; } }
       return best ? { c: best, d: bd } : null;
     }
+    // skuteczny rozkaz roty: rozkaz ataku wskazanej roty ściga ją tam, gdzie ją widzimy (albo gdzie ostatnio widzieliśmy); gdy cel zginął, rozkaz jest wykonany
+    function effOf(c) {
+      const o = c.order;
+      if (o.kind === 'attackTarget') {
+        const tc = comps[o.target];
+        if (!tc || tc.alive <= 0) { o.done = true; return { kind: 'hold', x: c.ax, y: c.ay, engage: true }; }
+        const v = compView(tc, c.side); if (v) { o.x = v.ax; o.y = v.ay; }
+        return { kind: 'attack', x: o.x, y: o.y, engage: true, target: o.target };
+      }
+      return { kind: o.kind, x: o.x, y: o.y, engage: o.kind === 'attack' || o.kind === 'hold' || o.kind === 'retreat' };
+    }
     function updateControl(c) {
       const sn = SIDES[c.side], auraR = defs.scenario.sides[sn].auraR;
       c.ants = c.ants.filter((i) => alive[i]);
@@ -1511,7 +1582,7 @@ const Sim = (function () {
       if (c.moving) {
         let slopeMulF = 1;
         if (HILLS && c.slopeN > 0) { const sv = c.slopeSum / c.slopeN; slopeMulF = sv > 0 ? 1 + EL.fatUp * sv : Math.max(0.3, 1 + EL.fatDown * sv); }   // pod górę bardziej męczące, z góry mniej
-        fg += FP.move * (c.abilUntil > tick ? 2.5 : 1) * slopeMulF;
+        fg += FP.move * (c.abilUntil > tick ? 2.5 : 1) * (c.order.run && c.order.kind === 'move' && !c.order.done ? P.run.fatigue : 1) * slopeMulF;
       } else if (eng < 0.05) fg -= FP.rest;
       c.slopeSum = 0; c.slopeN = 0;
       c.fatigue = Math.max(0, Math.min(100, c.fatigue + fg));
@@ -1542,7 +1613,7 @@ const Sim = (function () {
       if (c.cstate === CS_LOST) {
         if (c.side === 1) { const p = retreatPoint(c); c.eff = { kind: 'retreat', x: p[0], y: p[1], engage: true }; }
         else { const e = ne ? ne.c : null; c.eff = { kind: 'attack', x: e ? e.ax : c.order.x, y: e ? e.ay : c.order.y, engage: true }; }
-      } else c.eff = { kind: c.order.kind, x: c.order.x, y: c.order.y, engage: c.order.kind === 'attack' || c.order.kind === 'hold' || c.order.kind === 'retreat' };
+      } else c.eff = effOf(c);
       // dominujący typ -> prędkość rity
       let dom = null, dn = -1;
       const cnt = {}; for (const i of c.ants) { const k = type[i]; cnt[k] = (cnt[k] || 0) + 1; if (cnt[k] > dn) { dn = cnt[k]; dom = k; } }
@@ -1629,8 +1700,32 @@ const Sim = (function () {
       slotPt[0] = q.x - q.ty * v; slotPt[1] = q.y + q.tx * v; return slotPt;
     }
 
+    // wykonanie rozkazu: rozkaz ruchu jest wykonany po dojściu kotwicy; szarża na wskazany cel; wykrywanie braku postępu (raz przeliczenie trasy, potem koniec rozkazu z komunikatem)
+    function trackOrder(c, o, dist) {
+      const od = c.order;
+      if (od.kind === 'move' && dist <= 3) od.done = true;
+      if (od.kind === 'attackTarget' && od.charge && !c.chargeUsed && c.abilType && (c.abilType === 'taran' || c.abilType === 'biegacz') && dist < P.orders.chargeRange && tick >= c.abilCdUntil) { c.chargeUsed = true; useAbility(c); }
+      if (c.cstate === CS_LOST) { c.ostate = c.side === 0 ? 'rage' : 'retreat'; return; }
+      const want = !od.done && (od.kind === 'move' || od.kind === 'attackTarget' || od.kind === 'attack') && dist > 6 && c.engaged <= 0.2 && tick >= c.delayTick;
+      if ((tick + c.id) % HZ === 0) {
+        if (Math.hypot(c.ax - c.pgx, c.ay - c.pgy) > 8) { c.pgx = c.ax; c.pgy = c.ay; c.blockT = 0; }
+        else if (want) c.blockT++; else { c.blockT = 0; c.pgx = c.ax; c.pgy = c.ay; }
+        if (c.blockT >= P.orders.stuckSec) {
+          if (!c.replanned) { c.replanned = true; c.blockT = 0; fields.delete(cellAt(od.x, od.y)); c.field = getField(od.x, od.y); c.afield = null; c.afKey = -1; }
+          else if (!aiSides.has(SIDES[c.side])) { od.done = true; c.queue.length = 0; c.order = { kind: 'hold', x: c.ax, y: c.ay, face: null, done: false }; c.ostate = 'noPath'; c.blockT = 0; c.replanned = false; notify(c, 'brak postępu w marszu: rozkaz zakończony (brak drogi lub zablokowane przejście)'); return; }
+          else c.blockT = 0;
+        }
+      }
+      if (c.ostate === 'noPath') return;   // komunikat o braku drogi trwa do następnego przyjętego rozkazu
+      c.ostate = c.engaged > 0.2 ? 'fighting' : c.moving ? (c.blockT >= 2 ? 'blocked' : 'moving') : c.blockT >= 2 ? 'blocked' : 'idle';
+    }
+
     // ---------- przesuwanie kotwicy rity ----------
     function updateAnchor(c) {
+      if (c.order.kind === 'attackTarget') { const tc = comps[c.order.target]; if (!tc || tc.alive <= 0) c.order.done = true; }   // cel zniszczony: rozkaz wykonany (także gdy rota straciła kontrolę)
+      if (c.order.kind === 'attackTarget' && (tick + c.id) % P.orders.retargetTicks === 0 && c.cstate !== CS_LOST) c.eff = effOf(c);   // cel porusza się: eff odświeżany częściej niż raz na sekundę
+      if (c.order.done && c.queue.length && c.cstate !== CS_LOST) { advanceQueue(c); c.eff = effOf(c); }
+      if (c.cstate === CS_LOST && c.queue.length) c.queue.length = 0;   // utrata kontroli anuluje kolejkę rozkazów bojowych
       const o = c.eff;
       const dx = o.x - c.ax, dy = o.y - c.ay, dist = Math.hypot(dx, dy);
       const abilMul = c.abilUntil > tick && (c.abilType === 'taran' || c.abilType === 'biegacz') && c.domType === ti[c.abilType] ? defs.units[c.abilType].ability.mult : 1;
@@ -1639,7 +1734,8 @@ const Sim = (function () {
       if (dist > 3 && !attackHalt && tick >= c.delayTick) {
         let dirx = dx / dist, diry = dy / dist;
         if (!(dist < CELL * 2 && moveClear(c.ax, c.ay, o.x, o.y)) && c.field && flowDir(c.field, c.ax, c.ay)) { dirx = flow.x; diry = flow.y; }
-        const step = Math.min(dist, c.speed * c.spMod * abilMul * c.cohesion * DT * (HILLS ? slopeMul(slopeAt(c.ax, c.ay, dirx, diry)) : 1));
+        const runMul = c.order.run && c.order.kind === 'move' && !c.order.done && c.cstate !== CS_LOST ? P.run.mult : 1;
+        const step = Math.min(dist, c.speed * c.spMod * abilMul * runMul * c.cohesion * DT * (HILLS ? slopeMul(slopeAt(c.ax, c.ay, dirx, diry)) : 1));
         const nx = c.ax + dirx * step, ny = c.ay + diry * step, ox = c.ax, oy = c.ay;
         if (!blocked(nx, ny)) { c.ax = nx; c.ay = ny; moved = true; }
         else if (!blocked(nx, c.ay)) { c.ax = nx; moved = true; }
@@ -1647,6 +1743,7 @@ const Sim = (function () {
         if (moved) { c.tface = Math.atan2(diry, dirx); if (CORR) trailPush(c, Math.hypot(c.ax - ox, c.ay - oy)); }
       }
       c.moving = moved;
+      trackOrder(c, o, dist);
       if (!moved) {
         const ne = nearestEnemyComp(c);
         if (c.order.face != null && o.kind === c.order.kind && dist <= 3) c.tface = c.order.face;   // kierunek wskazany przez gracza
@@ -2080,7 +2177,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const S = {
     side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'kopiec', budget: q.get('budget') || '', oppStyle: 'auto', army: null,
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
-    sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
+    sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, cgroups: [], pinned: -1, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
   };
   if (S.speedIdx < 0) S.speedIdx = 1;
@@ -2397,14 +2494,19 @@ if (typeof module !== 'undefined') module.exports = Sim;
   // ---------- bitwa: start / restart ----------
   function startBattle() {
     S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, scenario: S.scenario, budget: S.budget || undefined, armies: S.budget && S.army && !S.observe ? { [S.side]: S.army } : undefined, styles: S.budget ? { [S.side === 'WK' ? 'LH' : 'WK']: S.oppStyle, [S.side]: 'auto' } : undefined, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
-    S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
+    S.selected.clear(); S.groups = {}; S.cgroups = []; S.pinned = -1; S.lastR = null; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
     setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); buildFordButtons(); $('mapName').textContent = S.sim.scenarioInfo.name + ' · ' + (S.sim.scenarioInfo.map ? S.sim.mapInfo.name : S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name);
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
     if (q.get('autoselect')) for (const c of S.sim.comps) if (SIDES[c.side] === S.side) S.selected.add(c.id);
   }
   const ownComps = () => S.sim.comps.filter((c) => SIDES[c.side] === S.side);
 
-  // ---------- polecenia ----------
+  // ---------- sterowanie wzorowane na Total War (reguły i zgodność ze specyfikacją: docs/sterowanie-total-war.md) ----------
+  // Kliknięcie określa wybór lub cel, rozkaz określa intencję, a ruch i pathfinding w symulacji odpowiadają za wykonanie.
+  const CTL = DEFS0.ui.controls;
+  // jedno miejsce przypisań wejścia: akcja -> lista skrótów; skrót to kod klawisza z prefiksami Ctrl+, Alt+, Shift+ (w tej kolejności)
+  const KEYACT = {}; for (const a in CTL.keys) for (const k of CTL.keys[a]) KEYACT[k] = a;
+  const chord = (e) => (e.ctrlKey || e.metaKey ? 'Ctrl+' : '') + (e.altKey ? 'Alt+' : '') + (e.shiftKey ? 'Shift+' : '') + e.code;
   function issue(cmd) {
     if (S.observe || !S.sim || S.over) return;
     cmd.side = S.side; cmd.comps = [...S.selected].filter((id) => S.sim.comps[id].alive > 0);
@@ -2412,95 +2514,155 @@ if (typeof module !== 'undefined') module.exports = Sim;
     S.sim.command(cmd);
     if (S.paused) S.sim.flush();
   }
-  // Rozkaz ruchu z formowaniem: przeciągnięcie PPM ustawia kierunek szyku po dotarciu, kółko myszy zmienia szerokość (a więc i głębokość).
-  // Kilka zaznaczonych rot jedzie razem: układ zachowuje wzajemne rozmieszczenie i obraca się o ten sam kąt co kierunek wskazany myszą.
-  // Pojedyncza rota idzie dokładnie w wskazany punkt.
   const selComps = () => [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0);
   const autoCols = (c) => { const n = c.alive; return c.fcols > 0 ? c.fcols : (c.formation === 0 ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5)))); };
+  const circMean = (cs) => { let sa = 0, ca = 0; for (const c of cs) { sa += Math.sin(c.face); ca += Math.cos(c.face); } return Math.atan2(sa, ca); };
+  // grupy rot (G) i blokada formacji (Ctrl+G): grupa zaznacza się razem; zablokowana pamięta układ z chwili blokady
+  const groupOf = (id) => S.cgroups.find((g) => g.ids.has(id));
+  function expandGroups(ids) { const out = new Set(ids); for (const id of ids) { const g = groupOf(id); if (g) g.ids.forEach((q) => out.add(q)); } return out; }
+  function lockedGroupOf(cs) {
+    if (!cs.length) return null; const g = groupOf(cs[0].id);
+    return g && g.locked && cs.every((c) => g.ids.has(c.id)) ? g : null;
+  }
+  function makeTemplate(cs) {
+    let mx = 0, my = 0; for (const c of cs) { mx += c.ax; my += c.ay; } mx /= cs.length; my /= cs.length;
+    return { f: circMean(cs), list: cs.map((c) => ({ id: c.id, ox: c.ax - mx, oy: c.ay - my, df: c.face - circMean(cs) })) };
+  }
+  function pruneGroups() {
+    if (!S.sim) return; const dead = (id) => S.sim.comps[id].alive <= 0;
+    for (const k in S.groups) { S.groups[k] = S.groups[k].filter((id) => !dead(id)); if (!S.groups[k].length) delete S.groups[k]; }
+    for (const g of S.cgroups) for (const id of [...g.ids]) if (dead(id)) g.ids.delete(id);
+    S.cgroups = S.cgroups.filter((g) => g.ids.size >= 2);
+    for (const id of [...S.selected]) if (dead(id)) S.selected.delete(id);
+    if (S.pinned != null && S.pinned >= 0 && dead(S.pinned)) S.pinned = -1;
+  }
+  // Plan rozkazów ruchu: jedna rota idzie dokładnie w punkt (z szerokością z długości gestu), kilka zachowuje wzajemny układ (zablokowana grupa: układ z chwili blokady)
+  // i obraca się o ten sam kąt co kierunek wskazany myszą.
   function planOrders(kind, wx, wy, opt) {
-    const cs = selComps(), face = opt && opt.face != null ? opt.face : null, steps = opt ? opt.steps || 0 : 0, k = Math.pow(1.15, steps), out = [];
+    const cs = selComps(), face = opt && opt.face != null ? opt.face : null, out = [];
     if (!cs.length) return out;
-    let mx = 0, my = 0, sa = 0, ca = 0; for (const c of cs) { mx += c.ax; my += c.ay; sa += Math.sin(c.face); ca += Math.cos(c.face); } mx /= cs.length; my /= cs.length;
-    const rot = face != null && cs.length > 1 ? face - Math.atan2(sa, ca) : 0, cr = Math.cos(rot), sr = Math.sin(rot);
-    for (const c of cs) {
-      const ox = c.ax - mx, oy = c.ay - my, x = cs.length === 1 ? wx : wx + ox * cr - oy * sr, y = cs.length === 1 ? wy : wy + ox * sr + oy * cr;
-      let cols = null; if (steps !== 0 && c.formation !== 2 && c.role !== 'plug') cols = Math.max(3, Math.min(Math.max(3, c.alive), Math.round(autoCols(c) * k)));
+    const lg = lockedGroupOf(cs); let items;
+    if (lg) items = cs.map((c) => { const t = lg.tpl.list.find((q) => q.id === c.id); return { c, ox: t.ox, oy: t.oy, df: t.df }; });
+    else { const tp = makeTemplate(cs); items = cs.map((c, i) => ({ c, ox: tp.list[i].ox, oy: tp.list[i].oy, df: tp.list[i].df })); }
+    const ref = lg ? lg.tpl.f : circMean(cs), rot = face != null && cs.length > 1 ? face - ref : 0, cr = Math.cos(rot), sr = Math.sin(rot);
+    for (const it of items) {
+      const c = it.c, x = cs.length === 1 ? wx : wx + it.ox * cr - it.oy * sr, y = cs.length === 1 ? wy : wy + it.ox * sr + it.oy * cr;
+      let cols = null; if (opt && opt.width != null && cs.length === 1 && c.formation !== 2 && c.role !== 'plug') cols = Math.max(3, Math.min(Math.max(3, c.alive), Math.round(opt.width / c.spacing) + 1));
       out.push({ c, x, y, face, cols: cols == null ? undefined : cols, kind });
     }
     return out;
   }
   function orderAt(kind, wx, wy, opt) {
     if (S.observe || !S.sim || S.over) return;
-    for (const o of planOrders(kind, wx, wy, opt)) issue1(o.c.id, { k: 'order', kind, x: o.x, y: o.y, face: o.face, cols: o.cols });
+    const bad = [];
+    for (const o of planOrders(kind, wx, wy, opt)) {
+      if (!S.sim.reachable(o.c, o.x, o.y)) { bad.push(o); continue; }
+      issue1(o.c.id, { k: 'order', kind, x: o.x, y: o.y, face: o.face, cols: o.cols, queue: !!(opt && opt.queue), run: !!(opt && opt.run) });
+    }
+    for (const o of bad) { markers.push({ x: o.x, y: o.y, t: 1.6, kind: 'bad' }); }
+    if (bad.length) flash('Brak drogi do wskazanego miejsca (' + bad.map((o) => o.c.name + ' #' + o.c.num).join(', ') + ')');
+  }
+  function attackOn(id, opt) {
+    if (S.observe || !S.sim || S.over) return; const t = S.sim.comps[id], bad = [];
+    for (const c of selComps()) { if (!S.sim.reachable(c, t.ax, t.ay)) { bad.push(c); continue; } issue1(c.id, { k: 'order', kind: 'attackTarget', target: id, queue: !!(opt && opt.queue), charge: !!(opt && opt.charge) }); }
+    if (bad.length) flash('Brak drogi do celu ataku (' + bad.map((c) => c.name + ' #' + c.num).join(', ') + ')');
+  }
+  // Alt + LPM: przesunięcie lub (z Ctrl) obrót całej zaznaczonej grupy z zachowaniem układu i kształtu formacji
+  function planGroupMove(g) {
+    const cs = selComps(); if (!cs.length) return [];
+    let mx = 0, my = 0; for (const c of cs) { mx += c.ax; my += c.ay; } mx /= cs.length; my /= cs.length;
+    let dx = 0, dy = 0, rot = 0;
+    if (g.ctrl) rot = Math.atan2(g.cur[1] - my, g.cur[0] - mx) - Math.atan2(g.w0[1] - my, g.w0[0] - mx); else { dx = g.cur[0] - g.w0[0]; dy = g.cur[1] - g.w0[1]; }
+    const cr = Math.cos(rot), sr = Math.sin(rot);
+    return cs.map((c) => ({ c, x: mx + (c.ax - mx) * cr - (c.ay - my) * sr + dx, y: my + (c.ax - mx) * sr + (c.ay - my) * cr + dy, face: c.face + rot, cols: undefined, kind: 'move' }));
+  }
+  function commitGroupMove(g) {
+    const bad = []; for (const o of planGroupMove(g)) { if (!S.sim.reachable(o.c, o.x, o.y)) { bad.push(o); continue; } issue1(o.c.id, { k: 'order', kind: 'move', x: o.x, y: o.y, face: o.face }); markers.push({ x: o.x, y: o.y, t: 1, kind: 'move' }); }
+    if (bad.length) { flash('Nie da się zachować pełnego układu grupy: ' + bad.length + ' rot bez drogi do swojego miejsca'); for (const o of bad) markers.push({ x: o.x, y: o.y, t: 1.6, kind: 'bad' }); }
   }
   const doFormation = (f) => issue({ k: 'formation', f });
-  const doHold = () => { for (const c of selComps()) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };
+  const doHold = () => { for (const c of selComps()) issue1(c.id, { k: 'order', kind: 'hold', x: c.ax, y: c.ay }); };   // Backspace i H: zatrzymanie, czyści kolejkę
   function issue1(id, cmd) { cmd.side = S.side; cmd.comps = [id]; S.sim.command(cmd); if (S.paused) S.sim.flush(); }
   const doRetreat = () => issue({ k: 'order', kind: 'retreat', x: 0, y: 0 });
 
   // ---------- zaznaczanie ----------
   // zaznaczanie działa na rzutowanych pozycjach mrówek (współrzędne kontenera), więc ramka na ekranie jest prostokątem
+  function setSelection(ids, add) { if (!add) S.selected.clear(); expandGroups(ids).forEach((id) => S.selected.add(id)); }
   function selectIn(x0, y0, x1, y1, add) {
     const sim = S.sim, set = new Set(), mine = SIDES.indexOf(S.side);
     const lx = Math.min(x0, x1), hx = Math.max(x0, x1), ly = Math.min(y0, y1), hy = Math.max(y0, y1);
     for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const px = ISO.sx(sim.x[i], sim.y[i]), py = ISO.sy(sim.x[i], sim.y[i]); if (px >= lx && px <= hx && py >= ly && py <= hy) set.add(sim.comp[i]); }
-    if (!add) S.selected.clear();
-    set.forEach((id) => S.selected.add(id));
+    setSelection(set, add);
   }
-  function clickSelect(cx, cy, add) {
-    const sim = S.sim, mine = SIDES.indexOf(S.side), r = 10 / cam.z + 3;
-    let best = -1, bd = r * r;
-    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === mine) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 4 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
-    if (best < 0) { if (!add) S.selected.clear(); return; }
-    const id = sim.comp[best];
-    if (add) { S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); } else { S.selected.clear(); S.selected.add(id); }
+  // mrówka pod kursorem: własna albo widoczna wroga (niewidocznych wrogów nie da się wskazać), najbliższa na ekranie
+  function pickAt(cx, cy) {
+    const sim = S.sim, mine = SIDES.indexOf(S.side), r = 10 / cam.z + 3; let best = -1, bd = r * r;
+    for (let i = 0; i < sim.count; i++) if (sim.alive[i] && (sim.side[i] === mine || (!S.observe && sim.visibleTo(mine, i)) || S.observe)) {
+      const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 4 - cy) ** 2; if (d < bd) { bd = d; best = i; }
+    }
+    return best < 0 ? null : { i: best, id: sim.comp[best], own: sim.side[best] === mine };
   }
   const box = { on: false, x0: 0, y0: 0, x1: 0, y1: 0 };
-  const drag = { on: false, active: false, kind: 'attack', sx: 0, sy: 0, wx: 0, wy: 0, face: null, steps: 0 };
+  let G = null;                         // gest LPM: own | enemy | box | group
+  const R = { on: false, moved: false, sx: 0, sy: 0, wx: 0, wy: 0, face: null, width: null, hit: null, shift: false };   // gest PPM
   const view = app.view;
   view.addEventListener('contextmenu', (e) => e.preventDefault());
   view.addEventListener('pointerdown', (e) => {
     if (!S.sim || !S.started) return;
-    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, [cx, cy] = toContainer(sx, sy), [wx, wy] = toWorld(sx, sy);
     if (e.button === 0) {
-      if (S.pending) { const [wx, wy] = toWorld(sx, sy); orderAt(S.pending, wx, wy); S.pending = null; buildCmdBar(); return; }
-      box.on = true; box.x0 = box.x1 = sx; box.y0 = box.y1 = sy; view.setPointerCapture(e.pointerId);
+      if (S.pending) { orderAt(S.pending, wx, wy, { queue: e.shiftKey }); S.pending = null; buildCmdBar(); return; }   // A lub M + klik (dodatek poza specyfikacją)
+      view.setPointerCapture(e.pointerId);
+      if (e.altKey && S.selected.size && !S.observe) { G = { type: 'group', sx, sy, w0: [wx, wy], cur: [wx, wy], ctrl: e.ctrlKey, moved: false }; return; }
+      const hit = pickAt(cx, cy);
+      if (hit) G = { type: hit.own ? 'own' : 'enemy', id: hit.id, sx, sy, moved: false };   // gest zaczęty na jednostce nigdy nie uruchamia zaznaczania ramką
+      else { G = { type: 'box', sx, sy, moved: false }; box.on = true; box.x0 = box.x1 = sx; box.y0 = box.y1 = sy; }
     } else if (e.button === 2) {
-      const [wx, wy] = toWorld(sx, sy);
-      Object.assign(drag, { on: true, active: false, kind: e.shiftKey || S.pending === 'move' ? 'move' : 'attack', sx, sy, wx, wy, face: null, steps: 0 }); view.setPointerCapture(e.pointerId);
+      Object.assign(R, { on: true, moved: false, sx, sy, wx, wy, face: null, width: null, hit: pickAt(cx, cy), shift: e.shiftKey }); view.setPointerCapture(e.pointerId);
     } else if (e.button === 1) { pan.on = true; pan.x = e.clientX; pan.y = e.clientY; view.setPointerCapture(e.pointerId); e.preventDefault(); }
   });
   const pan = { on: false, x: 0, y: 0 }, markers = [];
   view.addEventListener('pointermove', (e) => {
-    const r = view.getBoundingClientRect();
-    if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
-    if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); S.cursorLv = S.sim.levelAt(Math.max(0, wx), Math.max(0, wy)); }
-    if (drag.on) { const sx = e.clientX - r.left, sy = e.clientY - r.top; if (Math.hypot(sx - drag.sx, sy - drag.sy) > 14) { const [wx, wy] = toWorld(sx, sy); drag.active = true; drag.face = Math.atan2(wy - drag.wy, wx - drag.wx); } }
-    if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
-      const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
-      for (let i = 0; i < sim.count; i++) if (sim.alive[i] && (S.observe || sim.side[i] === SIDES.indexOf(S.side) || sim.visibleTo(SIDES.indexOf(S.side), i))) { const d = (ISO.sx(sim.x[i], sim.y[i]) - cx) ** 2 + (ISO.sy(sim.x[i], sim.y[i]) - 5 - cy) ** 2; if (d < bd) { bd = d; best = i; } }
-      S.hover = best >= 0 ? sim.comp[best] : -1;
-    }
+    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    S.mouse = [sx, sy];
+    if (G) { if (Math.hypot(sx - G.sx, sy - G.sy) > CTL.dragPx) G.moved = true; if (G.type === 'box') { box.x1 = sx; box.y1 = sy; } if (G.type === 'group') G.cur = toWorld(sx, sy); }
+    if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(sx, sy); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); S.cursorLv = S.sim.levelAt(Math.max(0, wx), Math.max(0, wy)); }
+    if (R.on && Math.hypot(sx - R.sx, sy - R.sy) > CTL.dragPx) { const [wx, wy] = toWorld(sx, sy); R.moved = true; R.face = Math.atan2(wy - R.wy, wx - R.wx); R.width = Math.hypot(wx - R.wx, wy - R.wy); }
+    if (S.sim && S.started) { const [cx, cy] = toContainer(sx, sy), hit = pickAt(cx, cy); S.hover = hit ? hit.id : -1; }   // samo najechanie niczego nie zmienia: tylko podświetlenie i panel informacji
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
   });
   view.addEventListener('pointerup', (e) => {
-    if (e.button === 2 && drag.on) {
-      drag.on = false;
-      const opt = drag.active ? { face: drag.face, steps: drag.steps } : null;
-      orderAt(drag.kind, drag.wx, drag.wy, opt); markers.push({ x: drag.wx, y: drag.wy, t: 1, kind: drag.kind }); drag.active = false; return;
+    const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
+    if (e.button === 2 && R.on) {
+      R.on = false;
+      if (S.observe || !S.sim || S.over) return;
+      const now = performance.now(), L = S.lastR, same = (kind, id) => L && now - L.t < CTL.doubleClickMs && Math.hypot(sx - L.sx, sy - L.sy) < CTL.doubleClickPx && L.kind === kind && L.id === id;
+      if (R.moved) {   // przeciągnięcie: ustawienie szyku (środek = początek gestu, kierunek i szerokość z przesunięcia)
+        orderAt('move', R.wx, R.wy, { face: R.face, width: R.width, queue: R.shift }); markers.push({ x: R.wx, y: R.wy, t: 1, kind: 'move' }); S.lastR = null; return;
+      }
+      if (R.hit && !R.hit.own) {   // PPM na wrogu: atak na wskazaną rotę; dwukrotny: szarża, jeśli rota ją ma
+        const dbl = same('enemy', R.hit.id); attackOn(R.hit.id, { queue: R.shift, charge: dbl });
+        markers.push({ x: S.sim.comps[R.hit.id].ax, y: S.sim.comps[R.hit.id].ay, t: 1, kind: 'attack' }); S.lastR = dbl ? null : { t: now, sx, sy, kind: 'enemy', id: R.hit.id }; return;
+      }
+      if (R.hit && R.hit.own) { flash('Własna jednostka: brak interakcji (PPM na własnej rocie nie wydaje rozkazu)'); S.lastR = null; return; }
+      const dbl = same('terrain', -1) && !R.shift;   // dwukrotny PPM na terenie: szybki ruch (zastępuje pierwszy rozkaz, nie dodaje drugiego)
+      orderAt('move', R.wx, R.wy, { queue: R.shift, run: dbl }); markers.push({ x: R.wx, y: R.wy, t: 1, kind: 'move' }); S.lastR = dbl ? null : { t: now, sx, sy, kind: 'terrain', id: -1 };
+      return;
     }
-    if (box.on) {
-      box.on = false;
-      const moved = Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5, add = e.shiftKey;
-      const a = toContainer(box.x0, box.y0), b = toContainer(box.x1, box.y1);
-      if (moved) selectIn(a[0], a[1], b[0], b[1], add); else clickSelect(b[0], b[1], add);
+    if (e.button === 0 && G) {
+      const g = G; G = null; box.on = false;
+      if (g.type === 'own') { if (!g.moved) { if (e.ctrlKey || e.metaKey) { const had = S.selected.has(g.id), grp = expandGroups([g.id]); grp.forEach((id) => (had ? S.selected.delete(id) : S.selected.add(id))); } else setSelection([g.id], false); S.pinned = -1; } }
+      else if (g.type === 'enemy') { if (!g.moved) S.pinned = g.id; }   // LPM na wrogu: tylko informacje, bez rozkazu i bez zmiany zaznaczenia
+      else if (g.type === 'box') {
+        if (g.moved) { const a = toContainer(g.sx, g.sy), b = toContainer(sx, sy); selectIn(a[0], a[1], b[0], b[1], e.ctrlKey || e.metaKey); }
+        else if (!(e.ctrlKey || e.metaKey)) { S.selected.clear(); S.pinned = -1; }   // LPM na pustym terenie odznacza
+      } else if (g.type === 'group') { if (g.moved) commitGroupMove(g); }
       buildCards();
     }
     pan.on = false;
   });
   view.addEventListener('wheel', (e) => {
     e.preventDefault();
-    if (drag.on && drag.active) { drag.steps = Math.max(-6, Math.min(6, drag.steps + (e.deltaY < 0 ? 1 : -1))); return; } // w trakcie formowania kółko zmienia szerokość szyku
     const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
     const [cx, cy] = toContainer(sx, sy), nz = Math.max(cam.minZ || 0.4, Math.min(8, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
     cam.z = nz; cam.x = sx - cx * nz; cam.y = sy - cy * nz; applyCam();
@@ -2513,35 +2675,53 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const m = /^Digit([1-9])$/.exec(e.code);
     if (m) {
       e.preventDefault();
-      if (e.ctrlKey || e.altKey || e.metaKey) { S.groups[m[1]] = [...S.selected]; flash('Grupa ' + m[1] + ': ' + S.groups[m[1]].length + ' rot'); }
+      if (e.ctrlKey || e.metaKey) { S.groups[m[1]] = [...S.selected]; flash('Grupa ' + m[1] + ': ' + S.groups[m[1]].length + ' rot'); }
       else if (S.groups[m[1]]) {
-        S.selected = new Set(S.groups[m[1]].filter((id) => S.sim.comps[id].alive > 0));
+        S.selected = expandGroups(S.groups[m[1]].filter((id) => S.sim.comps[id].alive > 0));
         if (S.lastGroup === m[1] && S.selected.size) { const cs = [...S.selected].map((id) => S.sim.comps[id]); cam.x = app.screen.width / 2 - ISO.sx(cs[0].ax, cs[0].ay) * cam.z; cam.y = app.screen.height / 2 - ISO.sy(cs[0].ax, cs[0].ay) * cam.z; applyCam(); }
         S.lastGroup = m[1]; buildCards();
       }
       return;
     }
-    switch (e.code) {
-      case 'Space': e.preventDefault(); togglePause(); break;
-      case 'Equal': case 'NumpadAdd': changeSpeed(1); break;
-      case 'Minus': case 'NumpadSubtract': changeSpeed(-1); break;
-      case 'KeyZ': doFormation(0); break; case 'KeyX': doFormation(1); break; case 'KeyC': doFormation(2); break;
-      case 'KeyH': doHold(); break; case 'KeyV': doRetreat(); break;
-      case 'KeyM': S.pending = 'move'; buildCmdBar(); break;
-      case 'Escape': S.pending = null; S.selected.clear(); buildCards(); buildCmdBar(); break;
-      case 'Slash': toggleHelp(); break;
-      default: if (e.code in abKeys) useAbilitySlot(abKeys[e.code]);
+    const act = KEYACT[chord(e)];
+    if (act) {
+      e.preventDefault();
+      switch (act) {
+        case 'selectAll': if (!S.observe) { S.selected = new Set(ownComps().filter((c) => c.alive > 0).map((c) => c.id)); buildCards(); } break;
+        case 'group': {
+          const ids = [...S.selected]; if (ids.length < 2) { flash('Grupowanie wymaga co najmniej dwóch zaznaczonych rot'); break; }
+          const g0 = S.cgroups.find((g) => g.ids.size === ids.length && ids.every((id) => g.ids.has(id)));
+          if (g0) { S.cgroups.splice(S.cgroups.indexOf(g0), 1); flash('Rozgrupowano ' + ids.length + ' rot'); }
+          else { for (const g of S.cgroups) ids.forEach((id) => g.ids.delete(id)); S.cgroups = S.cgroups.filter((g) => g.ids.size >= 2); S.cgroups.push({ ids: new Set(ids), locked: false, tpl: null }); flash('Zgrupowano ' + ids.length + ' rot (Ctrl+G blokuje układ)'); }
+          buildCards(); break;
+        }
+        case 'lockGroup': {
+          const gs = S.cgroups.filter((g) => [...g.ids].every((id) => S.selected.has(id))); if (!gs.length) { flash('Najpierw zgrupuj zaznaczone roty (G)'); break; }
+          for (const g of gs) { g.locked = !g.locked; if (g.locked) g.tpl = makeTemplate([...g.ids].map((id) => S.sim.comps[id])); }
+          flash(gs.some((g) => g.locked) ? 'Układ grupy zablokowany' : 'Układ grupy odblokowany'); break;
+        }
+        case 'stop': doHold(); break;
+        case 'hold': doHold(); break; case 'retreat': doRetreat(); break;
+        case 'move': S.pending = 'move'; buildCmdBar(); break;
+        case 'attackMove': S.pending = 'attack'; buildCmdBar(); break;
+        case 'lineFormation': doFormation(0); break; case 'columnFormation': doFormation(1); break; case 'wedgeFormation': doFormation(2); break;
+        case 'pause': togglePause(); break; case 'faster': changeSpeed(1); break; case 'slower': changeSpeed(-1); break;
+        case 'cancel': S.pending = null; G = null; box.on = false; R.on = false; S.selected.clear(); S.pinned = -1; buildCards(); buildCmdBar(); break;
+        case 'help': toggleHelp(); break;
+      }
+      return;
     }
+    if (!e.ctrlKey && !e.altKey && e.code in abKeys) useAbilitySlot(abKeys[e.code]);
   });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
-  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; G = null; box.on = false; R.on = false; });
 
   // ---------- panele ----------
   function flash(t) { const d = document.createElement('div'); d.textContent = t; $('ticker').appendChild(d); setTimeout(() => d.remove(), 3500); }
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
+  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · A + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -2671,7 +2851,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
     $('portName').textContent = c.name + ' #' + c.num; $('portSub').textContent = portSub(c);
     $('portBadge').textContent = n > 1 ? '+' + (n - 1) : ''; $('portBadge').classList.toggle('hidden', n <= 1);
   }
-  const portSub = (c) => c.alive + '/' + c.initial + ' · ' + (c.cstate === 2 ? (c.side === 0 ? 'szał' : 'odwrót') : CS_LABEL[c.cstate]) + ' · zm. ' + Math.round(c.fatigue) + '%';
+  const OSTATE = { idle: 'bezczynna', moving: 'w ruchu', fighting: 'w walce', blocked: 'zablokowana', noPath: 'brak drogi', rage: 'szał', retreat: 'odwrót' };
+  const portSub = (c) => c.alive + '/' + c.initial + ' · ' + (c.cstate === 2 ? (c.side === 0 ? 'szał' : 'odwrót') : CS_LABEL[c.cstate]) + ' · zm. ' + Math.round(c.fatigue) + '% · ' + OSTATE[c.ostate || 'idle'];
 
   // ---------- pasek rozkazów ----------
   const FORM_GLYPH = ['▬', '▮', '▲'];
@@ -2682,8 +2863,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const sep = () => { const s2 = document.createElement('span'); s2.className = 'sep'; b.appendChild(s2); };
     const cs = [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0), fm = cs.length && cs.every((c) => c.formation === cs[0].formation) ? cs[0].formation : -1;
     add(FORM_GLYPH[0] + ' Linia <small>Z</small>', () => doFormation(0), 'Szyk liniowy', fm === 0); add(FORM_GLYPH[1] + ' Kolumna <small>X</small>', () => doFormation(1), 'Szyk kolumny', fm === 1); add(FORM_GLYPH[2] + ' Klin <small>C</small>', () => doFormation(2), 'Szyk klina', fm === 2); sep();
-    add('■ Stój <small>H</small>', doHold, 'Zatrzymaj i broń pozycji'); add('➜ Ruch <small>M</small>', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie: marsz bez walki', S.pending === 'move'); add('↩ Odwrót <small>V</small>', doRetreat, 'Wycofaj rotę'); sep();
-    const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: atak (czerwona linia) · Shift+PPM: ruch (biała) · przeciągnij PPM: kierunek szyku, kółko: szerokość'; b.appendChild(hint);
+    add('■ Stój <small>H</small>', doHold, 'Zatrzymaj i broń pozycji'); add('➜ Ruch <small>M</small>', () => { S.pending = 'move'; buildCmdBar(); }, 'Następne kliknięcie LPM: ruch (jak PPM)', S.pending === 'move'); add('⚔ Atak-marsz <small>A</small>', () => { S.pending = 'attack'; buildCmdBar(); }, 'Następne kliknięcie LPM: marsz z walką po drodze (dodatek poza schematem Total War)', S.pending === 'attack'); add('↩ Odwrót <small>V</small>', doRetreat, 'Wycofaj rotę'); sep();
+    const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = S.pending ? 'Kliknij punkt na mapie…' : 'PPM: ruch · PPM na wrogu: atak · Shift+PPM: kolejka · przeciągnij PPM: szyk · Alt+LPM: grupa'; b.appendChild(hint);
   }
 
   // ---------- karty rot ----------
@@ -2692,7 +2873,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     for (const c of S.sim.comps) {
       if (S.observe ? c.side !== 0 : SIDES[c.side] !== S.side) continue;
       const d = document.createElement('div'); d.className = 'card' + (c._elite ? ' elite' : ''); d.dataset.id = c.id; d.title = c.name + ' #' + c.num;
-      d.onclick = (e) => { if (e.shiftKey) { S.selected.has(c.id) ? S.selected.delete(c.id) : S.selected.add(c.id); } else { S.selected.clear(); S.selected.add(c.id); } buildCards(); };
+      d.onclick = (e) => { if (e.ctrlKey || e.metaKey) { const had = S.selected.has(c.id); expandGroups([c.id]).forEach((id) => (had ? S.selected.delete(id) : S.selected.add(id))); } else setSelection([c.id], false); S.pinned = -1; buildCards(); };
       d.innerHTML = '<div class="n"></div><canvas width="120" height="90"></canvas><span class="g">' + (GLYPH[c._kind] || '') + (c._elite ? '★' : '') + '</span><span class="ab1"></span><div class="bars"><div class="bar"><i class="hp"></i></div><div class="bar"><i class="mo"></i></div><div class="bar" style="height:4px"><i class="fa"></i></div></div><div class="stl"></div>';
       host.appendChild(d); antIcon(d.querySelector('canvas'), c, 1.9);
     }
@@ -2702,7 +2883,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (!S.sim) return;
     for (const d of $('cards').children) {
       const c = S.sim.comps[+d.dataset.id];
-      d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0);
+      d.classList.toggle('sel', S.selected.has(c.id)); d.classList.toggle('dead', c.alive <= 0); d.title = c.name + ' #' + c.num + ' · ' + OSTATE[c.ostate || 'idle'] + (c.queue.length ? ' · w kolejce: ' + c.queue.length : '');
       d.querySelector('.n').textContent = c.alive;
       const hp = d.querySelector('.hp'); hp.style.width = (100 * c.alive / c.initial) + '%'; hp.style.background = '#6fbf4a';
       const mo = d.querySelector('.mo'); mo.style.width = c.control + '%'; mo.style.background = c.cstate === 0 ? '#6fbf4a' : (c.cstate === 1 ? '#e6b422' : '#e0483a');
@@ -2719,7 +2900,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     { kind: 'taran', ic: '➤', key: 'KeyE', hk: 'E', tip: 'Szarża tarana: większa prędkość i dwukrotny odrzut przez kilka sekund.' },
     { kind: 'biegacz', ic: '»', key: 'KeyR', hk: 'R', tip: 'Rajd biegaczy: sprint, dobry do gonienia plujek i flankowania.' },
     { kind: 'pekacz', ic: '✺', key: 'KeyF', hk: 'F', tip: 'Pęknięcie: pękacze szukają wroga i wybuchają, oblepiając obszar.' },
-    { kind: 'odzwierny', ic: '▥', key: 'KeyG', hk: 'G', tip: 'Zamknij wejście: odźwierni tworzą nieruchomą zaporę (przełącznik).' }
+    { kind: 'odzwierny', ic: '▥', key: 'KeyT', hk: 'T', tip: 'Zamknij wejście: odźwierni tworzą nieruchomą zaporę (przełącznik).' }
   ];
   const abKeys = {}; ABIL.forEach((a, i) => { abKeys[a.key] = i; });
   const abComps = (a) => [...S.selected].map((id) => S.sim.comps[id]).filter((c) => c.alive > 0 && c.abilType === a.kind);
@@ -2754,7 +2935,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   // ---------- rysowanie klatki ----------
   const HEX = { WK: 0xb01c22, LH: 0x222222 };
   function render() {
-    const sim = S.sim; if (!sim) return;
+    const sim = S.sim; if (!sim) return; pruneGroups();
     const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2), k = 1 / cam.z, me = SIDES.indexOf(S.side), showAll = S.observe;
     const seenByMe = (i) => showAll || sim.side[i] === me || sim.visibleTo(me, i);   // wrogów poza polem widzenia nie rysujemy (tryb obserwatora pokazuje wszystko)
     for (let i = 0; i < cnt; i++) {
@@ -2772,7 +2953,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 * k, s === 'WK' ? 0xe0483a : 0x111111, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
     }
     for (const c of sim.comps) {
-      const show = c.alive > 0 && (showAll || c.side === me || sim.compVisible(c, me)), sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id);
+      const show = c.alive > 0 && (showAll || c.side === me || sim.compVisible(c, me)), sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id || S.pinned === c.id);
       c._label.visible = c._cnt.visible = info; c._flag.visible = show;
       if (!show) continue;
       const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 2.2 + 16 * k;
@@ -2808,29 +2989,66 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
     }
     // podgląd formowania podczas przeciągania PPM
-    if (drag.on && drag.active) for (const o of planOrders(drag.kind, drag.wx, drag.wy, { face: drag.face, steps: drag.steps })) drawFormation(o.c, o.x, o.y, o.face, o.cols, drag.kind, true);
+    if (R.on && R.moved && !S.observe) for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width })) drawFormation(o.c, o.x, o.y, o.face, o.cols, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
+    if (G && G.type === 'group' && G.moved) for (const o of planGroupMove(G)) drawFormation(o.c, o.x, o.y, o.face, null, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
+    if (!S.observe) drawTargets();
     drawFx(sim, k);
-    for (let q = markers.length - 1; q >= 0; q--) { const m = markers[q]; m.t -= 0.02; if (m.t <= 0) { markers.splice(q, 1); continue; } gOver.lineStyle(2 * k, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, m.t); ell(gOver, m.x, m.y, (1.2 - m.t) * 60 + 8); }
+    for (let q = markers.length - 1; q >= 0; q--) { const m = markers[q]; m.t -= 0.02; if (m.t <= 0) { markers.splice(q, 1); continue; } if (m.kind === 'bad') { crossAt(m.x, m.y, ORDER_COL.bad, 10); continue; } gOver.lineStyle(2 * k, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, Math.min(1, m.t)); ell(gOver, m.x, m.y, (1.2 - Math.min(1, m.t)) * 60 + 8); }
     drawBox();
   }
-  // kolory rozkazów: biała linia to ruch, czerwona to atak, jasnoniebieska to odwrót
-  const ORDER_COL = { attack: 0xff4a3a, move: 0xffffff, retreat: 0x7fc8ff, hold: 0xffe08a };
+  // kolory rozkazów: biała to ruch, czerwona to atak, jasnoniebieska to odwrót, czerwień z krzyżykiem to niewykonalny rozkaz (brak drogi)
+  const ORDER_COL = { attack: 0xff4a3a, attackTarget: 0xff4a3a, move: 0xffffff, retreat: 0x7fc8ff, hold: 0xffe08a, bad: 0xff2a2a };
+  // linia przerywana po łamanej (punkty świata); trasa pochodzi z pól przepływu symulacji (sim.routeOf), czyli z tego samego pathfindingu co ruch
+  function dashPath(pts, col, alpha, w) {
+    const k = 1 / cam.z, on = 7 * k, off = 6 * k; let draw = true, left = on;
+    gOver.lineStyle(w * k, col, alpha);
+    for (let q = 0; q + 1 < pts.length; q++) {
+      let x0 = ISO.sx(pts[q][0], pts[q][1]), y0 = ISO.sy(pts[q][0], pts[q][1]); const x1 = ISO.sx(pts[q + 1][0], pts[q + 1][1]), y1 = ISO.sy(pts[q + 1][0], pts[q + 1][1]);
+      let len = Math.hypot(x1 - x0, y1 - y0); const ux = (x1 - x0) / (len || 1), uy = (y1 - y0) / (len || 1);
+      while (len > 0) { const st = Math.min(left, len); if (draw) gOver.moveTo(x0, y0).lineTo(x0 + ux * st, y0 + uy * st); x0 += ux * st; y0 += uy * st; len -= st; left -= st; if (left <= 1e-6) { draw = !draw; left = draw ? on : off; } }
+    }
+  }
+  function crossAt(x, y, col, r) { const k = 1 / cam.z, sx = ISO.sx(x, y), sy = ISO.sy(x, y); gOver.lineStyle(2.4 * k, col, 0.95).moveTo(sx - r * k, sy - r * k).lineTo(sx + r * k, sy + r * k).moveTo(sx + r * k, sy - r * k).lineTo(sx - r * k, sy + r * k); }
+  const routeFor = (c, x, y, fx, fy) => { const key = Math.round(fx / 24) + ',' + Math.round(fy / 24) + ',' + Math.round(x) + ',' + Math.round(y); c._rts = c._rts || {}; let r = c._rts[key]; if (!r) { c._rts = {}; r = c._rts[key] = { pts: S.sim.routeOf(fx, fy, x, y, 28) }; } return r.pts; };
   function drawFormation(c, x, y, face, cols, kind, preview) {
-    const k = 1 / cam.z, col = ORDER_COL[kind] || 0xffffff, sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), tx = ISO.sx(x, y), ty = ISO.sy(x, y);
-    gOver.lineStyle((preview ? 2 : 1.6) * k, col, preview ? 0.95 : 0.85).moveTo(sx, sy).lineTo(tx, ty);
-    gOver.lineStyle(2 * k, col, 0.95).beginFill(col, 0.18);
+    const k = 1 / cam.z, col = ORDER_COL[kind] || 0xffffff, tx = ISO.sx(x, y), ty = ISO.sy(x, y);
+    gOver.lineStyle(2 * k, col, 0.95).beginFill(col, preview ? 0.14 : 0.18);
     if (face == null) { gOver.drawEllipse(tx, ty, ISO.rx(10), ISO.ry(10)); gOver.endFill(); return; }
-    const n = c.alive, cc = cols || autoCols(c), rows = Math.max(1, Math.ceil(n / cc)), W = cc * c.spacing, D = rows * c.spacing, fx2 = Math.cos(face), fy2 = Math.sin(face), lx = -fy2, ly = fx2;
+    const n = c.alive, cc = cols || c.fcolsEff || autoCols(c), rows = Math.max(1, Math.ceil(n / cc)), W = cc * c.spacing, D = rows * c.spacing, fx2 = Math.cos(face), fy2 = Math.sin(face), lx = -fy2, ly = fx2;
     const P = (u, v) => [ISO.sx(x + fx2 * u + lx * v, y + fy2 * u + ly * v), ISO.sy(x + fx2 * u + lx * v, y + fy2 * u + ly * v)];
     const a = P(D / 2, -W / 2), b = P(D / 2, W / 2), c2 = P(-D / 2, W / 2), d = P(-D / 2, -W / 2);
     gOver.drawPolygon([a[0], a[1], b[0], b[1], c2[0], c2[1], d[0], d[1]]); gOver.endFill();
-    const f0 = P(D / 2, 0), f1 = P(D / 2 + 22, 0), h1 = P(D / 2 + 12, -8), h2 = P(D / 2 + 12, 8);   // strzałka kierunku
+    const f0 = P(D / 2, 0), f1 = P(D / 2 + 22, 0), h1 = P(D / 2 + 12, -8), h2 = P(D / 2 + 12, 8);   // strzałka kierunku frontu
     gOver.lineStyle(2 * k, col, 0.95).moveTo(f0[0], f0[1]).lineTo(f1[0], f1[1]).moveTo(h1[0], h1[1]).lineTo(f1[0], f1[1]).lineTo(h2[0], h2[1]);
   }
+  // aktywny rozkaz zaznaczonej roty: trasa z pathfindingu (przerywana), miejsce docelowe i kolejka z numerami; niewykonalny cel to czerwony krzyżyk, nie trasa przez ścianę
   function drawOrder(c) {
-    const o = c.order; if (!o) return;
-    if (o.kind === 'hold') { gOver.lineStyle(1.6 / cam.z, ORDER_COL.hold, 0.8); gOver.drawEllipse(ISO.sx(c.ax, c.ay), ISO.sy(c.ax, c.ay), ISO.rx(Math.sqrt(c.alive) * 5 + 22), ISO.ry(Math.sqrt(c.alive) * 5 + 22)); if (o.face != null) drawFormation(c, c.ax, c.ay, o.face, c.fcols || null, 'hold', false); return; }
-    drawFormation(c, o.x, o.y, o.face, c.fcols || null, o.kind, false);
+    const o = c.order, k = 1 / cam.z; if (!o) return;
+    if (o.kind === 'hold') { gOver.lineStyle(1.6 * k, ORDER_COL.hold, 0.8); gOver.drawEllipse(ISO.sx(c.ax, c.ay), ISO.sy(c.ax, c.ay), ISO.rx(Math.sqrt(c.alive) * 5 + 22), ISO.ry(Math.sqrt(c.alive) * 5 + 22)); if (o.face != null) drawFormation(c, c.ax, c.ay, o.face, c.fcols || null, 'hold', false); }
+    let fx = c.ax, fy = c.ay;
+    if (!o.done && o.kind !== 'hold') {
+      const col = ORDER_COL[o.kind] || 0xffffff, pts = routeFor(c, o.x, o.y, fx, fy);
+      if (!pts) crossAt(o.x, o.y, ORDER_COL.bad, 9); else { dashPath(pts, col, 0.9, 1.8); if (o.kind !== 'attackTarget') drawFormation(c, o.x, o.y, o.face, c.fcols || null, o.kind, false); }
+      fx = o.x; fy = o.y;
+    }
+    for (const q of c.queue) {
+      const col = ORDER_COL[q.kind] || 0xffffff, tcv = q.kind === 'attackTarget' ? S.sim.comps[q.target] : null, qx = tcv ? tcv.ax : q.x, qy = tcv ? tcv.ay : q.y, pts = S.sim.routeOf(fx, fy, qx, qy, 28);
+      if (pts) dashPath(pts, col, 0.6, 1.4); else crossAt(qx, qy, ORDER_COL.bad, 7);
+      gOver.lineStyle(1.8 * k, col, 0.95).beginFill(0x15120c, 0.7).drawCircle(ISO.sx(qx, qy), ISO.sy(qx, qy), 6 * k).endFill();
+      fx = qx; fy = qy;
+    }
+  }
+  // cel ataku: narożniki wokół wskazanej wrogiej roty (dla każdej zaznaczonej roty z aktywnym rozkazem ataku; znika, gdy cel zginie)
+  function drawTargets() {
+    const sim = S.sim, k = 1 / cam.z, seen = new Set();
+    for (const c of selComps()) { const o = c.order; if (o && o.kind === 'attackTarget' && !o.done) seen.add(o.target); }
+    for (const id of seen) {
+      const t = sim.comps[id]; if (!t || t.alive <= 0) continue;
+      const me = SIDES.indexOf(S.side); if (!S.observe && !sim.compVisible(t, me)) continue;
+      const sx = ISO.sx(t.ax, t.ay), sy = ISO.sy(t.ax, t.ay), r = Math.sqrt(t.alive) * 5 + 16, L = Math.min(10, r * 0.5) * 1;
+      gOver.lineStyle(2.4 * k, ORDER_COL.attack, 0.95);
+      for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const x = sx + dx * r, y = sy + dy * r * 0.6; gOver.moveTo(x, y).lineTo(x - dx * L * 0.9, y).moveTo(x, y).lineTo(x, y - dy * L * 0.5); }
+    }
   }
   // pociski kwasu lecą łukiem ponad swoimi (celuje się tylko z uwzględnieniem przeszkód terenu), po trafieniu zostaje plama; wybuchy pękaczy to rozchodzący się pierścień
   function drawFx(sim, k) {
@@ -2903,7 +3121,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, world, get atlas() { return atlas; } };
+  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, world, get atlas() { return atlas; }, toScreen: (x, y) => [ISO.sx(x, y) * cam.z + cam.x, ISO.sy(x, y) * cam.z + cam.y], markers, R, ctl: CTL, get G() { return G; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

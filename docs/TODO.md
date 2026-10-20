@@ -57,3 +57,9 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 
 ## Dalsze etapy rozszerzenia P1
 - Etap 3: konfiguracja armii i budżety (gotowy do testów ręcznych). Etap 4: elewacja, linia wzroku, zasadzki i ukrywanie się w mchu. Etap 5: pełnoprawne oblężenia kopców (gotowy do testów ręcznych: poziomy, korytarze, serce gniazda, panika obrońców).
+
+## Sterowanie (Total War)
+- Atak wielu rot na jeden cel: brak jawnego przydziału miejsc bojowych wokół celu (dziś: preferencja mrówek wskazanej roty i rozłożenie wynikające z kolizji).
+- Interakcje z wrogimi budynkami, surowcami i własnym gniazdem: gra nie ma takich celów rozkazów.
+- Sterowanie pojedynczymi mrówkami: nie istnieje (rota jest najmniejszą sterowalną jednostką).
+- Źródła Total War z specyfikacji nie zostały sprawdzone (brak dostępu do sieci w środowisku pracy).
