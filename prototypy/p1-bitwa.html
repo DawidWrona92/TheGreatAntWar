@@ -255,6 +255,10 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Obrażenia zależne od kierunku ciosu względem kierunku mrówki (heading): przód x1, flanka x flank, tył x rear. frontDeg i rearDeg to progi w stopniach.",
       "on": true, "flank": 1.25, "rear": 1.5, "frontDeg": 60, "rearDeg": 120
     },
+    "corridor": {
+      "comment": "Ruch w korytarzach (mapy z followAnchor: 4, 5 i kopiec). Pole przepływu omija ściany (koszt komórek przy ścianie: penalty dla odległości 1 i 2 komórek), a szyk, którego miejsca wpadają w ściany lub jest za szeroki dla korytarza, zmienia się w kolumnę o liczbie kolumn dopasowanej do szerokości korytarza i podąża śladem kotwicy (miejsce o głębokości U leży na śladzie U jednostek za kotwicą, a nie na prostej).",
+      "on": true, "penalty": [9, 4], "trailStep": 3, "trailMax": 400, "holdSec": 3, "probe": 40, "margin": 2
+    },
     "aiPeriod": 20
   },
   "units": {
@@ -1143,6 +1147,14 @@ const Sim = (function () {
     }
 
     // ---------- pola przepływu (jeden na cel) ----------
+    // korytarze (followAnchor): komórki przy ścianie są droższe, więc trasa biegnie środkiem i nie ściera narożników (kotwica i szyk mają szerokość)
+    const CORRP = P.corridor, CORR = FOLLOW && CORRP.on;
+    const CLR = CORR ? (() => {
+      const wd = new Uint8Array(COLS * ROWS).fill(9), q = []; for (let i = 0; i < COLS * ROWS; i++) if (BLK[grid[i]] === 1) { wd[i] = 0; q.push(i); }
+      for (let h = 0; h < q.length; h++) { const i = q[h], cx = i % COLS; for (const j of [cx > 0 ? i - 1 : -1, cx < COLS - 1 ? i + 1 : -1, i - COLS, i + COLS]) if (j >= 0 && j < COLS * ROWS && wd[j] === 9 && wd[i] < 2) { wd[j] = wd[i] + 1; q.push(j); } }
+      const pen = new Uint8Array(COLS * ROWS); for (let i = 0; i < pen.length; i++) pen[i] = wd[i] === 1 ? CORRP.penalty[0] : wd[i] === 2 ? CORRP.penalty[1] : 0;
+      return pen;
+    })() : null;
     const fields = new Map();
     function getField(x, y) {
       const key = cellAt(x, y);
@@ -1154,7 +1166,7 @@ const Sim = (function () {
       return f;
     }
     function buildField(key, f) {
-      f.fill(-1);
+      f.fill(-1); const pen = CLR;
       const q = [key]; f[key] = 0;
       const nb = [[1, 0, 10], [-1, 0, 10], [0, 1, 10], [0, -1, 10], [1, 1, 14], [1, -1, 14], [-1, 1, 14], [-1, -1, 14]];
       const isB = (i) => BLK[grid[i]] === 1;
@@ -1166,7 +1178,7 @@ const Sim = (function () {
           const ni = ny * COLS + nx;
           if (isB(ni)) continue;
           if (dx !== 0 && dy !== 0 && (isB(cy * COLS + nx) || isB(ny * COLS + cx))) continue;
-          const nd = f[cur] + w;
+          const nd = f[cur] + w + (pen ? pen[ni] : 0);
           if (f[ni] < 0 || nd < f[ni]) { f[ni] = nd; q.push(ni); }
         }
       }
@@ -1237,7 +1249,8 @@ const Sim = (function () {
             deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
             captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9,
-            slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null]
+            slopeSum: 0, slopeN: 0, seenAt: [-1e9, -1e9], lastX: [0, 0], lastY: [0, 0], vw: [null, null],
+            trail: { o: [], x: [], y: [], odo: 0, d0x: Math.cos(cd.face), d0y: Math.sin(cd.face) }, bent: false, bentUntil: 0, fcolsEff: 0, rad: 4
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -1247,7 +1260,7 @@ const Sim = (function () {
             c.startBy[k] = cd.units[k]; stats[sn].start[k] = (stats[sn].start[k] || 0) + cd.units[k];
           }
           c.initial = c.alive;
-          if (!c.spacing) { let mr = 0; for (const k in cd.units) if (k !== 'dowodca') mr = Math.max(mr, T.radius[ti[k]]); c.spacing = Math.max(SPACING, mr * 2.1); }
+          { let mr = 0; for (const k in cd.units) if (k !== 'dowodca') mr = Math.max(mr, T.radius[ti[k]]); c.rad = mr || 4; if (!c.spacing) c.spacing = Math.max(SPACING, mr * 2.1); }
           if (c.role === 'plug') c.fcols = Math.max(4, Math.ceil((passage - 2 * T.radius[ti.odzwierny]) / c.spacing) + 1);
           let nP = 0; for (const k in c.startBy) if (kinds[ti[k]] === 'plujka') nP += c.startBy[k]; c.acidMax = nP * P.supply.acidCap; c.acid = nP * P.supply.acidStart;
           // umiejętność rity: pierwszy typ specjalny, inaczej dowódca
@@ -1284,7 +1297,7 @@ const Sim = (function () {
         const rows = Math.ceil(Math.sqrt(n));
         for (let k = 0; k < n; k++) { const r = Math.floor(Math.sqrt(k)), idx = k - r * r; slotV[list[k]] = (idx - r) * s; slotU[list[k]] = ((rows - 1) / 2 - r) * s * 0.9; }
       } else {
-        const cols = c.fcols > 0 ? c.fcols : (c.formation === F_LINE ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5))));
+        const cols = c.fcolsEff > 0 ? c.fcolsEff : c.fcols > 0 ? c.fcols : (c.formation === F_LINE ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5))));
         const rows = Math.ceil(n / cols);
         for (let k = 0; k < n; k++) {
           const r = (k / cols) | 0, col = k % cols, rc = r < rows - 1 ? cols : n - (rows - 1) * cols;
@@ -1396,7 +1409,7 @@ const Sim = (function () {
       return best;
     }
 
-    sim.debug = { hit, acquire, slotErr: (i) => { const w = slotWorld(comps[compOf[i]], i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
+    sim.debug = { hit, acquire, slotErr: (i) => { const cc = comps[compOf[i]], w = CORR && cc.bent ? trailSlot(cc, i) : slotWorld(cc, i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
 
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
@@ -1547,6 +1560,75 @@ const Sim = (function () {
       buildField(key, c.afield); c.afKey = key; c.afTick = tick;
     }
 
+    // ---------- szyk w korytarzu (etap 5: poprawka ruchu w wąskich przejściach) ----------
+    // Problem: szyk to prosta siatka miejsc wokół kotwicy, a po zakręcie jego tylne rzędy wpadają w ściany. Mrówki z miejscem w ścianie szły do kotwicy
+    // i zlewały się w kupkę, której nic już nie rozsuwało (15-40% roty nigdy nie wracało do szyku). Rozwiązanie jest ogólne, nie dla jednego układu:
+    // gdy szyk nie mieści się w korytarzu (miejsca w ścianach lub za mało szerokości), rota zmienia liczbę kolumn na wynikającą z szerokości korytarza
+    // i układa się wzdłuż śladu kotwicy: miejsce o głębokości U < 0 leży na śladzie U jednostek za kotwicą (z bocznym przesunięciem V), więc kolumna
+    // skręca razem z korytarzem. Poza korytarzem (szyk mieści się) nic się nie zmienia.
+    function trailPush(c, step) {
+      const T_ = c.trail; T_.odo += step; const n = T_.o.length;
+      if (!n || Math.hypot(c.ax - T_.x[n - 1], c.ay - T_.y[n - 1]) >= CORRP.trailStep) {
+        T_.o.push(T_.odo); T_.x.push(c.ax); T_.y.push(c.ay);
+        if (T_.o.length > CORRP.trailMax) { T_.o.splice(0, CORRP.trailMax >> 1); T_.x.splice(0, CORRP.trailMax >> 1); T_.y.splice(0, CORRP.trailMax >> 1); }
+      }
+    }
+    const tp = { x: 0, y: 0, tx: 1, ty: 0 };
+    // punkt śladu kotwicy sprzed s jednostek drogi i kierunek ruchu w tym miejscu (poza historią: prosta wstecz od jej początku)
+    function trailAt(c, s_) {
+      const T_ = c.trail, n = T_.o.length, want = T_.odo - s_;
+      if (n < 2 || want <= T_.o[0]) {
+        const bx = n ? T_.x[0] : c.ax, by = n ? T_.y[0] : c.ay, back = n ? T_.o[0] - want : s_;
+        let dx = T_.d0x, dy = T_.d0y; if (n >= 2 && want <= T_.o[0] && T_.o[0] > 1e-6 && T_.o[0] - T_.o[1] !== 0 && T_.o[1] < T_.odo) { dx = T_.x[1] - T_.x[0]; dy = T_.y[1] - T_.y[0]; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d; }
+        tp.x = bx - dx * back; tp.y = by - dy * back; tp.tx = dx; tp.ty = dy; return tp;
+      }
+      let lo = 0, hi = n - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T_.o[m] <= want) lo = m; else hi = m; }
+      const span = T_.o[hi] - T_.o[lo] || 1, f = Math.max(0, Math.min(1, (want - T_.o[lo]) / span));
+      tp.x = T_.x[lo] + (T_.x[hi] - T_.x[lo]) * f; tp.y = T_.y[lo] + (T_.y[hi] - T_.y[lo]) * f;
+      let dx = T_.x[hi] - T_.x[lo], dy = T_.y[hi] - T_.y[lo]; const d = Math.hypot(dx, dy) || 1; tp.tx = dx / d; tp.ty = dy / d; return tp;
+    }
+    // swobodna szerokość korytarza w punkcie (prostopadle do kierunku ruchu), po lim z każdej strony
+    function latWidth(x, y, tx, ty, lim) {
+      let l = 0, r = 0; const nx = -ty, ny = tx;
+      while (l < lim && !blocked(x + nx * (l + 2), y + ny * (l + 2))) l += 2;
+      while (r < lim && !blocked(x - nx * (r + 2), y - ny * (r + 2))) r += 2;
+      return l + r;
+    }
+    const baseCols = (c, n) => (c.fcols > 0 ? c.fcols : (c.formation === F_LINE ? Math.max(4, Math.round(Math.sqrt(n * 2.5))) : Math.max(3, Math.round(Math.sqrt(n / 2.5)))));
+    // ile miejsc szyku leży w ścianie albo poza zasięgiem prostej od kotwicy
+    function straightInvalid(c) {
+      let bad = 0;
+      for (const i of c.ants) { if (!alive[i]) continue; const w = slotWorld(c, i); if (blocked(w[0], w[1]) || !moveClear(c.ax, c.ay, w[0], w[1])) bad++; }
+      return bad;
+    }
+    function updateBent(c) {
+      if ((tick + c.id) % 10 !== 0 || c.alive < 4 || c.closed) return;
+      { const T_ = c.trail, n = T_.o.length; if (n && Math.hypot(c.ax - T_.x[n - 1], c.ay - T_.y[n - 1]) > 40) { T_.o.length = T_.x.length = T_.y.length = 0; T_.d0x = c.fx; T_.d0y = c.fy; } }   // kotwica skoczyła (np. wstawiona z zewnątrz): stary ślad nie ma sensu
+      const n = c.alive, s_ = c.spacing, bc = baseCols(c, n), cols0 = c.fcolsEff > 0 ? c.fcolsEff : bc, depth = Math.min(CORRP.trailMax * CORRP.trailStep * 0.6, Math.ceil(n / cols0) * s_ * 0.5 + 10);
+      // najwęższe miejsce wzdłuż szyku: kotwica i ślad do połowy głębokości szyku (sondowanie na boki tylko do szerokości potrzebnej szykowi, więc otwarty teren nie zwęża)
+      const need = (bc - 1) * s_ + 2 * (c.rad + CORRP.margin);
+      let Wd = 1e9; for (let d = 0; d <= depth; d += CORRP.probe) { const q = trailAt(c, d); Wd = Math.min(Wd, latWidth(q.x, q.y, q.tx, q.ty, need / 2 + 6)); }
+      const want = Math.max(2, Math.min(bc, Math.floor((Wd - 2 * (c.rad + CORRP.margin)) / s_) + 1));
+      if (want < bc) {
+        if (!c.bent) c.bent = true; c.bentUntil = tick + CORRP.holdSec * HZ;
+        if (want !== c.fcolsEff) { c.fcolsEff = want; c.dirty = true; }
+      } else if (c.bent && tick >= c.bentUntil) {
+        if (c.fcolsEff > 0) { c.fcolsEff = 0; c.dirty = true; }
+        else if (straightInvalid(c) <= 1) c.bent = false;
+      } else if (!c.bent) {
+        const bad = straightInvalid(c); if (bad > Math.max(2, n * 0.03)) { c.bent = true; c.bentUntil = tick + CORRP.holdSec * HZ; }
+      }
+    }
+    const slotPt = [0, 0];
+    // miejsce mrówki w szyku "po śladzie": z tyłu (U < 0) na śladzie kotwicy, z przodu prosta albo kotwica; boczne przesunięcie V skracane, gdy wpada w ścianę
+    function trailSlot(c, i) {
+      const U = slotU[i], V = slotV[i];
+      if (U >= 0) { const w = slotWorld(c, i); if (!blocked(w[0], w[1]) && moveClear(c.ax, c.ay, w[0], w[1])) { slotPt[0] = w[0]; slotPt[1] = w[1]; return slotPt; } }
+      const q = trailAt(c, U < 0 ? -U : 0); let v = V;
+      for (let k = 0; k < 4 && blocked(q.x - q.ty * v, q.y + q.tx * v); k++) v = k === 3 ? 0 : v * 0.5;
+      slotPt[0] = q.x - q.ty * v; slotPt[1] = q.y + q.tx * v; return slotPt;
+    }
+
     // ---------- przesuwanie kotwicy rity ----------
     function updateAnchor(c) {
       const o = c.eff;
@@ -1558,11 +1640,11 @@ const Sim = (function () {
         let dirx = dx / dist, diry = dy / dist;
         if (!(dist < CELL * 2 && moveClear(c.ax, c.ay, o.x, o.y)) && c.field && flowDir(c.field, c.ax, c.ay)) { dirx = flow.x; diry = flow.y; }
         const step = Math.min(dist, c.speed * c.spMod * abilMul * c.cohesion * DT * (HILLS ? slopeMul(slopeAt(c.ax, c.ay, dirx, diry)) : 1));
-        const nx = c.ax + dirx * step, ny = c.ay + diry * step;
+        const nx = c.ax + dirx * step, ny = c.ay + diry * step, ox = c.ax, oy = c.ay;
         if (!blocked(nx, ny)) { c.ax = nx; c.ay = ny; moved = true; }
         else if (!blocked(nx, c.ay)) { c.ax = nx; moved = true; }
         else if (!blocked(c.ax, ny)) { c.ay = ny; moved = true; }
-        if (moved) c.tface = Math.atan2(diry, dirx);
+        if (moved) { c.tface = Math.atan2(diry, dirx); if (CORR) trailPush(c, Math.hypot(c.ax - ox, c.ay - oy)); }
       }
       c.moving = moved;
       if (!moved) {
@@ -1576,6 +1658,7 @@ const Sim = (function () {
         c.face += Math.max(-0.12, Math.min(0.12, da)); c.fx = Math.cos(c.face); c.fy = Math.sin(c.face);
       }
       if (FOLLOW) refreshAnchorField(c);
+      if (CORR) updateBent(c);
       if (c.errN > 0) { c.err = c.errSum / c.errN; c.errSum = 0; c.errN = 0; c.cohesion = Math.max(0.1, Math.min(1, 1 - (c.err - 8) / 40)); }
     }
 
@@ -1684,7 +1767,7 @@ const Sim = (function () {
         const isPek = tn === 'pekacz', burstMode = isPek && (c.abilUntil > tick || c.berserk);
         let gx, gy, speed = T.speed[ty] * c.spMod, goalSet = false;
         // slot
-        const sw = slotWorld(c, i), sdx = sw[0] - ax[i], sdy = sw[1] - ay[i], sd = Math.hypot(sdx, sdy);
+        const sw = CORR && c.bent ? trailSlot(c, i) : slotWorld(c, i), sdx = sw[0] - ax[i], sdy = sw[1] - ay[i], sd = Math.hypot(sdx, sdy);
         c.errSum += sd; c.errN++;
         // ewentualne namierzanie
         if (isPek) {

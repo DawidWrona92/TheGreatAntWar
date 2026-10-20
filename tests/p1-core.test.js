@@ -852,6 +852,18 @@ test('kopiec: determinizm (to samo ziarno, ten sam skrót) i czas kroku przy du�
   return 'skrót ' + a.hash() + '; krok przy ' + big.count + ' mrówkach: mediana ' + med.toFixed(1) + ' ms, p99 ' + p99.toFixed(1) + ' ms';
 });
 
+
+test('korytarze: rota po zakręcie o 90°, na rampie i przy wejściu wraca do szyku (wcześniej 15-50% mrówek zostawało w kupce przy kotwicy)', () => {
+  const { TRIALS, trial } = require('./p1-korytarze'); const lines = [];
+  for (const t of TRIALS) {
+    const before = trial(t, false), after = trial(t, true);
+    assert.ok(after.frac >= 0.95, t.name + ': po poprawce na miejscu ' + after.ok + '/' + after.n);
+    if (!/kontrola/.test(t.name)) assert.ok(before.frac <= 0.9, t.name + ': bez poprawki test nie wykrywa problemu (' + before.ok + '/' + before.n + ')');
+    lines.push(Math.round(100 * before.frac) + '% -> ' + Math.round(100 * after.frac) + '%');
+  }
+  return 'odsetek mrówek na miejscu w szyku przed i po poprawce: ' + lines.join(', ');
+});
+
 let failed = 0;
 for (const r of results) { console.log((r.ok ? 'OK   ' : 'FAIL ') + r.name + (r.note ? '\n       ' + r.note : '') + '  [' + r.ms + ' ms]'); if (!r.ok) failed++; }
 console.log('\n' + (results.length - failed) + '/' + results.length + ' testów rdzenia przeszło');

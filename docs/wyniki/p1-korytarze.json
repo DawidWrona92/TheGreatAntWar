@@ -1,0 +1,143 @@
+{
+ "generated": "wykonane: node tests/p1-korytarze.js",
+ "trials": [
+  {
+   "name": "LH rota 180: pierścień 0, zakręt N->W o 90° (cel 160 za rogiem)",
+   "przed": {
+    "ok": 153,
+    "n": 180,
+    "frac": 0.85,
+    "settleSeconds": null,
+    "anchor": [
+     1336,
+     390
+    ]
+   },
+   "po": {
+    "ok": 180,
+    "n": 180,
+    "frac": 1,
+    "settleSeconds": 18,
+    "anchor": [
+     1337,
+     390
+    ]
+   }
+  },
+  {
+   "name": "LH rota 180: pierścień 0, zakręt N->E o 90°",
+   "przed": {
+    "ok": 153,
+    "n": 180,
+    "frac": 0.85,
+    "settleSeconds": null,
+    "anchor": [
+     2375,
+     389
+    ]
+   },
+   "po": {
+    "ok": 180,
+    "n": 180,
+    "frac": 1,
+    "settleSeconds": 29,
+    "anchor": [
+     2375,
+     389
+    ]
+   }
+  },
+  {
+   "name": "LH rota 180: bliski cel za rogiem (70 za rogiem, start 110 przed)",
+   "przed": {
+    "ok": 109,
+    "n": 180,
+    "frac": 0.61,
+    "settleSeconds": null,
+    "anchor": [
+     1338,
+     298
+    ]
+   },
+   "po": {
+    "ok": 180,
+    "n": 180,
+    "frac": 1,
+    "settleSeconds": 16,
+    "anchor": [
+     1337,
+     297
+    ]
+   }
+  },
+  {
+   "name": "LH rota 180: rampa N poziom 0->1 i zakręt w pierścieniu 1",
+   "przed": {
+    "ok": 149,
+    "n": 180,
+    "frac": 0.83,
+    "settleSeconds": null,
+    "anchor": [
+     1703,
+     375
+    ]
+   },
+   "po": {
+    "ok": 180,
+    "n": 180,
+    "frac": 1,
+    "settleSeconds": 48,
+    "anchor": [
+     1703,
+     375
+    ]
+   }
+  },
+  {
+   "name": "LH plujki 60: prosto (kontrola)",
+   "przed": {
+    "ok": 60,
+    "n": 60,
+    "frac": 1,
+    "settleSeconds": 10,
+    "anchor": [
+     2232,
+     685
+    ]
+   },
+   "po": {
+    "ok": 60,
+    "n": 60,
+    "frac": 1,
+    "settleSeconds": 11,
+    "anchor": [
+     2232,
+     685
+    ]
+   }
+  },
+  {
+   "name": "WK rota 100: z pola startu przez wejście do pierścienia 0 (zakręt przy wejściu)",
+   "przed": {
+    "ok": 49,
+    "n": 100,
+    "frac": 0.49,
+    "settleSeconds": null,
+    "anchor": [
+     1335,
+     403
+    ]
+   },
+   "po": {
+    "ok": 100,
+    "n": 100,
+    "frac": 1,
+    "settleSeconds": 26,
+    "anchor": [
+     1335,
+     403
+    ]
+   }
+  }
+ ]
+}

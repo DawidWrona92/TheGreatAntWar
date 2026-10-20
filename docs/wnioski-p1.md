@@ -133,6 +133,11 @@ Ograniczenia i luki (zgłoszone, nie rozstrzygnięte):
 - AI nie wykorzystuje struktury kopca (nie rozdziela sił na dwie trasy, nie cofa się celowo na kolejne pierścienie ani nie blokuje ramp): do listy TODO.
 - Krok symulacji: przy ok. 4000 mrówek (budżet Duży) mediana 13-15 ms, p99 od 40 do 52 ms, czyli czasem ponad budżet 50 ms (czas piaskownicy, pomiary na wolnej maszynie); pierwszy krok po starcie trwa ok. 300 ms (budowa pól przepływu).
 
+## Poprawka ruchu w korytarzach (po etapie 5)
+Zgłoszenie: w oblężeniu mrówki blokują się w wąskich korytarzach, zwłaszcza gdy cel jest blisko, ale za zakrętem o ok. 90°. Diagnoza i rozwiązanie: decyzja 70 w `projekt-bitwy.md`. Pomiary (`node tests/p1-korytarze.js`, `wyniki/p1-korytarze.json`), odsetek mrówek na miejscu w szyku po dojściu kotwicy do celu, przed i po: zakręt N->W 85% -> 100%, N->E 85% -> 100%, bliski cel za rogiem 61% -> 100%, rampa i zakręt w pierścieniu 1 83% -> 100%, wejście do kopca z pola startu (rota 100) 49% -> 100%, kontrola prosto 100% -> 100%. Przepływ całej armii (bez obrońców poza gwardią w sercu, 330 s): po poprawce 90% atakujących na poziomie 1 po 154 s (przed: 201 s), a połowa na poziomie 2 po 307 s (przed: nigdy).
+Koszt: mediana kroku przy ok. 4000 mrówek ok. 14-16 ms zamiast 12-13 ms (p99 bez zmian, wynika z kilku pierwszych kroków po starcie).
+Ograniczenia: sondowanie szerokości korytarza działa tylko wzdłuż śladu kotwicy (rota nie zwęża się z wyprzedzeniem przed zwężeniem, tylko gdy kotwica do niego wejdzie); ruch w korytarzach mapy 4 i 5 używa tej samej poprawki, ale nie zmierzyłem jej osobno na tych mapach (przeszły istniejące testy); tłok wielu rot przy jednym wejściu nadal spowalnia przepływ (liczba i szerokość wejść to dane kopca).
+
 ## Błędy znalezione po drodze (każdy ma test)
 - Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.
 - Plug stał poza przejściem, był za wąski, obracał się za wrogiem, a szybkie mrówki i nacisk tłumu przepychały się przez szyk. Test: nieśmiertelny zamknięty plug nie przepuszcza nikogo przy 64, 128 i 256.
