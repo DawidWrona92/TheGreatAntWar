@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#17160f;--panel:#23211a;--panel2:#2d2a21;--line:#443f31;--text:#ece6d6;--dim:#a39b84;
-  --wk:#b01c22;--wkl:#ef6a58;--lh:#2f6fc4;--lhl:#7fb2f0;--ok:#6fbf4a;--warn:#e6b422;--bad:#e0483a;--acc:#e6b422;
+  --wk:#b01c22;--wkl:#ef6a58;--lh:#222;--lhl:#8b8b8b;--ok:#6fbf4a;--warn:#e6b422;--bad:#e0483a;--acc:#e6b422;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:13px/1.35 system-ui,Segoe UI,Roboto,sans-serif}
@@ -17,7 +17,7 @@ button:hover{border-color:var(--acc)}button.on{background:#51461f;border-color:v
 #stage canvas{display:block;width:100%;height:100%}
 #topbar{position:absolute;left:0;right:0;top:0;height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;background:rgba(23,22,15,.88);border-bottom:1px solid var(--line);z-index:5}
 #topbar .grow{flex:1}
-.cnt{font-weight:600;padding:2px 8px;border-radius:3px}.cnt.wk{background:#5a1014;color:#ffd7cf;border:1px solid #b01c22}.cnt.lh{background:#10264a;color:#d4e6ff;border:1px solid #2f6fc4}
+.cnt{font-weight:600;padding:2px 8px;border-radius:3px}.cnt.wk{background:#5a1014;color:#ffd7cf;border:1px solid #b01c22}.cnt.lh{background:#111;color:#ddd;border:1px solid #666}
 #clock{font-variant-numeric:tabular-nums;min-width:48px}
 #ticker{position:absolute;left:10px;top:46px;width:min(460px,60vw);z-index:4;pointer-events:none}
 #ticker div{background:rgba(23,22,15,.82);border-left:3px solid var(--acc);margin-bottom:3px;padding:3px 7px;font-size:12px}
@@ -132,7 +132,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
     <p>Wybierz scenariusz i mapę. Dowodzisz rotami, resztą zajmuje się AI. Zasady: docs/Dokument_0.5.pdf, sekcja 15.2.</p>
     <div class="choice">
       <button id="cWK" class="on">Wielka Kolonia (czerwona)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. W oblężeniu i przeprawie atakuje.</small></button>
-      <button id="cLH">Lake Hodges (niebieska)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. W oblężeniu i przeprawie broni.</small></button>
+      <button id="cLH">Lake Hodges (czarna)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. W oblężeniu i przeprawie broni.</small></button>
     </div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Scenariusz</span><select id="mScen"></select><span></span></div>
     <p id="mScenDesc" class="mapdesc"></p>
@@ -1396,7 +1396,7 @@ const Sim = (function () {
       return best;
     }
 
-    sim.debug = { hit, acquire, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
+    sim.debug = { hit, acquire, slotErr: (i) => { const w = slotWorld(comps[compOf[i]], i); return Math.hypot(w[0] - ax[i], w[1] - ay[i]); }, vis: () => { buildHash(); seen[0].fill(0); seen[1].fill(0); stamp[0].fill(-1); stamp[1].fill(-1); updateVisibility(); } };   // haki do testów (jednostkowe sprawdzanie ciosów i namierzania)
 
     // ---------- polecenia ----------
     const queue = []; sim.log = [];
@@ -2094,7 +2094,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
 
   const PAL = {
     WK: { base: '#b01c22', hi: '#ff8f84', dark: '#4a0508', leg: '#5e0c10', trim: '#f2c230' },   // czerwień w stylu ZSRR ze złotem
-    LH: { base: '#2f6fc4', hi: '#9cc8ff', dark: '#0c2a5a', leg: '#123a78', trim: '#bcd7ff' }
+    LH: { base: '#2b2b32', hi: '#8a8a98', dark: '#0b0b0f', leg: '#16161b', trim: '#b8b8c4' }
   };
   const DIRS = 16, CELLW = 64, CELLH = 48, AX = 32, AY = 31, ATLAS_SCALE = 0.42;
   // wielkość ciała (mnożnik rozmiaru malowania) i wygląd per rodzaj
@@ -2283,7 +2283,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     sim.comps.forEach((c) => {
       let dom = 'dowodca', dn = 0; for (const k in c.startBy) if (k !== 'dowodca' && c.startBy[k] > dn) { dn = c.startBy[k]; dom = k; }
       c._kind = sim.kinds[sim.ti[dom]]; c._elite = sim.kinds[sim.ti[dom]] !== dom; c._domName = dom;
-      c._label = mk(c.name + ' #' + c.num, 13, c.side === 0 ? 0xffd7cf : 0xd4e6ff); c._cnt = mk('', 13, 0xe6e0c8); c._flag = mk(GLYPH[c._kind] || '?', 11, 0xffffff);
+      c._label = mk(c.name + ' #' + c.num, 13, c.side === 0 ? 0xffd7cf : 0xffffff); c._cnt = mk('', 13, 0xe6e0c8); c._flag = mk(GLYPH[c._kind] || '?', 11, 0xffffff);
       c._flag.anchor.set(0.5, 0.5);
     });
   }
@@ -2669,7 +2669,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   }
 
   // ---------- rysowanie klatki ----------
-  const HEX = { WK: 0xb01c22, LH: 0x2f6fc4 };
+  const HEX = { WK: 0xb01c22, LH: 0x222222 };
   function render() {
     const sim = S.sim; if (!sim) return;
     const p = antsPC.children, cnt = sim.count, K = DIRS / (Math.PI * 2), k = 1 / cam.z, me = SIDES.indexOf(S.side), showAll = S.observe;
@@ -2686,7 +2686,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R));
     // zasięg dowódców na ziemi
     for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.kinds[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s && seenByMe(i)) {
-      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 * k, s === 'WK' ? 0xe0483a : 0x5a9be8, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
+      const R = sim.defs.scenario.sides[s].auraR; gGround.beginFill(HEX[s], 0.07).lineStyle(1.5 * k, s === 'WK' ? 0xe0483a : 0x111111, 0.45); ell(gGround, sim.x[i], sim.y[i], R); gGround.endFill();
     }
     for (const c of sim.comps) {
       const show = c.alive > 0 && (showAll || c.side === me || sim.compVisible(c, me)), sel = S.selected.has(c.id), info = show && (sel || S.hover === c.id);
@@ -2694,9 +2694,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
       if (!show) continue;
       const sx = ISO.sx(c.ax, c.ay), sy = ISO.sy(c.ax, c.ay), up = Math.sqrt(c.alive) * 2.2 + 16 * k;
       // chorągiew: zawsze widoczna, bez liczb
-      const fy = sy - up, fw = 15 * k, fh = 10 * k, col = c.side === 0 ? 0xb01c22 : 0x2f6fc4;
+      const fy = sy - up, fw = 15 * k, fh = 10 * k, col = c.side === 0 ? 0xb01c22 : 0x2b2b32;
       gOver.lineStyle(1.4 * k, 0x2a2018, 1).moveTo(sx, fy).lineTo(sx, fy - 20 * k);
-      gOver.lineStyle(1 * k, c._elite ? 0xf2c230 : (c.side === 0 ? 0xf2c230 : 0xbcd7ff), 1).beginFill(col, 1).drawRect(sx, fy - 20 * k, fw, fh).endFill();
+      gOver.lineStyle(1 * k, c._elite ? 0xf2c230 : (c.side === 0 ? 0xf2c230 : 0xb8b8c4), 1).beginFill(col, 1).drawRect(sx, fy - 20 * k, fw, fh).endFill();
       c._flag.scale.set(k); c._flag.position.set(sx + fw / 2, fy - 20 * k + fh / 2);
       if (info) {
         // panel informacji: nazwa, liczebność (aktualnie/max), pasek zdrowia z podziałem na mrówki, morale i zmęczenie

@@ -7,7 +7,7 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 **Skala i czytelność**
 1. Rój jest rzadki. Odstęp w szyku to 11 jednostek świata, ciało zwykłej mrówki ma promień 4. Na polu jest ok. 1900 mrówek w 23 rotach. To świadome zejście poniżej widełek 2000-4000 z sekcji 15.2 dokumentu: na prośbę użytkownika woleliśmy widzieć pojedyncze mrówki i więcej rot niż gęsty tłum. Test wydajności 10 tys. mrówek należy do etapu T, nie do P1.
 2. Widok jest izometryczny 2:1 (rzut: `sx = (x - y) * 0.5 * S`, `sy = (x + y) * 0.25 * S`, S = 2). Symulacja zna tylko płaszczyznę (x, y); izometria to wyłącznie prezentacja.
-3. Sprite'y są malowane w wysokiej rozdzielczości (atlas 2,4 razy większy niż na ekranie), 16 kierunków, cień rzucany w prawo-dół. Wielka Kolonia jest czerwona (w stylu ZSRR, ze złotym wykończeniem), Lake Hodges niebieski; typy różnią się sylwetką.
+3. Sprite'y są malowane w wysokiej rozdzielczości (atlas 2,4 razy większy niż na ekranie), 16 kierunków, cień rzucany w prawo-dół. Wielka Kolonia jest czerwona (w stylu ZSRR, ze złotym wykończeniem), Lake Hodges czarny (niebieski wariant odrzucony przez użytkownika jako nienaturalny); typy różnią się sylwetką.
 
 **Fizyka ciał**
 4. Mrówki mają ciało (okrąg o promieniu zależnym od typu) i masę. W walce nie mogą się przenikać ani stackować: tylny szereg czeka, aż przed nim zrobi się miejsce (poległy kolega, rozciągnięty szyk).
