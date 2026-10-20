@@ -57,6 +57,13 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 38. Mapy z korytarzami (4 i 5, `world.followAnchor`): mrówka, która nie widzi swojego miejsca w szyku (albo miejsce leży w ścianie), idzie za kotwicą roty (pole przepływu do kotwicy, odświeżane co 0,5 s po zmianie jej komórki), a nie przed nią do celu rozkazu. Błąd szyku jest mierzony drogą do kotwicy ponad promień szyku. Bez tego rota w krętym korytarzu rozciągała się, spójność spadała do 0,1 i kotwica pełzła z 10% prędkości, a rota traciła kontrolę od zmęczenia. Na mapach 1-3 zachowanie jest dotychczasowe.
 39. Duże mapy: tekstura terenu jest dzielona na kafle 2048 px z zakładką 2 px (limit tekstury GPU to zwykle 4096-8192 px), a minimalny zoom kamery zależy od rozmiaru mapy.
 
+**Scenariusze (etap 2 rozszerzenia P1)**
+40. Przed bitwą wybiera się scenariusz (`world.scenarioTypes`, parametr URL `scenario=bitwa|oblezenie|przeprawa`). Domyślne jest Oblężenie, czyli dotychczasowe zachowanie gry (test regresji: ten sam przebieg co przed etapem 2). Scenariusz określa trzy rzeczy: czy jest gniazdo (cel i mur), postawę AI każdej strony (`advance`: idzie do celu, `hold`: broni pozycji) i sposób zakończenia (`nest` albo `annihilate`).
+41. **Bitwa**: standardowe starcie dwóch armii na dowolnym z pięciu typów map. Nie ma gniazda (ani muru, ani celu terenowego); obie strony mają postawę `advance`: cel marszu to najbliższa rota przeciwnika. Gwardia dowódcy idzie 170 jednostek za najbardziej wysuniętą rotą swojej strony (dla Lake Hodges kierunek jest odwrócony). Wygrywa zniszczenie przeciwnika (poniżej 5% stanu początkowego), a po upływie czasu strona z większym odsetkiem ocalałych (to założenie projektowe, nie zapis z dokumentu).
+42. **Oblężenie**: atakujący (Wielka Kolonia, `advance`) szturmuje gniazdo, obrońca (Lake Hodges, `hold`) broni go i uzupełnia straty; atakujący wygrywa, zajmując gniazdo (co najmniej 15 mrówek przy najwyżej 2 obrońcach przez 8 s) albo niszcząc obrońców, a po upływie czasu wygrywa obrona. Na etapie 2 to tylko wybór scenariusza i podstawowe reguły: atakujący **nie** ma jeszcze przewagi budżetowej (jednostki nie mają kosztów, budżety wprowadza etap 3, i tam atakujący dostanie większy) i nie ma wnętrza kopca (etap 5).
+43. **Przeprawa**: scenariusz z własną, stałą mapą `stream` (2400 x 1200, wybór typu mapy jest wyłączony). Potok o szerokości ok. 176 jednostek przecina pole bitwy między strefą startu a obrońcami. Nowe komórki terenu: woda (7, blokuje ruch jak ściana, ale nie zasłania widoku ani strzału: w ruchu `BLK`, w widoczności osobna tabela `SIGHT`) oraz duży kamień w potoku (8, przejezdny). Trzy przeprawy to łańcuchy trzech dużych kamieni (najwęższe miejsce ok. 50-80 jednostek), więc atakujący musi się przeprawić, a obrońca, trzymając drugi brzeg, ostrzeliwuje przeprawy. Cel starcia zadał użytkownik: zniszczenie przeciwnika jak w Bitwie (zajęcia przyczółka na etapie 2 nie ma).
+44. Kolejność generowania: `applyScenario` (nest, tryb), potem `applyMapType` (przeprawa wymusza mapę `stream`), więc scenariusz i mapa są niezależnymi osiami. Mur gniazda w `rasterize` powstaje tylko gdy `world.nestWall != false`.
+
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
 ## 2. Dane
@@ -72,6 +79,7 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 | `world.nest` | [1800, 600] |
 | `world.nestR` | 64 |
 | `world.retreatWK` | [110, 600] |
+| `world.scenarioTypes` | {'comment': 'Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).', 'bitwa': {'name': 'Bitwa', 'nest': False, 'posture': {'WK': 'advance', 'LH': 'advance'}, 'end': 'annihilate', 'desc': 'Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych.'}, 'oblezenie': {'name': 'Oblężenie', 'nest': True, 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'nest', 'desc': 'Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i uzupełnia straty. Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5).'}, 'przeprawa': {'name': 'Przeprawa', 'nest': False, 'map': 'stream', 'posture': {'WK': 'advance', 'LH': 'hold'}, 'end': 'annihilate', 'desc': 'Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa.'}} |
 
 Mapa typu 3 („dno lasu”) 2000 x 1200 i jej przeszkody (poniżej). Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla; blokują wszystkie poza 0 i 2. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica: światło między kapsułami wynosi ok. 17 jednostek, czyli jedną komórkę siatki (wcześniejsze opisy podawały błędnie ok. 65). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
 
@@ -97,7 +105,15 @@ Przeszkody:
 | 2 | Kilka przeszkód | 2000x1200 | scattered | `count` [8, 11], `sep` 150, `cover` 14 |
 | 3 | Pień z kilkoma trasami | 2000x1200 | legacy |  |
 | 4 | Gęsty i kręty podszyt | 2600x1400 | thicket | `pitch` 128, `wallR` 26, `jitter` 8, `braid` 0.1, `doors` 6, `follow` True, `cover` 40, `minWidth` 52, `mix` {'brush': 0.45, 'wood': 0.25, 'root': 0.15, 'stone': 0.15} |
+| stream | Potok z kamieniami | 2400x1200 | stream | `hidden` True, `crossings` 3, `stoneR` [44, 52], `cover` 12, `minWidth` 44 |
 | 5 | Chaparral: gąszcz wąskich przejść | 3000x1500 | thicket | `pitch` 116, `wallR` 28, `jitter` 6, `braid` 0.04, `doors` 4, `follow` True, `cover` 70, `minWidth` 44, `mix` {'brush': 0.62, 'wood': 0.18, 'root': 0.12, 'stone': 0.08} |
+
+### Scenariusze (`world.scenarioTypes`)
+| Scenariusz | Gniazdo | Postawa AI (WK / LH) | Koniec |
+|---|---|---|---|
+| Bitwa | nie | advance / advance | annihilate |
+| Oblężenie | tak | advance / hold | nest |
+| Przeprawa | nie | advance / hold | annihilate (mapa: Potok z kamieniami) |
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
@@ -675,6 +691,28 @@ w pętli mrówki, gdy mrówka nie walczy:
   jeśli sd > 12 i (slot w ścianie lub brak widoczności do slotu) i afield:
      kierunek = gradient(afield); błąd_szyku += max(0, droga_do_kotwicy - |slot|) - sd
   w przeciwnym razie idź do slotu
+```
+
+### 4.15 Scenariusz: postawa AI i koniec bitwy
+```
+applyScenario(defs, id):  # przed applyMapType
+  cfg = world.scenarioTypes[id]; world.nestWall = cfg.nest
+  scenario.mode = { id, nest, posture: {WK, LH}, end }
+
+aiStep(s):
+  advance = mode.posture[strona] == advance
+  goal(c) = mode.nest ? nest : pozycja najbliższej roty przeciwnika
+  jeśli advance: jak dotychczasowy atakujący, z celem goal(c) zamiast gniazda i odwrotem retreatPoint(c);
+     gwardia dowódcy (rota z dowodca) idzie dir * 170 za najbardziej wysuniętą rotą (dir = +1 WK, -1 LH)
+  w przeciwnym razie: jak dotychczasowy obrońca (plug, artyleria, kontratak, odwrót do gniazda)
+
+checkEnd():
+  jeśli mode.end == annihilate:
+     fr = żywi / stan początkowy dla obu stron
+     fr[LH] < 0.05 -> WK; fr[WK] < 0.05 -> LH; limit czasu -> strona z większym fr
+  w przeciwnym razie: zajęcie gniazdo (15+ WK, < 3 LH, 8 s) / zniszczenie obrońców / rozbicie atakujących / limit czasu: wygrywa obrońca
+
+widoczność: losClear sprawdza tablicę SIGHT (woda 0), ruch i pola przepływu tablicę BLK (woda 1)
 ```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#

@@ -1,0 +1,297 @@
+{
+ "generated": "wykonane: node tests/p1-experiment.js",
+ "seeds": 4,
+ "widths": null,
+ "maps": null,
+ "scenarios": [
+  "bitwa",
+  "oblezenie",
+  "przeprawa"
+ ],
+ "mapType": 2,
+ "overrides": {},
+ "summary": {
+  "bitwa": {
+   "runs": 4,
+   "winsWK": 3,
+   "winRateWK": 0.75,
+   "reasons": {
+    "minął czas, więcej ocalałych (6% do 7%)": 1,
+    "minął czas, więcej ocalałych (9% do 6%)": 1,
+    "zniszczenie przeciwnika": 2
+   },
+   "seconds": {
+    "min": 434,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 1116,
+    "median": 1135,
+    "p90": 1164,
+    "max": 1164
+   },
+   "lostLH": {
+    "min": 1081,
+    "median": 1102,
+    "p90": 1102,
+    "max": 1102
+   },
+   "stepMeanMs": 2.24,
+   "stepMaxMs": 79.7
+  },
+  "oblezenie": {
+   "runs": 4,
+   "winsWK": 0,
+   "winRateWK": 0,
+   "reasons": {
+    "minął czas, obrona utrzymana": 3,
+    "rozbicie atakujących": 1
+   },
+   "seconds": {
+    "min": 718,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 1132,
+    "median": 1150,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 898,
+    "median": 920,
+    "p90": 926,
+    "max": 926
+   },
+   "stepMeanMs": 1.77,
+   "stepMaxMs": 44.5
+  },
+  "przeprawa": {
+   "runs": 4,
+   "winsWK": 0,
+   "winRateWK": 0,
+   "reasons": {
+    "zniszczenie przeciwnika": 3,
+    "minął czas, więcej ocalałych (10% do 29%)": 1
+   },
+   "seconds": {
+    "min": 531,
+    "median": 664,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 1129,
+    "median": 1178,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 760,
+    "median": 858,
+    "p90": 863,
+    "max": 863
+   },
+   "stepMeanMs": 3,
+   "stepMaxMs": 78.3
+  }
+ },
+ "runs": [
+  {
+   "seed": 1,
+   "map": 2,
+   "scenario": "bitwa",
+   "winner": "LH",
+   "reason": "minął czas, więcej ocalałych (6% do 7%)",
+   "seconds": 901,
+   "lostWK": 1164,
+   "lostLH": 1081,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.5814911184239737,
+   "stepMaxMs": 34.739981,
+   "hash": "c87faa84",
+   "controlLost": 44
+  },
+  {
+   "seed": 2,
+   "map": 2,
+   "scenario": "bitwa",
+   "winner": "WK",
+   "reason": "minął czas, więcej ocalałych (9% do 6%)",
+   "seconds": 901,
+   "lostWK": 1135,
+   "lostLH": 1092,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.8234434624861158,
+   "stepMaxMs": 53.824044,
+   "hash": "c4f0df1e",
+   "controlLost": 57
+  },
+  {
+   "seed": 3,
+   "map": 2,
+   "scenario": "bitwa",
+   "winner": "WK",
+   "reason": "zniszczenie przeciwnika",
+   "seconds": 442,
+   "lostWK": 1116,
+   "lostLH": 1102,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.729797806787319,
+   "stepMaxMs": 45.537085,
+   "hash": "c0a13a25",
+   "controlLost": 45
+  },
+  {
+   "seed": 4,
+   "map": 2,
+   "scenario": "bitwa",
+   "winner": "WK",
+   "reason": "zniszczenie przeciwnika",
+   "seconds": 434,
+   "lostWK": 1121,
+   "lostLH": 1102,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.8443224455069025,
+   "stepMaxMs": 79.681911,
+   "hash": "86368ad1",
+   "controlLost": 34
+  },
+  {
+   "seed": 1,
+   "map": 2,
+   "scenario": "oblezenie",
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1135,
+   "lostLH": 920,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.8060253500554997,
+   "stepMaxMs": 43.116125,
+   "hash": "b873f129",
+   "controlLost": 28
+  },
+  {
+   "seed": 2,
+   "map": 2,
+   "scenario": "oblezenie",
+   "winner": "LH",
+   "reason": "rozbicie atakujących",
+   "seconds": 718,
+   "lostWK": 1178,
+   "lostLH": 905,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.0014838708217284,
+   "stepMaxMs": 41.034297,
+   "hash": "3a19922b",
+   "controlLost": 28
+  },
+  {
+   "seed": 3,
+   "map": 2,
+   "scenario": "oblezenie",
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1150,
+   "lostLH": 926,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.6106396814650341,
+   "stepMaxMs": 41.037391,
+   "hash": "62a92491",
+   "controlLost": 32
+  },
+  {
+   "seed": 4,
+   "map": 2,
+   "scenario": "oblezenie",
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1132,
+   "lostLH": 898,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.6609880826303998,
+   "stepMaxMs": 44.546689,
+   "hash": "c50c84be",
+   "controlLost": 27
+  },
+  {
+   "seed": 1,
+   "map": 2,
+   "scenario": "przeprawa",
+   "winner": "LH",
+   "reason": "zniszczenie przeciwnika",
+   "seconds": 531,
+   "lostWK": 1178,
+   "lostLH": 760,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.389772835404889,
+   "stepMaxMs": 48.974935,
+   "hash": "96ba51d9",
+   "controlLost": 20
+  },
+  {
+   "seed": 2,
+   "map": 2,
+   "scenario": "przeprawa",
+   "winner": "LH",
+   "reason": "minął czas, więcej ocalałych (10% do 29%)",
+   "seconds": 901,
+   "lostWK": 1129,
+   "lostLH": 858,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.6189513691453903,
+   "stepMaxMs": 72.213029,
+   "hash": "aa4206b9",
+   "controlLost": 38
+  },
+  {
+   "seed": 3,
+   "map": 2,
+   "scenario": "przeprawa",
+   "winner": "LH",
+   "reason": "zniszczenie przeciwnika",
+   "seconds": 636,
+   "lostWK": 1178,
+   "lostLH": 819,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.055525188836484,
+   "stepMaxMs": 43.283592,
+   "hash": "a12f09df",
+   "controlLost": 31
+  },
+  {
+   "seed": 4,
+   "map": 2,
+   "scenario": "przeprawa",
+   "winner": "LH",
+   "reason": "zniszczenie przeciwnika",
+   "seconds": 664,
+   "lostWK": 1178,
+   "lostLH": 863,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.9364159554216878,
+   "stepMaxMs": 78.288315,
+   "hash": "9a24bc47",
+   "controlLost": 46
+  }
+ ]
+}

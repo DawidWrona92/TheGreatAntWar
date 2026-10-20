@@ -261,7 +261,7 @@ const avgOf = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 // flood fill 8-kierunkowy (bez ścinania narożników) od komórki; używany do sprawdzania osiągalności
 function reachableFrom(sim, x, y) {
   const C = sim.CELL, COLS = sim.COLS, ROWS = sim.ROWS, g = sim.grid, seen = new Uint8Array(COLS * ROWS);
-  const bl = (i) => g[i] === 1 || g[i] === 3 || g[i] === 4 || g[i] === 5 || g[i] === 6;
+  const bl = (i) => g[i] === 1 || g[i] === 3 || g[i] === 4 || g[i] === 5 || g[i] === 6 || g[i] === 7;
   let s = Math.floor(y / C) * COLS + Math.floor(x / C); const q = [s]; seen[s] = 1;
   for (let h = 0; h < q.length; h++) {
     const c = q[h] % COLS, r = (q[h] / COLS) | 0;
@@ -368,13 +368,97 @@ test('nawigacja: bez obrony atakujący docierają do gniazda na mapach krętej i
     const near = () => { let a = 0, t = 0; for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === 0) { t++; if (Math.hypot(sim.x[i] - nest[0], sim.y[i] - nest[1]) < 250) a++; } return a / t; };
     for (let k = 0; k < tmax * 20; k++) {
       sim.step(); if (sim.result) sim.result = null; // zakończenie bitwy nie jest tu celem
-      if (k % 100 === 0) { for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const g = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; if (g === 1 || g === 3 || g === 4 || g === 5 || g === 6) wall++; } if (tReach === null && near() >= need) tReach = k / 20; }
+      if (k % 100 === 0) { for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const g = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; if (g === 1 || g === 3 || g === 4 || g === 5 || g === 6 || g === 7) wall++; } if (tReach === null && near() >= need) tReach = k / 20; }
     }
     assert.strictEqual(wall, 0, 'mrówki w ścianach na mapie ' + map);
     assert.ok(tReach !== null, 'mapa ' + map + ': mniej niż ' + need * 100 + '% atakujących doszło do gniazda w ' + tmax + ' s (doszło ' + (near() * 100).toFixed(0) + '%)');
     out.push('mapa ' + map + ': ' + need * 100 + '% przy gnieździe po ' + tReach + ' s');
   }
   return out.join('; ');
+});
+
+// ---------- etap 2: scenariusze ----------
+function makeScen(scenario, map, seed, mod) { const { Sim, defs } = loadP1(); if (mod) mod(defs); return Sim.create({ defs, seed, map, scenario }); }
+const ringCells = (sim) => { let n = 0; for (const v of sim.grid) if (v === 3) n++; return n; };
+
+test('scenariusze: oblężenie ma gniazdo z murem (domyślne), bitwa i przeprawa go nie mają', () => {
+  assert.strictEqual(make(1).scenarioInfo.id, 'oblezenie');
+  assert.ok(ringCells(makeScen('oblezenie', 3, 1)) > 20, 'oblężenie bez muru gniazda');
+  assert.strictEqual(ringCells(makeScen('bitwa', 3, 1)), 0); assert.strictEqual(ringCells(makeScen('przeprawa', 3, 1)), 0);
+  assert.throws(() => makeScen('nieznany', 3, 1), /scenariusz/i);
+  return 'mur gniazda: oblężenie ' + ringCells(makeScen('oblezenie', 3, 1)) + ' komórek, bitwa 0, przeprawa 0';
+});
+
+test('postawa AI: w bitwie obie strony idą na siebie, w oblężeniu i przeprawie obrońca trzyma pozycję', () => {
+  const lhOrders = (scen) => { const sim = makeScen(scen, 2, 1); for (let k = 0; k < 20 * 30; k++) sim.step(); return sim.comps.filter((c) => c.side === 1 && c.role !== 'artillery' && !c.startBy.dowodca && c.alive > 0).map((c) => c.order.kind); };
+  const b = lhOrders('bitwa'), o = lhOrders('oblezenie'), p = lhOrders('przeprawa');
+  assert.ok(b.length && b.every((k) => k === 'attack'), 'w bitwie LH nie atakuje: ' + b);
+  assert.ok(o.every((k) => k === 'hold') && p.every((k) => k === 'hold'), 'obrońca nie trzyma pozycji: ' + o + ' / ' + p);
+  return 'LH w bitwie: ' + b[0] + '; w oblężeniu i przeprawie: ' + o[0];
+});
+
+test('warunki końca: bitwa i przeprawa kończą się zniszczeniem lub większym odsetkiem ocalałych, oblężenie dalej obroną gniazda', () => {
+  const short = (d) => { d.world.timeLimit = 30; };
+  for (const scen of ['bitwa', 'przeprawa']) {
+    const sim = makeScen(scen, 2, 1, short); for (let k = 0; k < 20 * 40 && !sim.result; k++) sim.step();
+    const r = sim.result, a = sim.count_alive(), st = [0, 0]; for (const c of sim.comps) st[c.side] += c.initial;
+    assert.ok(r && /minął czas, więcej ocalałych/.test(r.reason), scen + ': ' + JSON.stringify(r));
+    assert.strictEqual(r.winner, a[0] / st[0] > a[1] / st[1] ? 'WK' : 'LH', scen + ': zwycięzca niezgodny z odsetkiem ocalałych');
+  }
+  const o = makeScen('oblezenie', 3, 1, short); for (let k = 0; k < 20 * 40 && !o.result; k++) o.step();
+  assert.ok(o.result && o.result.reason === 'minął czas, obrona utrzymana' && o.result.winner === 'LH');
+  const w = makeScen('bitwa', 2, 1, (d) => { for (const c of d.scenario.sides.LH.companies) for (const k in c.units) c.units[k] = k === 'dowodca' ? 1 : Math.max(1, Math.round(c.units[k] * 0.03)); d.scenario.sides.LH.reserve = 0; });
+  for (let k = 0; k < 20 * 400 && !w.result; k++) w.step();
+  assert.ok(w.result && w.result.winner === 'WK' && w.result.reason === 'zniszczenie przeciwnika', JSON.stringify(w.result));
+  return 'upływ czasu i zniszczenie przeciwnika działają w bitwie i przeprawie; oblężenie: obrona utrzymana';
+});
+
+test('przeprawa: woda blokuje ruch, kamienie dają trzy przeprawy, a woda nie zasłania strzału', () => {
+  const sim = makeScen('przeprawa', 3, 1), W = sim.W, H = sim.H, C = sim.CELL, g = sim.grid, COLS = sim.COLS;
+  let water = 0, ford = 0; for (const v of g) { if (v === 7) water++; if (v === 8) ford++; }
+  assert.ok(water > 450 && ford > 100, 'woda ' + water + ', kamienie ' + ford);
+  assert.ok(sim.mapInfo.metrics.reachable && sim.mapInfo.metrics.bottleneck >= 44, 'przeprawa nieosiągalna lub za wąska');
+  // bez kamieni nie ma przejścia: zamieniamy je na wodę i sprawdzamy, że strefa startu nie sięga strefy obrońców
+  const fords = []; for (let i = 0; i < g.length; i++) if (g[i] === 8) { fords.push(i); g[i] = 7; }
+  const reach = reachableFrom(sim, 230, H / 2);
+  assert.ok(!reach(W - 400, H / 2), 'woda nie blokuje ruchu: obrońcy osiągalni bez kamieni');
+  for (const i of fords) g[i] = 8;
+  assert.ok(reachableFrom(sim, 230, H / 2)(W - 400, H / 2), 'po przywróceniu kamieni brak przejścia');
+  // liczba przepraw: komórki kamieni tworzą trzy rozłączne skupiska wzdłuż potoku
+  const seen = new Set(); let groups = 0;
+  for (const i0 of fords) if (!seen.has(i0)) { groups++; const q = [i0]; seen.add(i0); for (let h = 0; h < q.length; h++) for (const j of [q[h] + 1, q[h] - 1, q[h] + COLS, q[h] - COLS]) if (g[j] === 8 && !seen.has(j)) { seen.add(j); q.push(j); } }
+  assert.strictEqual(groups, 3, 'liczba przepraw: ' + groups);
+  // widoczność: strzał przez wodę przechodzi, przez ścianę nie
+  let found = null;
+  for (let r = 4; r < sim.ROWS - 4 && !found; r++) { let wx = -1; for (let c = 0; c < COLS; c++) if (g[r * COLS + c] === 7) { wx = c; break; } if (wx > 8 && g[r * COLS + wx - 6] === 0 && g[r * COLS + wx + 20] === 0) { let ok = true; for (let c = wx - 6; c <= wx + 20; c++) if (g[r * COLS + c] !== 0 && g[r * COLS + c] !== 7) ok = false; if (ok) found = [(wx - 6) * C, r * C + C / 2, (wx + 20) * C]; } }
+  assert.ok(found, 'brak odcinka brzeg-woda-brzeg do testu widoczności');
+  assert.ok(sim.losClear(found[0], found[1], found[2], found[1]), 'woda zasłania strzał');
+  const wall = sim.losClear(5, 5, 400, 5); assert.ok(!wall, 'brzeg mapy nie zasłania strzału');
+  return 'woda ' + water + ' komórek, kamienie ' + ford + ' komórek w ' + groups + ' przeprawach, szerokość najszerszej trasy ' + sim.mapInfo.metrics.bottleneck.toFixed(0);
+});
+
+test('przeprawa w grze: atakujący przechodzą potok po kamieniach, nikt nie stoi w wodzie ani w ścianie', () => {
+  const sim = makeScen('przeprawa', 3, 1), cxs = W_STREAM(sim); let inWater = 0, over = 0;
+  for (let k = 0; k < 20 * 240; k++) {
+    sim.step();
+    if (k % 20 === 0) for (let i = 0; i < sim.count; i++) if (sim.alive[i]) {
+      const v = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; if (v === 7 || v === 1 || v === 3 || v === 4 || v === 5 || v === 6) inWater++;
+      if (sim.side[i] === 0 && sim.x[i] > cxs + 110) over++;
+    }
+  }
+  assert.strictEqual(inWater, 0, 'ciała w wodzie lub ścianie: ' + inWater);
+  assert.ok(over > 100, 'atakujący nie przeprawiają się (próbki na wschodnim brzegu: ' + over + ')');
+  return 'próbki atakujących na drugim brzegu: ' + over + ', w wodzie: 0';
+});
+function W_STREAM(sim) { return sim.W - 1180; }
+
+test('determinizm scenariuszy: bitwa, oblężenie i przeprawa dają ten sam skrót dla tego samego ziarna', () => {
+  const out = [];
+  for (const [scen, map] of [['bitwa', 2], ['oblezenie', 4], ['przeprawa', 3]]) {
+    const h = (seed) => { const sim = makeScen(scen, map, seed); for (let k = 0; k < 600; k++) sim.step(); return sim.hash(); };
+    const a = h(5), b = h(5), c = h(6); assert.strictEqual(a, b, scen + ': to samo ziarno dało różne wyniki'); assert.notStrictEqual(a, c, scen + ': inne ziarno dało ten sam wynik'); out.push(scen + ' ' + a);
+  }
+  return out.join(', ');
 });
 
 let failed = 0;

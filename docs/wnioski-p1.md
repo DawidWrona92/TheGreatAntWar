@@ -46,6 +46,21 @@ Przy pierwszej wersji gąszczu rota rozciągała się w korytarzu: mrówki, któ
 
 Zrzuty: `wyniki/p1-mapa-1.png` ... `p1-mapa-5.png`.
 
+## Etap 2 rozszerzenia: wybór scenariusza
+Menu ma listę scenariuszy (parametr URL `scenario=bitwa|oblezenie|przeprawa`), niezależną od wyboru typu mapy. Domyślne Oblężenie to dotychczasowa gra (test regresji: identyczny przebieg i teren jak przed etapem 2, także na mapach z etapu 1).
+
+| Scenariusz | Gniazdo | AI atakujących / obrońców | Koniec bitwy |
+|---|---|---|---|
+| Bitwa | nie | obie strony idą na najbliższą rotę przeciwnika | zniszczenie przeciwnika (< 5%), po czasie więcej ocalałych (odsetek) |
+| Oblężenie | tak (mur z wejściem) | WK szturmuje, LH broni | zajęcie gniazda lub zniszczenie obrońców, po czasie wygrywa obrona |
+| Przeprawa | nie | WK się przeprawia, LH trzyma drugi brzeg | jak w Bitwie |
+
+Przeprawa ma własną, stałą mapę (potok z kamieniami, 2400×1200): woda blokuje ruch, ale nie zasłania strzału, a trzy przeprawy to łańcuchy trzech dużych kamieni. W teście woda faktycznie blokuje (po zamianie kamieni na wodę strefy startu i obrońców są rozłączne), jest dokładnie 3 przepraw, w trakcie bitwy nikt nie stał w wodzie, a atakujący przechodzą na drugi brzeg.
+
+AI przeciw AI (wykonane: `node tests/p1-experiment.js --seeds 4 --scenarios bitwa,oblezenie,przeprawa --map-type 2`, 4 ziarna, to nie jest pomiar balansu; dane w `wyniki/p1-scenariusze-bitwy.json`): wygrane Wielkiej Kolonii 3/4 w Bitwie, 0/4 w Oblężeniu (ten sam wynik co na mapie 2 w etapie 1) i 0/4 w Przeprawie. W Przeprawie AI atakujących ginie na kamieniach i na drugim brzegu pod ostrzałem plujek: 3 bitwy kończą się zniszczeniem WK (mediana 664 s), jedna upływem czasu (10% do 29% ocalałych). W Bitwie obie armie niemal się wzajemnie niszczą (po ok. 1100 strat) i połowa bitew kończy się dopiero przy limicie czasu.
+
+Zrzuty: `wyniki/p1-scenariusz-bitwa.png`, `p1-scenariusz-oblezenie.png`, `p1-scenariusz-przeprawa.png`.
+
 ## Błędy znalezione po drodze (każdy ma test)
 - Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.
 - Plug stał poza przejściem, był za wąski, obracał się za wrogiem, a szybkie mrówki i nacisk tłumu przepychały się przez szyk. Test: nieśmiertelny zamknięty plug nie przepuszcza nikogo przy 64, 128 i 256.
@@ -60,6 +75,7 @@ Zrzuty: `wyniki/p1-mapa-1.png` ... `p1-mapa-5.png`.
 Krok symulacji przy ok. 4200 mrówkach w Node: mediana 9 ms, p99 17 ms, max 50 ms przy budżecie 50 ms (20 Hz). To czas sandboxa, nie kryterium 15.2.
 
 ## Nie zweryfikowane
+- Etap 2 (scenariusze): oblężenie nie ma jeszcze przewagi budżetowej atakującego (jednostki nie mają kosztów; budżety dopiero w etapie 3) ani wnętrza kopca (etap 5), więc różni się od Bitwy tylko gniazdem, postawą AI i warunkami końca. W Przeprawie nie ma celu terenowego (zdecydował użytkownik): przeprawa liczy się tylko przez teren. Zasada „po czasie wygrywa większy odsetek ocalałych” w Bitwie i Przeprawie jest założeniem projektowym. AI nie planuje wyboru przeprawy (idzie najkrótszą trasą do najbliższej roty). Nie wiadomo, czy przeprawa jest zbalansowana ani fajna: tylko 4 ziarna AI przeciw AI.
 - Etap 1 (mapy): czy mapy 4 i 5 są fajne do grania, czy gęstość i kręte korytarze sprawdzają się w walce, czy marsz przez gąszcz trwa za długo (ok. 4-7 minut dla całej armii; limit bitwy to 15 minut). Typ 3 jest dotychczasowym układem stałym (ziarno zmienia tylko mech). Nie ma elewacji, widoczności ani ukrywania się w mchu (etap 4): osłona (mech) tylko zmniejsza obrażenia. Zarośla (nowy typ komórki) blokują ruch jak pień i nie dają ukrycia.
 - Etap 1: AI zna tylko jeden plan (atak na gniazdo najkrótszą trasą), więc na mapach z wieloma trasami nie oskrzydla. Sprawdzono tylko 4 ziarna na typ.
 - Czy to jest fajne: czy dowodzenie rotami bawi, czy unikaty są czytelne w ruchu, czy po trzech bitwach da się powiedzieć, dlaczego się wygrało, czy zmęczenie i kapitan są zrozumiałe. Wymaga gry człowieka.

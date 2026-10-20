@@ -38,7 +38,12 @@ Przeszkody:
 ### Typy map (`world.mapTypes`)
 | Typ | Nazwa | Rozmiar | Generator | Parametry |
 |---|---|---|---|---|
-{chr(10).join(f"| {k} | {m['name']} | {m.get('w', W['w'])}x{m.get('h', W['h'])} | {m['gen']} | " + ', '.join(f'`{a}` {b}' for a, b in m.items() if a not in ('name', 'gen', 'w', 'h', 'desc')) + " |" for k, m in W['mapTypes'].items() if isinstance(m, dict))}
+{chr(10).join(f"| {k} | {m['name']} | {m.get('w', W['w'])}x{m.get('h', W['h'])} | {m['gen']} | " + ', '.join(f'`{a}` {b}' for a, b in m.items() if a not in ('name', 'gen', 'w', 'h', 'desc')) + " |" for k, m in W['mapTypes'].items() if isinstance(m, dict) and 'gen' in m)}
+
+### Scenariusze (`world.scenarioTypes`)
+| Scenariusz | Gniazdo | Postawa AI (WK / LH) | Koniec |
+|---|---|---|---|
+{chr(10).join(f"| {m['name']} | {'tak' if m['nest'] else 'nie'} | {m['posture']['WK']} / {m['posture']['LH']} | {m['end']}" + (f" (mapa: {W['mapTypes'][m['map']]['name']})" if m.get('map') else '') + " |" for k, m in W['scenarioTypes'].items() if isinstance(m, dict) and 'posture' in m)}
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.

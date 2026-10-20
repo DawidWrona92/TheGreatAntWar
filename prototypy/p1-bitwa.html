@@ -115,12 +115,14 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <div id="menu" class="overlay">
   <div class="dlg">
     <h1>Wojna superkolonii: prototyp bitwy</h1>
-    <p>Wielka Kolonia atakuje przez przejście, Lake Hodges broni gniazda. Dowodzisz rotami, resztą zajmuje się AI. Zasady: docs/Dokument_0.5.pdf, sekcja 15.2.</p>
+    <p>Wybierz scenariusz i mapę. Dowodzisz rotami, resztą zajmuje się AI. Zasady: docs/Dokument_0.5.pdf, sekcja 15.2.</p>
     <div class="choice">
-      <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
-      <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
+      <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. W oblężeniu i przeprawie atakuje.</small></button>
+      <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. W oblężeniu i przeprawie broni.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Typ mapy</span><select id="mMap"></select><span></span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Scenariusz</span><select id="mScen"></select><span></span></div>
+    <p id="mScenDesc" class="mapdesc"></p>
+    <div class="row" id="mMapRow" style="grid-template-columns:150px 1fr 50px"><span>Typ mapy</span><select id="mMap"></select><span></span></div>
     <p id="mMapDesc" class="mapdesc"></p>
     <div class="row" id="mPassRow" style="grid-template-columns:150px 1fr 50px"><span>Szerokość głównego przesmyku</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
@@ -156,6 +158,15 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       ],
       "coverRandom": 14
     },
+    "scenarioTypes": {
+      "comment": "Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).",
+      "bitwa": { "name": "Bitwa", "nest": false, "posture": { "WK": "advance", "LH": "advance" }, "end": "annihilate",
+                 "desc": "Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych." },
+      "oblezenie": { "name": "Oblężenie", "nest": true, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest",
+                     "desc": "Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i uzupełnia straty. Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5)." },
+      "przeprawa": { "name": "Przeprawa", "nest": false, "map": "stream", "posture": { "WK": "advance", "LH": "hold" }, "end": "annihilate",
+                     "desc": "Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa." }
+    },
     "mapTypes": {
       "comment": "Pięć typów mapy, od najprostszej do najbardziej złożonej. Wszystkie mają gniazdo na wschodzie i strefę startu atakującego na zachodzie; układ rot z sekcji scenario jest zapisany dla mapy 2000x1200 i przesuwany (strona zachodnia o dy, wschodnia o dx i dy) na inne rozmiary. Typ 3 używa układu z world.map bez zmian.",
       "1": { "name": "Otwarta polana", "gen": "open", "w": 2000, "h": 1200, "pebbles": [4, 6], "cover": 10,
@@ -167,6 +178,8 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "4": { "name": "Gęsty i kręty podszyt", "gen": "thicket", "w": 2600, "h": 1400, "pitch": 128, "wallR": 26, "jitter": 8, "braid": 0.1, "doors": 6, "follow": true, "cover": 40, "minWidth": 52,
              "mix": { "brush": 0.45, "wood": 0.25, "root": 0.15, "stone": 0.15 },
              "desc": "Pas zarośli między strefą startu a gniazdem: kręte korytarze o szerokości ok. 60-100 jednostek (najszersza trasa przez pas zwęża się do ok. 75), ślepe zaułki i pętle dające kilka tras, sześć wejść w czołowych ścianach pasa. Mapa powiększona (o ok. 40% więcej terenu do chodzenia niż typ 3), bo strefy rozmieszczenia armii są stałe." },
+      "stream": { "name": "Potok z kamieniami", "gen": "stream", "hidden": true, "w": 2400, "h": 1200, "crossings": 3, "stoneR": [44, 52], "cover": 12, "minWidth": 44,
+                  "desc": "Potok o szerokości ok. 176 jednostek między strefą startu a obrońcami, z trzema przeprawami z trzech dużych kamieni." },
       "5": { "name": "Chaparral: gąszcz wąskich przejść", "gen": "thicket", "w": 3000, "h": 1500, "pitch": 116, "wallR": 28, "jitter": 6, "braid": 0.04, "doors": 4, "follow": true, "cover": 70, "minWidth": 44,
              "mix": { "brush": 0.62, "wood": 0.18, "root": 0.12, "stone": 0.08 },
              "desc": "Gęsty podszyt w stylu kalifornijskiego chaparralu: ściany z krzewów, pni i kamieni tworzą wąskie, kręte korytarze o szerokości ok. 48-60 jednostek (najszersza trasa zwęża się do ok. 48), z wieloma ślepymi zaułkami i czterema wejściami w czołowych ścianach pasa. To korytarze między ścianami, a nie zadaszone tunele: nic tu jeszcze nie ukrywa jednostek (to etap 4). Największa mapa (o ok. 57% więcej terenu do chodzenia niż typ 3)." }
@@ -289,8 +302,9 @@ const Sim = (function () {
   }
 
   // ---------- mapy: rasteryzacja przeszkód, generatory, metryki ----------
-  // Wartości komórek terenu: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla
-  const OBS_TYPE = { wood: 1, stone: 4, root: 5, brush: 6 };
+  // Wartości komórek terenu: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla,
+  // 7 woda (nieprzejezdna, nie zasłania widoku ani strzału), 8 kamień w potoku (przejezdny)
+  const OBS_TYPE = { wood: 1, stone: 4, root: 5, brush: 6, water: 7, ford: 8 };
   const NEST_RING = [4.3, 5.5];   // promienie (w komórkach): wnętrze gniazda i mur; wejście od zachodu
   function segDist(px, py, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1; const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / l2)); return Math.hypot(px - a[0] - t * dx, py - a[1] - t * dy); }
   // siatka terenu z listy przeszkód (kapsuły i koła); pierwszy pasujący obiekt z listy wygrywa
@@ -320,7 +334,8 @@ const Sim = (function () {
       const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
       if (Math.abs(cx - gap[0]) < 40 && Math.abs(cy - gap[1]) <= passage / 2) grid[r * COLS + c] = 0;
     }
-    // gniazdo: wnętrze otwarte, mur z wejściem od zachodu
+    // gniazdo: wnętrze otwarte, mur z wejściem od zachodu (tylko w scenariuszu z gniazdem)
+    if (world.nestWall !== false) {
     const nr = Math.ceil(NEST_RING[1] + 1);
     const nc = Math.floor(nestC[0] / CELL), nrw = Math.floor(nestC[1] / CELL);
     for (let r = Math.max(1, nrw - nr); r <= Math.min(ROWS - 2, nrw + nr); r++) for (let c = Math.max(1, nc - nr); c <= Math.min(COLS - 2, nc + nr); c++) {
@@ -330,9 +345,10 @@ const Sim = (function () {
         grid[r * COLS + c] = Math.abs(da) > 0.4 ? 3 : 0;
       } else if (d <= NEST_RING[0] * CELL) grid[r * COLS + c] = 0;
     }
+    }
     return grid;
   }
-  const isWall = (v) => v === 1 || v === 3 || v === 4 || v === 5 || v === 6;
+  const isWall = (v) => v === 1 || v === 3 || v === 4 || v === 5 || v === 6 || v === 7;
 
   // Metryki układu terenu: odsetek otwartego terenu, szerokość najszerszej trasy w jej najwęższym miejscu
   // (transformata odległości do ścian), kręta droga jako stosunek długości najkrótszej trasy do linii prostej.
@@ -476,7 +492,33 @@ const Sim = (function () {
       make: (r, rc) => ({ type: pick(r, { brush: 0.5, stone: 0.3, wood: 0.2 }), r: Math.round(r.range(30, 56)), at: [r.range(rc[0], rc[2]), r.range(rc[1], rc[3])] }) });
     return obs.concat(extra);
   }
-  const GENERATORS = { open: genOpen, scattered: genScattered, thicket: genThicket };
+  // potok: pas wody przez całą wysokość (krzywa kapsuła), a w nim łańcuchy trzech dużych kamieni (przejezdnych) jako przeprawy
+  function streamCenter(W, H) { return W - 1180; }
+  function genStream(rng, mt, W, H, Z) {
+    const cx = streamCenter(W, H), pts = [[cx + 15, 0], [cx - 30, H * 0.25], [cx + 30, H * 0.5], [cx - 20, H * 0.75], [cx + 10, H]], R = 88;
+    const xAt = (y) => { for (let k = 0; k + 1 < pts.length; k++) if (y <= pts[k + 1][1]) { const t = (y - pts[k][1]) / (pts[k + 1][1] - pts[k][1]); return pts[k][0] + t * (pts[k + 1][0] - pts[k][0]); } return pts[pts.length - 1][0]; };
+    const obs = [], base = [-330, 20, 340];
+    for (let k = 0; k < mt.crossings; k++) {
+      const y = H / 2 + base[k % base.length] + rng.range(-40, 40), x = xAt(y);
+      for (const dxs of [-62, 0, 62]) obs.push({ type: 'ford', r: Math.round(rng.range(mt.stoneR[0], mt.stoneR[1])), at: [Math.round(x + dxs), Math.round(y + rng.range(-8, 8))] });
+    }
+    obs.push({ type: 'water', r: R, line: pts.map((p) => [Math.round(p[0]), Math.round(p[1])]) });
+    const band = [cx - R - 130, 0, cx + R + 130, H];
+    const extra = scatter(rng, { n: 10, W, H, sep: 150, keep: [], exclude: [Z.wk, Z.lh, band], nest: Z.nest, allow: [[250, 100, band[0], H - 100], [band[2], 100, W - 250, H - 100]],
+      make: (r, rc) => { const x = r.range(rc[0], rc[2]), y = r.range(rc[1], rc[3]), k = r.next(); return k < 0.5 ? { type: 'stone', r: Math.round(r.range(34, 60)), at: [x, y] } : { type: 'root', r: Math.round(r.range(40, 64)), at: [x, y] }; } });
+    return obs.concat(extra);
+  }
+  const GENERATORS = { open: genOpen, scattered: genScattered, thicket: genThicket, stream: genStream };
+
+  // Rodzaj scenariusza: czy jest gniazdo, postawa AI każdej strony i sposób zakończenia bitwy (world.scenarioTypes).
+  // Przeprawa narzuca własną mapę (potok); pozostałe scenariusze działają na dowolnym z pięciu typów map.
+  function applyScenario(defs, id) {
+    const cfg = defs.world.scenarioTypes[id];
+    if (!cfg || !cfg.posture) throw new Error('Nieznany scenariusz: ' + id);
+    defs.world.nestWall = cfg.nest;
+    defs.scenario.mode = { id, nest: cfg.nest, posture: cfg.posture, end: cfg.end };
+    return { id, name: cfg.name, desc: cfg.desc, nest: cfg.nest, end: cfg.end, map: cfg.map };
+  }
 
   // Przygotowuje świat dla wybranego typu mapy: rozmiar, gniazdo, przesunięcie układu rot, lista przeszkód.
   // Mapa jest sprawdzana (trasa od strefy startu do gniazda, minimalna szerokość); przy porażce losuje się inny wariant.
@@ -518,14 +560,16 @@ const Sim = (function () {
     if (opts.supply) for (const s of SIDES) if (opts.supply[s] != null) defs.params.supply[s] = opts.supply[s];
     const seed = opts.seed == null ? 1 : opts.seed;
     const rng = createRng(seed), rngMap = rng.fork('map'), rngSpawn = rng.fork('spawn'), rngCombat = rng.fork('combat');
-    const mapInfo = applyMapType(defs, opts.map == null ? 3 : opts.map, rng); // rozmiar, gniazdo, przeszkody i przesunięcie układu rot
+    const scenInfo = applyScenario(defs, opts.scenario || 'oblezenie');
+    const mapInfo = applyMapType(defs, scenInfo.map || (opts.map == null ? 3 : opts.map), rng); // rozmiar, gniazdo, przeszkody i przesunięcie układu rot
+    const MODE = defs.scenario.mode;
     // Dowódca może być dowolnego typu: gwardia dowódcy to elitarna wersja każdego typu bazowego (generowana tu)
     for (const k of Object.keys(defs.units)) if (k !== 'dowodca' && !defs.units[k].base) defs.units['gwardia_' + k] = { name: 'Gwardzista: ' + defs.units[k].name.toLowerCase(), base: k };
     const aiSides = new Set(opts.aiSides || SIDES);
     const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
     const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
-    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo };
+    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo, scenarioInfo: scenInfo };
 
     // ---------- tabele typów (przebudowywane po zmianie suwaków) ----------
     let names, kinds, nT, ti, T, mult;
@@ -554,7 +598,8 @@ const Sim = (function () {
 
     // ---------- teren ----------
     // 0 otwarte, 1 pień lub kłoda, 2 osłona (mech, paprocie), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla; blokują wszystkie poza 0 i 2
-    const BLK = new Uint8Array([0, 1, 0, 1, 1, 1, 1]);
+    const BLK = new Uint8Array([0, 1, 0, 1, 1, 1, 1, 1, 0]);   // blokują ruch
+    const SIGHT = new Uint8Array([0, 1, 0, 1, 1, 1, 1, 0, 0]); // zasłaniają widok i strzał (woda nie zasłania)
     const gap = defs.world.gap, passage = defs.world.passage;   // gap jest null na mapach bez głównego przesmyku
     const nestC = defs.world.nest;
     const grid = rasterize(defs.world, defs.world.map.obstacles);
@@ -570,15 +615,19 @@ const Sim = (function () {
         }
       }
     })();
-    sim.grid = grid;
+    sim.grid = grid; sim.losClear = losClear;
     function cellAt(x, y) { return ((y / CELL) | 0) * COLS + ((x / CELL) | 0); }
     function blocked(x, y) {
       if (x < 0 || y < 0 || x >= W || y >= H) return true;
       return BLK[grid[cellAt(x, y)]] === 1;
     }
+    function sightBlocked(x, y) {
+      if (x < 0 || y < 0 || x >= W || y >= H) return true;
+      return SIGHT[grid[cellAt(x, y)]] === 1;
+    }
     function losClear(x0, y0, x1, y1) {
       const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
-      for (let k = 1; k < n; k++) if (blocked(x0 + dx * k / n, y0 + dy * k / n)) return false;
+      for (let k = 1; k < n; k++) if (sightBlocked(x0 + dx * k / n, y0 + dy * k / n)) return false;
       return true;
     }
     function nearestOpen(x, y) {
@@ -1198,7 +1247,10 @@ const Sim = (function () {
     function aiStep(s) {
       const sn = SIDES[s], t = tick / HZ, mine = comps.filter((c) => c.side === s && c.alive > 0), foes = comps.filter((c) => c.side !== s && c.alive > 0);
       if (!foes.length) return;
-      const attacker = defs.scenario.attacker === sn;
+      const attacker = MODE.posture[sn] === 'advance';
+      const dir = s === 0 ? 1 : -1;
+      // cel marszu: gniazdo (scenariusz z gniazdem) albo najbliższa rota przeciwnika
+      const goal = (c) => { if (MODE.nest) return nestC; let b = foes[0], bd = 1e18; for (const e of foes) { const d = dist(c, e); if (d < bd) { bd = d; b = e; } } return [b.ax, b.ay]; };
       for (const c of mine) {
         if (c.cstate === CS_LOST) continue;
         const foeNear = foes.filter((e) => dist(c, e) < 260).sort((a, b) => dist(c, a) - dist(c, b));
@@ -1211,17 +1263,17 @@ const Sim = (function () {
               order(c, 'attack', art.ax, art.ay, 3);
             }
             if (nearestFoe && nearestFoe.acidMax > 0 && dist(c, nearestFoe) < 220) useAbility(c);
-          } else if (c.role === 'command') {
+          } else if (c.role === 'command' || c.startBy.dowodca) {
             // gwardia dowódcy idzie ok. 170 jednostek za najbardziej wysuniętą rotą szturmową, żeby dowódca nie wpadł w lej jako pierwszy
-            let front = null; for (const o of mine) if (o.role === 'assault' || o.role === 'taran') if (!front || o.ax > front.ax) front = o;
-            if (front && tick >= c.aiUntil) order(c, 'attack', front.ax - 170, front.ay * 0.5 + c.ay * 0.5, 2);
+            let front = null; for (const o of mine) if (o.role === 'assault' || o.role === 'taran' || o.role === 'reserve' || o.role === 'line') if (!o.startBy.dowodca && (!front || dir * o.ax > dir * front.ax)) front = o;
+            if (front && tick >= c.aiUntil) order(c, 'attack', front.ax - dir * 170, front.ay * 0.5 + c.ay * 0.5, 2);
           } else if (c.role === 'pekacz') {
             const tgt = foes.find((e) => e.closed) || nearestFoe;
-            if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
+            if (tick >= c.aiUntil) { const g = goal(c); order(c, 'attack', g[0], g[1], 3); }
             if (tgt && dist(c, tgt) < 110) useAbility(c);
           } else {
-            if (c.alive < 0.3 * c.initial && c.cstate !== CS_FULL) { order(c, 'retreat', defs.world.retreatWK[0], defs.world.retreatWK[1], 8); }
-            else if (tick >= c.aiUntil) order(c, 'attack', nestC[0], nestC[1], 3);
+            if (c.alive < 0.3 * c.initial && c.cstate !== CS_FULL) { const rp = retreatPoint(c); order(c, 'retreat', rp[0], rp[1], 8); }
+            else if (tick >= c.aiUntil) { const g = goal(c); order(c, 'attack', g[0], g[1], 3); }
             if (c.role === 'taran' && nearestFoe && dist(c, nearestFoe) < 110) useAbility(c);
           }
           if (c.abilType === 'dowodca' && mine.some((o) => o.cstate === CS_WEAK && dist(o, c) < defs.scenario.sides[sn].auraR)) useAbility(c);
@@ -1257,9 +1309,16 @@ const Sim = (function () {
       }
       const startN = [0, 0]; for (const c of comps) startN[c.side] += c.initial;
       const att = defs.scenario.attacker === 'WK' ? 0 : 1;
-      nestTimer = (nestWK >= 15 && nestLH < 3) ? nestTimer + 1 : 0;
+      nestTimer = (MODE.end === 'nest' && nestWK >= 15 && nestLH < 3) ? nestTimer + 1 : 0;
       let r = null;
-      if (nestTimer >= 8) r = { winner: 'WK', reason: 'Wielka Kolonia zajęła gniazdo' };
+      if (MODE.end === 'annihilate') {
+        // bitwa i przeprawa: zniszczenie przeciwnika; po upływie czasu wygrywa strona z większym odsetkiem ocalałych
+        const fr = [aliveSide[0] / startN[0], aliveSide[1] / startN[1]];
+        if (fr[1] < 0.05) r = { winner: 'WK', reason: 'zniszczenie przeciwnika' };
+        else if (fr[0] < 0.05) r = { winner: 'LH', reason: 'zniszczenie przeciwnika' };
+        else if (tick / HZ >= defs.world.timeLimit) r = { winner: fr[0] > fr[1] ? 'WK' : 'LH', reason: 'minął czas, więcej ocalałych (' + Math.round(100 * fr[0]) + '% do ' + Math.round(100 * fr[1]) + '%)' };
+      }
+      else if (nestTimer >= 8) r = { winner: 'WK', reason: 'Wielka Kolonia zajęła gniazdo' };
       else if (aliveSide[1] < 0.05 * startN[1]) r = { winner: 'WK', reason: 'zniszczenie obrońców' };
       else if (aliveSide[0] < 0.05 * startN[0]) r = { winner: 'LH', reason: 'rozbicie atakujących' };
       else if (tick / HZ >= defs.world.timeLimit) r = { winner: SIDES[1 - att], reason: 'minął czas, obrona utrzymana' };
@@ -1295,7 +1354,7 @@ const Sim = (function () {
       return h.toString(16);
     };
     sim.report = function () {
-      const out = { seed, passage, map: mapInfo.id, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
+      const out = { seed, passage, map: mapInfo.id, scenario: scenInfo.id, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
       SIDES.forEach((sn, s) => {
         const surv = {}; for (let i = 0; i < count; i++) if (alive[i] && side[i] === s) { const k = names[type[i]]; surv[k] = (surv[k] || 0) + 1; }
         out.sides[sn] = {
@@ -1327,7 +1386,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3),
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'oblezenie',
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -1492,7 +1551,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const [cw, ch] = ISO.size(sim);
     const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
     const nz = (x, y, s) => { let h = Math.imul(x * 374761393 + y * 668265263 + s * 2246822519, 1274126177); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
-    const nest = sim.defs.world.nest, nestR = sim.defs.world.nestR;
+    const nest = sim.defs.world.nest, nestR = sim.defs.world.nestR, hasNest = sim.defs.world.nestWall !== false;
     // dno lasu: próchnica, ściółka, mech; pnie i kłody z korą, omszałe głazy, korzenie
     const HUM = ['#85714d', '#7e6b47', '#8c7853', '#76643f'], DIRT = ['#9a7f58', '#947a54', '#a08561', '#8a704c'];
     const MOSS = ['#5f8f3e', '#578636', '#69984a', '#4f7d33'];
@@ -1518,6 +1577,14 @@ if (typeof module !== 'undefined') module.exports = Sim;
         const h = 6;
         tile(c, cx, top, HUM[k]); isoBox(c, cx, top, h, '#6b4d2b', '#553b21', '#3d2b17');
         c.fillStyle = '#8e6a3c'; c.fillRect(cx - 9 + (k % 3) * 4, top - h + 3, 10, 1); c.fillRect(cx + 1, top - h + 7, 7, 1);
+      } else if (v === 7) {
+        // woda potoku: niebieskozielona tafla z jasnymi zmarszczkami
+        tile(c, cx, top, ['#3f6f86', '#3a6a82', '#437890', '#386279'][k]);
+        for (let t = 0; t < 4; t++) { c.fillStyle = t % 2 ? 'rgba(200,235,245,0.55)' : 'rgba(20,50,70,0.35)'; c.fillRect(px(80 + t) - 2, py(90 + t), 5 + (t % 2) * 3, 1); }
+      } else if (v === 8) {
+        // duży kamień w potoku: płaski, szary, z mchem
+        tile(c, cx, top, '#4a7388'); isoBox(c, cx, top, 4, '#9aa196', '#787f75', '#5a605a');
+        c.fillStyle = '#5f8238'; c.fillRect(cx - 5 + (k % 3) * 3, top - 3, 4, 1);
       } else if (v === 6) {
         // zarośla (chaparral): gęsty krzew, ciemna zieleń z jaśniejszymi liśćmi i patykami
         const h = 12 + (k % 3);
@@ -1532,7 +1599,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
           const gx = px(40), gy = py(41); c.fillStyle = '#e8dfc8'; c.fillRect(gx, gy + 2, 2, 3); c.fillStyle = '#c0392b'; c.fillRect(gx - 2, gy, 6, 3); c.fillStyle = '#fff1e0'; c.fillRect(gx - 1, gy + 1, 1, 1); c.fillRect(gx + 2, gy, 1, 1);
         }
       } else {
-        tile(c, cx, top, dn < nestR + 14 ? DIRT[k] : HUM[k]);
+        tile(c, cx, top, hasNest && dn < nestR + 14 ? DIRT[k] : HUM[k]);
         // ściółka: liście w ciepłych barwach, patyki, kamyki
         for (let t = 0; t < 5; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.7 ? '#a8672c' : nn > 0.4 ? '#8d6b2f' : '#6b5a2a'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 3 : 2, 1); }
         if (n > 0.93) { c.fillStyle = '#2f2418'; c.fillRect(cx - 5, top + 9, 8, 1); c.fillStyle = '#6a4d2a'; c.fillRect(cx - 5, top + 8, 7, 1); }
@@ -1541,8 +1608,10 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
     // gniazdo: kopiec w trzech tonach i ciemne wejście od strony zachodniej
     const ell = (x, y, R, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R), 0, 0, 7); c.fill(); };
+    if (hasNest) {
     ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.32)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(60,40,20,0.45)');
     ell(nest[0] - 78, nest[1], 7, '#241508');
+    }
     return cv;
   }
   // duże mapy nie mieszczą się w jednej teksturze GPU (limit zwykle 4096-8192 px): teren dzielimy na kafle 2048 px z zakładką 2 px
@@ -1594,9 +1663,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
-    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
+    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, scenario: S.scenario, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
     S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
-    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); $('mapName').textContent = S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name;
+    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); $('mapName').textContent = S.sim.scenarioInfo.name + ' · ' + (S.sim.scenarioInfo.map ? S.sim.mapInfo.name : S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name);
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
     if (q.get('autoselect')) for (const c of S.sim.comps) if (SIDES[c.side] === S.side) S.selected.add(c.id);
   }
@@ -1749,18 +1818,22 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); };
   $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
   // typ mapy: lista z world.mapTypes; suwak przesmyku działa tylko na mapie z głównym przesmykiem (typ 3)
-  const MAPT = DEFS0.world.mapTypes;
-  for (const id of Object.keys(MAPT).filter((k) => MAPT[k].gen)) { const o = document.createElement('option'); o.value = id; o.textContent = id + '. ' + MAPT[id].name + ' (' + MAPT[id].w + '×' + MAPT[id].h + ')'; $('mMap').appendChild(o); }
+  const MAPT = DEFS0.world.mapTypes, SCENT = DEFS0.world.scenarioTypes;
+  for (const id of Object.keys(SCENT).filter((k) => SCENT[k].posture)) { const o = document.createElement('option'); o.value = id; o.textContent = SCENT[id].name; $('mScen').appendChild(o); }
+  for (const id of Object.keys(MAPT).filter((k) => MAPT[k].gen && !MAPT[k].hidden)) { const o = document.createElement('option'); o.value = id; o.textContent = id + '. ' + MAPT[id].name + ' (' + MAPT[id].w + '×' + MAPT[id].h + ')'; $('mMap').appendChild(o); }
   function syncMapRow() {
-    const mt = MAPT[S.map]; $('mMapDesc').textContent = mt ? mt.desc : '';
+    const sc = SCENT[S.scenario] || SCENT.oblezenie, forced = sc.map ? MAPT[sc.map] : null;
+    $('mScenDesc').textContent = sc.desc; $('mMap').disabled = !!forced; $('mMapRow').style.opacity = forced ? 0.4 : 1; $('mMapRow').title = forced ? 'Ten scenariusz ma własną mapę: ' + forced.name : '';
+    const mt = forced || MAPT[S.map]; $('mMapDesc').textContent = mt ? mt.desc : '';
     const has = mt && mt.gen === 'legacy'; $('mPass').disabled = !has; $('mPassRow').style.opacity = has ? 1 : 0.4; $('mPassRow').title = has ? '' : 'Ten typ mapy nie ma głównego przesmyku';
   }
   $('mMap').onchange = () => { S.map = +$('mMap').value; syncMapRow(); };
+  $('mScen').onchange = () => { S.scenario = $('mScen').value; syncMapRow(); };
   $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); };
   $('mObs').onchange = () => { S.observe = $('mObs').checked; };
   $('mGuard').onchange = () => { S.guard = $('mGuard').value; };
   $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
-  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen) S.map = 3; $('mMap').value = S.map; syncMapRow(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen || MAPT[S.map].hidden) S.map = 3; if (!SCENT[S.scenario] || !SCENT[S.scenario].posture) S.scenario = 'oblezenie'; $('mScen').value = S.scenario; $('mMap').value = S.map; syncMapRow(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
   // ---------- drewniany interfejs ----------
   // tekstura desek: cztery deski z usłojeniem, sękami i szwami; używana jako tło paneli (.wood)
