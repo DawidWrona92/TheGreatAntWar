@@ -1,68 +1,42 @@
-# Etap 4: plan (elewacja, linia wzroku, zasadzki i ukrywanie się)
+# Etap 4: projekt (elewacja, linia wzroku, balistyka, zasadzki, ukrywanie się, ciosy z tyłu i z boku)
 
-Dokument przygotowawczy. Nic z poniższego nie jest jeszcze zaimplementowane. Zawiera analizę obecnego kodu (co istnieje, czego brakuje), propozycję rozwiązania w miejscach, gdzie jest wybór projektowy, i pytania do zatwierdzenia przed pierwszym commitem etapu 4.
+Decyzje użytkownika: brak bonusu za zasadzkę (wystarczy niewidoczność); cios od tyłu zadaje największe obrażenia, z flanki mniejsze, z przodu mrówka jest przygotowana; wzgórza blokują widok; strzał zależy od wysokości i wielkości wzgórza i jest liczony balistycznie (dowolny kąt, kąt powyżej 45 stopni skraca zasięg, ale pozwala przestrzelić nad wzgórzem); AI gra zawsze uczciwie (te same ograniczenia widzenia co gracz); obsługiwane tryby to AI przeciw AI i gracz przeciw AI. Wartości liczbowe poniżej, których użytkownik nie podał, są założeniami prototypu i trafiają do JSON (`params.elevation`, `params.ballistics`, `params.visibility`, `params.facing`).
 
-## 1. Wymagania (z opisu etapu 4)
-1. Elewacja musi wpływać na ruch i zmęczenie: schodzenie z góry szybsze i mniej męczące, wchodzenie pod górę wolniejsze i bardziej męczące.
-2. Jednostki wyżej mają przewagę nad strzelającymi z dołu: większy zasięg skuteczny niż atakujący pod górę, a różnica wysokości wpływa na możliwość ostrzału (nie tylko grafika).
-3. Jednostki ukryte za linią wzroku (skały, krzaki, góry; trawa tylko dekoracyjnie, mech jako gęste krzaki) nie są widoczne dla przeciwnika: zasadzki dla gracza i dla AI. Ukrywanie się w gęstszych rzeczach (pod liściem, w mchu).
-4. Zachować istniejące mechaniki; nie zmieniać niepowiązanych parametrów; typ 3 i Oblężenie bez budżetu mają nadal dawać identyczny przebieg, jeśli elewacja i widoczność są tam wyłączone.
+## 1. Stan kodu przed etapem
+Siatka terenu 16x16 bez wysokości; ruch to `T.speed * spMod`; zmęczenie roty liczone co sekundę (`+move` w marszu); zasięg plujki stały (80); linia wzroku 2D (`losClear`, tablica `SIGHT`); osłona (mech) tylko mnoży obrażenia przez `cover`; brak widoczności (AI i rysowanie widzą wszystko); teren to płaska, wstępnie renderowana tekstura izometryczna.
 
-## 2. Co jest w kodzie (stan po etapie 3)
-| Obszar | Stan | Miejsce |
-|---|---|---|
-| Teren | siatka 16x16 jednostek, rodzaje komórek 0-8; brak wysokości | `rasterize`, `grid` |
-| Ruch | prędkość = `T.speed[typ] * c.spMod`; `spMod` = morale x zmęczenie x mnożnik strony; pola przepływu liczą tylko ściany, nie koszt terenu | `updateAnts`, `updateControl`, `buildField` |
-| Zmęczenie | co sekundę `+move` w marszu, `+fight` w walce, `-rest` na odpoczynku, na poziomie roty | `updateControl` |
-| Zasięg | plujka `range` 80, melee `reach`; stała, niezależna od pozycji | `acquire`, `updateAnts` |
-| Linia wzroku | `losClear` krokiem 6 jednostek po tablicy `SIGHT` (ściany i zarośla blokują, woda nie); wyłącznie 2D | `losClear` |
-| Osłona | komórka 2 (mech) tylko mnoży otrzymane obrażenia przez `cover` (0,7) | `hit` |
-| Widoczność | brak: AI (`aiStep`, `acquire`) i rysowanie widzą wszystkie mrówki obu stron | `aiStep`, `drawAnts` |
-| Rysowanie | teren jest wstępnie renderowaną płaską teksturą izometryczną, mrówki sprite'ami bez sortowania głębi | `makeIsoTerrain`, `ParticleContainer` |
+## 2. Wzgórza
+- Wysokości w siatce Float32 (`height`) i wstępnie policzony gradient; generowane z osobnego strumienia `terrain` jako gładkie wzgórza (funkcje Gaussa) poza strefami rozmieszczenia.
+- Mapy: typ 1 zostaje płaski (z etapu 1: „otwarta i płaska”), typ 3 zostaje płaski (kotwica regresji), wzgórza mają typy 2, 4, 5 i potok (na potoku podwyższone brzegi przy brodach). Przełącznik `hills` w `mapTypes`.
+- Skala wynika z balistyki (punkt 4), a nie z odczucia: szczyty 20-40 jednostek, nachylenie do 0,25, promień 200-400. Ściany (pnie, kamienie, korzenie, zarośla, mur gniazda) zostają pełnymi blokerami widoku i strzału; strzał łukiem nie przechodzi nad ścianami (to możliwa późniejsza opcja).
 
-Wnioski: (a) elewacja wymaga nowej warstwy danych (siatka wysokości) i zmiany renderowania terenu; (b) ruch i zmęczenie mają już punkty zaczepienia (`spMod`, `fg`), więc nachylenie można tam wmnożyć bez nowego systemu; (c) zasięg i linia wzroku mają jedno miejsce (`acquire`, `losClear`), ale `losClear` musi stać się trójwymiarowe; (d) widoczność (zasadzki) to osobny, nowy mechanizm: jest dziś zupełnie nieobecny, a dotyka AI, interfejsu i rdzenia.
+## 3. Ruch i zmęczenie
+- Nachylenie liczone dla mrówki z gradientu wzdłuż jej prędkości. Mnożnik prędkości: pod górę `1 / (1 + 2,5 s)` (min 0,45), z góry `1 + 1,2 |s|` (max 1,35) (monotonicznie, zgodnie z wymaganiem).
+- Zmęczenie: składnik marszu `move` razy `1 + 3 * średnie_nachylenie_pod_górę` i razy `1 - 0,5 * średnie_nachylenie_z_góry`; średnia po poruszających się mrówkach roty w ciągu sekundy.
+- Pola przepływu bez zmian (obchodzenie stromych zboczy trafia do TODO).
 
-## 3. Propozycja rozwiązania (do zatwierdzenia)
-### 3.1 Siatka wysokości
-- `height[]` (Float32, jednostki świata) w tej samej siatce 16x16, generowana z ziarna (strumień `terrain`), gładkie wzgórza i grzbiety (kilka funkcji Gaussa lub szum), parametry wzgórz w `mapTypes` (`hills`: liczba, promień, wysokość).
-- Skala: mrówka ma ok. 8 jednostek średnicy. Proponowana skala wysokości: wzgórze 40-120 jednostek (nachylenie do ok. 0,3-0,5), co jest „pagórkiem” rzędu kilkudziesięciu długości mrówki.
-- Komórki nieprzejezdne (ściany) mają wysokość, ale nie są wchodzone; woda i brody leżą na poziomie 0.
-- Typ mapy 3 (zachowanie sprzed etapu 1): bez elewacji (`hills: 0`), żeby zachować identyczny przebieg; można go odblokować osobną decyzją.
+## 4. Balistyka plujki (kwas)
+- Prędkość wylotu z zasięgu na płaskim: `v^2 = g R0`, `R0 = 80` (g = 1 w jednostkach świata). Najwyższy punkt toru w ogóle: `v^2/(2g) = R0/2 = 40` jednostek.
+- Dla odległości `d` i różnicy wysokości `Δh` (cel minus strzelec; oczy strzelca +4, cel +2): `tanθ = (v^2 ± sqrt(v^4 - g (g d^2 + 2 Δh v^2))) / (g d)`. Ujemny wyróżnik oznacza, że cel jest poza zasięgiem. Maksymalny zasięg `R = R0 sqrt(1 + 2 Δh / R0)` (strzelec 20 wyżej: 98, 20 niżej: 57, 40 niżej: 0).
+- Najpierw tor płaski (mniejszy kąt), próbkowany co ok. 8 jednostek względem wysokości terenu; jeśli blokuje go wzgórze, tor stromy (powyżej 45 stopni), jeśli oba są zablokowane, strzału nie ma. Obrażenia zadawane natychmiast (jak dotąd); wyliczony wierzchołek służy tylko do narysowania łuku. Czas lotu jest pomijany (TODO).
+- Bez wzgórz (`hills` wyłączone) obowiązuje dotychczasowa reguła (zasięg 80 i `losClear`), aby zachować identyczny przebieg.
 
-### 3.2 Ruch i zmęczenie
-- Nachylenie `s = (h_cel - h_teraz) / odległość` w kierunku ruchu mrówki (z siatki wysokości, interpolacja dwuliniowa).
-- Mnożnik prędkości: pod górę `1 / (1 + 2,5 * s)` (min 0,45), z góry `1 + 1,2 * (-s)` (max 1,35). Wartości do kalibracji; w JSON `params.elevation`.
-- Zmęczenie roty: składnik marszu `move` mnożony przez `1 + 3 * max(0, średnie_nachylenie_pod_górę)` i `1 - 0,5 * max(0, nachylenie_z_góry)`; średnia po mrówkach roty w tym kroku.
-- Pola przepływu: opcjonalnie koszt komórki rosnący z nachyleniem (żeby rota obchodziła strome zbocza); bez tego rota idzie najkrótszą trasą po płaskim terenie, wchodząc pod górę, gdy trasa tego wymaga.
+## 5. Widoczność i ukrywanie się (wspólna dla gracza i AI)
+- Widoczność strony jest wspólna: wrogi mrówka jest widoczna, gdy widzi ją którykolwiek z próbkowanych własnych obserwatorów (1 na 4 mrówki w rocie). Liczona co 5 kroków w stałej kolejności (stan symulacji, deterministyczna).
+- Promień widzenia 125 (większy niż zasięg plujki, aby zasięg był użyteczny). Linia wzroku 3D: linia od oczu obserwatora do celu musi leżeć powyżej terenu; ściany (`SIGHT`) blokują, woda nie.
+- Mech (osłona, komórka 2) ukrywa: mrówka na mchu jest widoczna tylko z bliska (28 jednostek); mech nie blokuje widoku między innymi komórkami. Trawa i ściółka to dekoracje.
+- Ujawnienie: mrówka, która zaatakowała (wręcz albo kwasem), jest widoczna dla wszystkich przez 3 s. Bez bonusu obrażeń za zasadzkę.
+- AI korzysta tylko z widocznych przeciwników i z ostatnio widzianej pozycji roty (ważnej ok. 15 s); dotyczy `acquire`, celu marszu, wyboru brodu, kontrataku i biegaczy. Gdy nic nie jest widoczne, cel zastępczy: Bitwa środek strefy wroga, Oblężenie gniazdo, Przeprawa lądowisko wybranego brodu.
+- Interfejs: niewidoczne wrogie mrówki, etykiety, karty i panele nie są rysowane; tryb obserwatora pokazuje wszystko.
 
-### 3.3 Walka i zasięg
-- Zasięg skuteczny strzelca: `range * clamp(1 + 0,006 * (h_strzelec - h_cel), 0,6, 1,6)` (każde 10 jednostek wysokości to +/- 6% zasięgu; różnica 60 daje +/- 36%). Atak wręcz: bez zmiany zasięgu, ale obrażenia z góry x1,15 i z dołu x0,9 (opcjonalnie, do zatwierdzenia).
-- Strzał jest możliwy tylko, gdy `losClear` w 3D przechodzi: linia od oczu strzelca (h + 4) do celu (h + 2) musi leżeć powyżej terenu po drodze; grzbiet między stronami zasłania.
-- Odpowiednio kwas z góry trafia dalej, a plujka na dole musi podejść pod ostrzał albo go przyjąć.
+## 6. Ciosy z tyłu i z boku
+Kąt między kierunkiem `heading` obrońcy a kierunkiem do atakującego: do 60 stopni przód (x1), 60-120 flanka (x1,25), powyżej 120 tył (x1,5). Dotyczy ciosów wręcz i kwasu (kierunek z miejsca strzału). Mnożniki są założeniem prototypu (`params.facing`). Obrażenia wręcz z wysokości nie są zmieniane.
 
-### 3.4 Widoczność, zasadzki i ukrywanie się
-- Każda strona ma zbiór widocznych mrówek wroga, liczony co 5 kroków (4 Hz): wróg jest widoczny, gdy w promieniu widzenia (propozycja: 110 jednostek, mrówka mała) leży własna mrówka z czystą trójwymiarową linią wzroku (zasłaniają ściany, zarośla, kamienie, grzbiety; woda i trawa nie).
-- Ukrywanie się: mrówka stojąca na komórce mchu (osłona) jest widoczna tylko z bliska (propozycja: 25 jednostek), czyli mech to gęste krzaki dla mrówek; mech sam nie blokuje widoku między innymi komórkami. Trawa i ściółka są dekoracją.
-- Ujawnienie: mrówka, która zaatakowała (melee lub kwas), jest widoczna dla wszystkich przez 3 s (zasadzka daje pierwsze uderzenie, ale ujawnia).
-- Zasadzka (opcjonalnie, do zatwierdzenia): pierwszy atak z ukrycia ma obrażenia x1,5.
-- Własne jednostki są zawsze widoczne dla właściciela. Tryb obserwatora (AI przeciw AI) pokazuje wszystko, a pomocniczo można pokazać widok jednej ze stron.
-- AI (obie strony, tak samo): `acquire` i `aiStep` używają tylko widocznych przeciwników oraz ostatnio widzianej pozycji roty (pamięć kilkunastu sekund). To wprowadza zasadzki także po stronie AI.
-- Interfejs: ukryte wrogie mrówki nie są rysowane, nie mają kart, etykiet ani paneli po najechaniu; ostatnia znana pozycja rot może być pokazana jako znacznik „?” przez kilka sekund.
-- Wydajność: obserwatorami jest próbka mrówek (np. 1 na 4 w rocie), a cele sprawdzane są przez siatkę przestrzenną w promieniu widzenia; budżet to kilka ms na aktualizację (4 razy na sekundę).
+## 7. Bezpiecznik regresji
+`params.facing.on`, `params.visibility.on` (domyślnie włączone) i wzgórza per mapa. Test kotwicy typu 3 jest uruchamiany z wyłączonymi mechanikami etapu 4 i musi dawać identyczny skrót; nowe testy z włączonymi.
 
-### 3.5 Rysowanie
-- Wstępnie renderowany teren izometryczny przesuwa każdy kafel w pionie o `wysokość * 0,5 * S`, z cieniowaniem zboczy (jaśniej od strony światła) i pochyłymi bokami; mrówki rysowane na wysokości terenu pod nimi. Ponieważ mrówki nie są sortowane w głąb, za grzbietem nie powinny być widoczne, co zapewnia ukrywanie (wróg za wzgórzem jest ukryty), a dla własnych mrówek za wzgórzem przewidziane jest półprzezroczyste rysowanie.
+## 8. Rysowanie
+Jedna funkcja przesunięcia pionowego o wysokość terenu używana w każdym miejscu, gdzie liczy się pozycję ekranową (mrówki, etykiety, aury, linie rozkazów, podglądy szyku, łuki kwasu, etykiety brodów, gniazdo); wybieranie myszą (`toWorld`) poprawiane iteracyjnie o wysokość; teren rysowany od tyłu do przodu z cieniowaniem zboczy i bokami tam, gdzie sąsiednia komórka jest niższa.
 
-## 4. Luki i pytania do użytkownika (przed implementacją)
-1. **Które mapy mają elewację?** Propozycja: typy 1, 2, 4, 5 i potok mają wzgórza, typ 3 zostaje płaski (identyczny przebieg), a Oblężenie bez budżetu na typie 3 pozostaje bez zmian.
-2. **Skala i siła wpływu** (liczby w punkcie 3.2 i 3.3 to propozycje, nie dane z dokumentu): czy akceptujesz wzgórza 40-120 jednostek, +/-6% zasięgu na 10 jednostek wysokości i prędkość pod górę do 0,45?
-3. **Widoczność:** czy promień widzenia 110 i widoczność z bliska 25 w mchu jest dobrym punktem wyjścia, i czy AI ma grać uczciwie (te same ograniczenia widzenia co gracz)?
-4. **Zasadzka:** czy pierwszy atak z ukrycia ma dawać bonus x1,5 do obrażeń (jest to nowa mechanika bojowa), czy wystarczy sama niewidoczność?
-5. **Grzbiety a linia wzroku:** czy wzgórza mają blokować widok i strzał (propozycja: tak, przez trójwymiarową linię wzroku)?
-
-## 5. Plan implementacji i testów (po zatwierdzeniu)
-1. Siatka wysokości: generator z ziarna dla typów map, renderowanie terenu z wysokością, test: typ 3 bez zmian (hash), generatory dają gładkie wzgórza i trasy nadal istnieją.
-2. Ruch i zmęczenie: test, że ta sama rota idzie szybciej z góry niż pod górę i zbiera więcej zmęczenia pod górę, na płaskim terenie bez zmian.
-3. Zasięg i trójwymiarowa linia wzroku: test, że plujka na wzgórzu trafia dalej niż ta pod nim, a grzbiet blokuje strzał.
-4. Widoczność i zasadzki: test, że ukryta w mchu rota jest niewidoczna z daleka, widoczna z bliska i po ataku; AI nie celuje w ukryte jednostki; interfejs ich nie rysuje; test zasadzki (AI przeciw AI).
-5. Pełny `npm test` w tle na kopii pliku, eksperymenty wpływu elewacji na wynik i dokumentacja (decyzje, pseudokod, wnioski), zrzuty ekranu.
+## 9. Testy
+Płaska mapa z wyłączonymi mechanikami: identyczny skrót; ta sama rota pod górę i z góry (stosunek prędkości, zmęczenie); balistyka względem tabeli analitycznej (+20/-20/-40, wzgórze blokuje tor płaski, a stromy przechodzi, cel 40 wyżej poza zasięgiem); widoczność (mech: ukryta z 60, widoczna z 20; widoczna po ataku; za wzgórzem ukryta; `acquire` nie celuje w ukryte; AI idzie, gdy nic nie widzi); stosunki obrażeń przód/flanka/tył; determinizm z wzgórzami i widocznością; czas kroku przy ok. 4500 mrówek na mapie ze wzgórzami; przeglądarka: wzgórza się rysują, wybieranie na szczycie jest dokładne, ukrytych wrogów nie widać.

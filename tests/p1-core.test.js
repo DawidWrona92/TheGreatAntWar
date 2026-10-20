@@ -363,6 +363,17 @@ test('uzupełnienia: w oblężeniu ma je tylko obrońca, w Bitwie i Przeprawie o
   return 'rezerwa w oblężeniu: WK 0, LH 150; w Bitwie i Przeprawie po 150';
 });
 
+test('poprawki po przeglądzie: mapy 4 i 5 zawsze spełniają minimalną szerokość, duża lekka armia nie rzuca wyjątku, rota przed brodem nie zostaje pod wodą', () => {
+  let n = 0; for (const map of [4, 5]) for (let seed = 1; seed <= 40; seed++) { const sim = makeMap(map, seed); assert.ok(sim.mapInfo.widthOk, 'mapa ' + map + ' ziarno ' + seed + ': trasa węższa niż minWidth'); n++; }
+  const { Sim, defs } = loadP1(); for (const scen of ['oblezenie', 'bitwa']) for (const side of ['WK', 'LH']) { const sim = makeArmy(scen, 3, 1, 'duzy', { styles: { [side]: 'lekka' } }); assert.ok(sim.armyInfo[side].cost <= sim.armyInfo[side].budget); }
+  // przeprawa: po 80 s prawie żadna mrówka rot, których kotwica jest już za potokiem, nie stoi daleko na zachód od wody (wcześniej większość tkwiła pod wodą, bo omijanie zależało od widoczności)
+  const sim = makeScen('przeprawa', 3, 1), cx = sim.W - 1180; let stranded = 0, past = 0;
+  for (let k = 0; k < 20 * 80; k++) sim.step();
+  for (const c of sim.comps) if (c.side === 0 && c.ax > cx + 20) for (const i of c.ants) if (sim.alive[i]) { past++; if (sim.x[i] < cx - 100) stranded++; }
+  assert.ok(past > 100 && stranded <= 0.06 * past, 'utknęło ' + stranded + ' z ' + past);
+  return n + ' map 4 i 5 z poprawną szerokością; lekka armia na Dużym bez wyjątku; po 80 s utknęło ' + stranded + ' z ' + past + ' mrówek rot za potokiem';
+});
+
 function dummyDefenders(d) {
   for (const c of d.scenario.sides.WK.companies) for (const k in c.units) if (k !== 'dowodca' && k !== '@guard') c.units[k] = Math.round(c.units[k] * 0.6); // mniejsze roty: test sprawdza nawigację, nie przepustowość
   d.units.dummy = { name: 'Manekin', hp: 1e9, speed: 1, dmg: 0, reach: 1, cd: 1, aggro: 0, radius: 4, mass: 1, rank: 2, armor: 0, size: 0.5 };
