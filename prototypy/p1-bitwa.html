@@ -2238,6 +2238,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   view.addEventListener('pointermove', (e) => {
     const r = view.getBoundingClientRect();
     if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
+    if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); }
     if (drag.on) { const sx = e.clientX - r.left, sy = e.clientY - r.top; if (Math.hypot(sx - drag.sx, sy - drag.sy) > 14) { const [wx, wy] = toWorld(sx, sy); drag.active = true; drag.face = Math.atan2(wy - drag.wy, wx - drag.wx); } }
     if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
       const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
@@ -2662,7 +2663,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const t1 = performance.now(); render(); S.renderMs = S.renderMs * 0.9 + (performance.now() - t1) * 0.1;
       hudT += dt; diagT += dt;
       if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); }
-      if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash(); }
+      if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash() + (S.sim.hills ? '\nwysokość terenu pod kursorem: ' + (S.cursorH || 0).toFixed(0) : ''); }
     }
   });
 

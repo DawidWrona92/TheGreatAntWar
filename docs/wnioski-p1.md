@@ -102,6 +102,10 @@ Co jest (szczegóły i liczby w `projekt-bitwy.md`, decyzje 56-62, plan w `etap4
 - **Cios z tyłu** x1,5, **z boku** x1,25, z przodu x1 (zmierzone: x1,51 i x1,25).
 - Krok symulacji przy ok. 4500 mrówek na mapie ze wzgórzami i mgłą: mediana 19 ms, p99 55 ms (budżet 50 ms; czas piaskownicy).
 
+Gdzie szukać wzgórz (ziarno 1; szczyty wysokości x, y): mapa 2: (1464,168) 35, (888,312) 23, (1240,920) 24; mapa 4: (1976,184) 37, (1016,1208) 37, (1080,344) 23; mapa 5: (2328,184) 37, (1144,1304) 37; Przeprawa: (2312,328) 50, (1288,536) 25, (2328,1592) 26. Wzgórza są **subtelne wizualnie** (jaśniejsze i ciemniejsze plamy, wygięta ramka mapy, przesunięcie mrówek w pionie); zrzut `wyniki/p1-wzgorza-szczyt.png` to mapa 2 przy szczycie (1240,920). Na pasku diagnostyki jest „wysokość terenu pod kursorem”, co pozwala je znaleźć.
+
+Przeprawa, mrówki rot z kotwicą za potokiem, które nadal są przed nim (liczba/rot za potokiem; nie jest to ściśle „utknięcie”, liczy też spóźnionych i walczących), ziarna 1 i 2, funkcje etapu 4 włączone / wyłączone: t=80: 35 i 37 / 5 i 1; t=120: 107 i 81 / 57 i 55; t=160: 115 i 103 / 118 i 102. Po 160 s poziom jest taki sam, więc zator przy wodzie jest wcześniejszy niż etap 4, ale etap 4 (wzgórza, widoczność) opóźnia przeprawę o kilkadziesiąt sekund.
+
 Wpływ na bitwy AI przeciw AI (wykonane: `node tests/p1-etap4.js --seeds 4`, Bitwa na mapie 2, budżet Średni, `wyniki/p1-etap4-wplyw.json`): wygrane WK 2/4 przy wszystkim wyłączonym, 2/4 z samą elewacją, 1/4 z samą widocznością, 3/4 z samym kierunkiem ciosu, 2/4 ze wszystkim; różnice są w granicach szumu 4 ziaren. Strome tory kwasu (łuk wyższy od 22 jednostek) w ogóle nie wystąpiły w tych bitwach. Wniosek: mechaniki działają (testy jednostkowe), ale obecne AI nie wykorzystuje terenu (nie szuka wzgórz, nie ustawia plujek pod strzał, nie robi zasadzek), więc w całych bitwach ich wpływ jest niewidoczny. Do sprawdzenia w grze człowieka; uczenie AI korzystania z terenu jest na liście TODO.
 
 ## Błędy znalezione po drodze (każdy ma test)
