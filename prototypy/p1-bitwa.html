@@ -40,7 +40,7 @@ button:hover{border-color:var(--acc)}button.on{background:#51461f;border-color:v
 #orders .hint{color:#f6e7c4;font-size:11.5px;opacity:.85;text-shadow:0 1px 0 #000;margin-left:6px}
 #cards{display:flex;gap:4px;overflow-x:auto;padding:7px 8px 5px}
 .card{width:68px;height:106px;flex:0 0 auto;border:2px solid #24160a;border-radius:5px;background:linear-gradient(#41301b,#2a1d10);position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:2px 2px 3px;box-shadow:inset 0 0 0 1px rgba(255,220,160,.12)}
-.card.elite{border-color:#c9a24b}.card.sel{border-color:#ffe08a;box-shadow:0 0 0 2px #e6b422,0 0 10px rgba(230,180,34,.7)}.card.dead{opacity:.3}
+.card.elite{border-color:#c9a24b}.card.sel{}.card.dead{opacity:.3}
 .card .n{font-size:12px;font-weight:700;color:#f6e7c4;text-shadow:0 1px 0 #000;line-height:1.1}
 .card canvas{width:60px;height:45px;border-radius:3px;background:radial-gradient(#5b4829,#2b2012)}
 .card .g{font-size:10px;color:#ffd98a;position:absolute;left:3px;top:15px;font-weight:700;text-shadow:0 1px 0 #000}
@@ -90,6 +90,9 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 @media(max-width:800px){.acols{grid-template-columns:1fr}}
 #force{display:flex;align-items:center;gap:6px;font-size:12px;cursor:help}
 #forceBar{width:150px;height:12px;background:#7a3a1c;border:1px solid var(--line);border-radius:6px;overflow:hidden}#forceOwn{display:block;height:100%;background:#4fb3c9;width:50%}
+.card.sel{border-color:var(--selc,#35e0d0);box-shadow:0 0 0 2px var(--selc,#35e0d0),0 0 10px rgba(53,224,208,.5)}.card.hov:not(.sel){border-color:#bfe9ff;box-shadow:0 0 0 1px rgba(191,233,255,.6)}
+#ovTip{position:fixed;z-index:41;max-width:320px;background:#15130c;border:1px solid #c9a24b;padding:6px 8px;font-size:12px;pointer-events:none;border-radius:4px;line-height:1.35}
+#ovPanel{position:absolute;right:92px;top:44px;width:290px;z-index:6;padding:8px 10px;font-size:12px;color:#f6e7c4}#ovPanel .ovr{display:block;padding:2px 0}#ovPanel .ovc{margin-right:6px;white-space:nowrap}#ovPanel input[type=color]{width:26px;height:18px;padding:0;border:0;vertical-align:middle}#ovPanel button{margin-top:6px}
 #unitPanel{position:absolute;left:8px;top:236px;width:240px;max-height:calc(100vh - 470px);overflow-y:auto;z-index:4;padding:8px 9px;font-size:12px;color:#f6e7c4}
 #unitPanel .uh{font-weight:700;font-size:13px;text-shadow:0 1px 0 #000;margin-bottom:3px}
 #unitPanel details{border-top:1px solid rgba(30,18,8,.7);padding:2px 0}#unitPanel summary{cursor:pointer;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#ffd98a;text-shadow:0 1px 0 #000}
@@ -119,13 +122,14 @@ body.sideOpen #miniWrap{right:316px}
   <button id="bRestart" title="Ten sam seed i parametry">Restart</button>
   <button id="bMenu">Menu</button>
   <span class="grow"></span>
+  <button id="bOv" title="Nakładki taktyczne (K); tryb taktyczny: J">Nakładki</button>
   <button id="bPanel">Panel</button>
   <button id="bHelp">?</button>
 </div>
 <div id="ticker"></div>
 <div id="unitPanel" class="wood hidden"></div>
 <div id="miniWrap" class="wood"><canvas id="mini" width="196" height="120"></canvas></div>
-<div id="tip" class="hidden"></div>
+<div id="tip" class="hidden"></div><div id="ovTip" class="hidden"></div><div id="ovPanel" class="wood hidden"></div>
 <div id="help" class="hidden"></div>
 <div id="side" class="hide">
   <h3>Diagnostyka</h3><pre id="diag"></pre>
@@ -302,8 +306,16 @@ body.sideOpen #miniWrap{right:316px}
       "keys": {
         "selectAll": ["Ctrl+KeyA"], "group": ["KeyG"], "lockGroup": ["Ctrl+KeyG"], "stop": ["Backspace"], "hold": ["KeyH"], "retreat": ["KeyV"],
         "move": ["KeyM"], "attackMove": ["KeyB"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
-        "pause": ["Space"], "faster": ["Equal", "NumpadAdd"], "slower": ["Minus", "NumpadSubtract"], "cancel": ["Escape"], "help": ["Slash"]
+        "pause": ["Space"], "faster": ["Equal", "NumpadAdd"], "slower": ["Minus", "NumpadSubtract"], "cancel": ["Escape"], "help": ["Slash"],
+        "tactical": ["KeyJ"], "overlayPanel": ["KeyK"]
       }
+    },
+    "overlays": {
+      "comment": "Znaczniki i nakładki taktyczne (etap C, specyfikacja projektu, nie odwzorowanie funkcji Total War). Progi wykonalności ostrzału (procent strzelców z poprawną linią strzału): zielony od green, żółty od yellow, pomarańczowy od 1%, czerwony 0%. Próbkowanie ogranicza koszt zapytań. Kolory w hex; użytkownik może je zmienić w panelu nakładek.",
+      "fire": { "thresholds": { "green": 80, "yellow": 50 }, "maxShooters": 40, "maxTargets": 8, "rayStepDeg": 10, "rayStep": 4 },
+      "colors": { "select": "#35e0d0", "hover": "#bfe9ff", "enemyHover": "#ff8a30", "target": "#ff3b30", "move": "#ffffff", "range": "#e8d98a", "green": "#5ad15a", "yellow": "#f0d23a", "orange": "#f28a1e", "red": "#e5372f", "area": "#b8f060", "neutral": "#c9b27a" },
+      "selectColors": { "turkus": "#35e0d0", "niebieski": "#4aa8ff", "zolty": "#ffe066" },
+      "maxRoutes": 3, "maxTargetLines": 8
     }
   },
   "units": {
@@ -1166,6 +1178,104 @@ const Sim = (function () {
       return -1;
     }
     sim.shotApex = shotApex;
+    // ---------- zapytania dla nakładek taktycznych (etap C): te same reguły co strzał, ale z przyczyną odmowy i punktem blokady ----------
+    // pierwszy punkt na odcinku, w którym ściana zasłania widok (to samo próbkowanie co losClear), albo null
+    function losBlocker(x0, y0, x1, y1) {
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
+      for (let k = 1; k < n; k++) { const x = x0 + dx * k / n, y = y0 + dy * k / n; if (sightBlocked(x, y)) return [x, y]; }
+      return null;
+    }
+    // wynik: { apex (>= 0, gdy strzał możliwy), why: 'ok' | 'range' | 'wall' | 'terrain', bx, by (punkt blokady), d }; apex zgodny ze shotApex
+    function shotAt(x0, y0, x1, y1, R0) {
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy);
+      if (!HILLS) {
+        if (d > R0) return { apex: -1, why: 'range', d };
+        const b = losBlocker(x0, y0, x1, y1); return b ? { apex: -1, why: 'wall', bx: b[0], by: b[1], d } : { apex: 0, why: 'ok', d };
+      }
+      const z0 = heightAt(x0, y0) + BL.eyeShooter, z1 = heightAt(x1, y1) + BL.eyeTarget, sol = ballistic(R0, BL.g, Math.max(d, 0.5), z1 - z0);
+      if (!sol) return { apex: -1, why: 'range', d };
+      const wb = losBlocker(x0, y0, x1, y1); if (wb) return { apex: -1, why: 'wall', bx: wb[0], by: wb[1], d };
+      const n = Math.max(2, Math.ceil(d / BL.step)), v2 = BL.g * R0; let first = null;
+      for (const tn of sol) {
+        let ok = true, apex = Math.max(z0, z1);
+        for (let k = 1; k < n; k++) {
+          const xx = d * k / n, z = z0 + xx * tn - BL.g * xx * xx * (1 + tn * tn) / (2 * v2);
+          if (z > apex) apex = z;
+          if (heightAt(x0 + dx * k / n, y0 + dy * k / n) + BL.clearance > z) { ok = false; if (!first) first = [x0 + dx * k / n, y0 + dy * k / n]; break; }
+        }
+        if (ok) return { apex, why: 'ok', d };
+      }
+      return { apex: -1, why: 'terrain', bx: first[0], by: first[1], d };
+    }
+    sim.shotAt = shotAt;
+    const OV = (defs.ui && defs.ui.overlays) || { fire: { thresholds: { green: 80, yellow: 50 }, maxShooters: 40, maxTargets: 8, rayStepDeg: 10, rayStep: 4 } };
+    sim.fireLevel = (frac, canFire) => !canFire || frac <= 0 ? 'red' : frac * 100 >= OV.fire.thresholds.green ? 'green' : frac * 100 >= OV.fire.thresholds.yellow ? 'yellow' : 'orange';
+    const evenly = (arr, n) => { if (arr.length <= n) return arr; const out = []; for (let k = 0; k < n; k++) out.push(arr[Math.floor(k * arr.length / n)]); return out; };
+    // wykonalność ostrzału roty strzelców c w rotę celu t z punktu widzenia strony c: ułamek mrówek strzelających (próbka), przyczyna odmowy i punkt blokady.
+    // Cele to wyłącznie mrówki widoczne dla strony strzelca (nakładka niczego nie ujawnia); każdy strzelec ma wziąć na cel dowolną widoczną mrówkę celu, jak acquire()
+    sim.fireCheck = (cid, tid) => {
+      const c = comps[cid], t = comps[tid], s = c.side;
+      const shooters = evenly(c.ants.filter((i) => alive[i] && T.ranged[type[i]]), OV.fire.maxShooters);
+      const out = { applicable: shooters.length > 0, shooters: shooters.length, ok: 0, frac: 0, ammo: c.acid, visible: false, why: 'ok', bx: null, by: null, range: 0, accuracy: 1, aoe: 0, canFire: false, level: 'red' };
+      if (!shooters.length) return out;
+      const tt = evenly(t.ants.filter((j) => alive[j] && visibleTo(s, j)), OV.fire.maxTargets);
+      out.range = T.range[type[shooters[0]]]; out.accuracy = T.acc[type[shooters[0]]]; out.aoe = T.aoe[type[shooters[0]]];
+      if (!tt.length) return out;
+      out.visible = true; const why = { range: 0, wall: 0, terrain: 0 }; let blk = null, blkD = 1e18;
+      for (const i of shooters) {
+        let ok = false, near = null;
+        for (const j of tt) { const r = shotAt(ax[i], ay[i], ax[j], ay[j], T.range[type[i]]); if (r.apex >= 0) { ok = true; break; } if (!near || r.d < near.d) near = r; }
+        if (ok) out.ok++; else { why[near.why]++; if (near.bx != null && near.d < blkD) { blkD = near.d; blk = near; } }
+      }
+      out.frac = out.ok / shooters.length;
+      const topWhy = () => (why.wall + why.terrain > 0 ? (why.wall >= why.terrain ? 'wall' : 'terrain') : 'range');   // przeszkoda wygrywa z zasięgiem: strzelec w zasięgu zasłonięty ścianą to ważniejsza informacja niż strzelcy zbyt daleko
+      if (out.ok === 0) { const top = topWhy(); out.why = top; if (blk && top !== 'range') { out.bx = blk.bx; out.by = blk.by; } }
+      else if (out.ok < shooters.length) { const top = topWhy(); out.why = 'partial:' + top; if (blk) { out.bx = blk.bx; out.by = blk.by; } }
+      out.canFire = out.ok > 0 && c.acid > 0; if (c.acid <= 0 && out.ok > 0) out.why = 'ammo';
+      out.level = sim.fireLevel(out.frac, out.canFire);
+      return out;
+    };
+    // obszar, z którego strzał jest faktycznie możliwy z punktu (x, y): promienie co rayStepDeg, zasięg = najdalszy punkt ciągłego odcinka możliwych strzałów;
+    // blokada i jej przyczyna dla promieni krótszych niż zasięg teoretyczny R0 (zasięg na płaskim). To geometria terenu, niczego nie ujawnia o wrogach.
+    sim.fireAreaAt = (x, y, R0) => {
+      const rays = [], st = OV.fire.rayStep, maxD = R0 * 1.4;
+      for (let a = 0; a < 360; a += OV.fire.rayStepDeg) {
+        const ca = Math.cos(a * Math.PI / 180), sa = Math.sin(a * Math.PI / 180); let reach = 0, why = 'range', bx = null, by = null;
+        for (let d = st; d <= maxD; d += st) {
+          const px = x + ca * d, py = y + sa * d; if (px < 0 || py < 0 || px >= W || py >= H) { why = 'edge'; break; }
+          const r = shotAt(x, y, px, py, R0); if (r.apex >= 0) reach = d; else { why = r.why; bx = r.bx; by = r.by; break; }
+        }
+        rays.push({ a, reach, why: reach >= maxD - st ? 'range' : why, bx, by });
+      }
+      return { x, y, R0, rays };
+    };
+    // przedstawicielska mrówka strzelająca roty: najbliższa środka (z jej rzeczywistej pozycji liczony jest obszar)
+    sim.fireShooter = (cid) => { const c = comps[cid]; let best = -1, bd = 1e18; for (const i of c.ants) if (alive[i] && T.ranged[type[i]]) { const d = (ax[i] - c.ax) ** 2 + (ay[i] - c.ay) ** 2; if (d < bd) { bd = d; best = i; } } return best; };
+    sim.fireArea = (cid) => { const i = sim.fireShooter(cid); return i < 0 ? null : sim.fireAreaAt(ax[i], ay[i], T.range[type[i]]); };
+    // otoczka wypukła żywych mrówek roty (obrys dla nakładek); pamięć podręczna na krok symulacji
+    sim.compHull = (c) => {
+      if (c._hullTick === tick && c._hull) return c._hull;
+      const pts = []; for (const i of c.ants) if (alive[i]) pts.push([ax[i], ay[i]]);
+      pts.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+      const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+      let hull;
+      if (pts.length < 3) hull = pts; else {
+        const lo = []; for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+        const up = []; for (let q = pts.length - 1; q >= 0; q--) { const p = pts[q]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+        lo.pop(); up.pop(); hull = lo.concat(up);
+      }
+      c._hullTick = tick; c._hull = hull; return hull;
+    };
+    // punkt podejścia do roty t od strony roty c: przecięcie odcinka (kotwica c -> środek t) z obrysem t, najbliższe c; bez obrysu (mało mrówek) środek t
+    sim.approachPoint = (c, t) => {
+      const h = sim.compHull(t), x0 = c.ax, y0 = c.ay, dx = t.ax - x0, dy = t.ay - y0; let best = null, bu = 1e18;
+      for (let q = 0; q < h.length; q++) {
+        const a = h[q], b = h[(q + 1) % h.length], ex = b[0] - a[0], ey = b[1] - a[1], den = dx * ey - dy * ex; if (Math.abs(den) < 1e-9) continue;
+        const u = ((a[0] - x0) * ey - (a[1] - y0) * ex) / den, v = ((a[0] - x0) * dy - (a[1] - y0) * dx) / den;
+        if (u > 0 && u <= 1 && v >= 0 && v <= 1 && u < bu) { bu = u; best = [x0 + dx * u, y0 + dy * u]; }
+      }
+      return best || [t.ax, t.ay];
+    };
     function cellAt(x, y) { return ((y / CELL) | 0) * COLS + ((x / CELL) | 0); }
     function blocked(x, y) {
       if (x < 0 || y < 0 || x >= W || y >= H) return true;
@@ -1647,7 +1757,7 @@ const Sim = (function () {
         entities: { current: c.alive, initial: c.initial, max: c.initial }, health: { current: hpNow, max: c.hp0, perAntMax: T.hp[dt] },
         morale: { value: c.control, band: c.band, name: band.name, icon: band.icon, color: band.color, retreating: c.cstate === CS_LOST, resistance: c.mres, breakdown: c.mb, threshold: MO.bands.map((b) => b.min) },
         state, firing, fighting, hurt, order: c.ostate,
-        attack: { melee: Math.max(0, T.matk[dt] - CB.fatigueAtk * fat), baseDamage: T.base[dt], armourPiercing: T.ap[dt], interval, reach: T.reach[dt], range: ranged ? T.range[dt] : 0, accuracy: ranged ? T.acc[dt] : null, ranged, counters: Object.keys(defs.counters[names[dt]] || {}).map((k) => ({ vs: k, mult: defs.counters[names[dt]][k] })) },
+        attack: { melee: Math.max(0, T.matk[dt] - CB.fatigueAtk * fat), baseDamage: T.base[dt], armourPiercing: T.ap[dt], interval, reach: T.reach[dt], range: ranged ? T.range[dt] : 0, aoe: ranged ? T.aoe[dt] : 0, accuracy: ranged ? T.acc[dt] : null, ranged, counters: Object.keys(defs.counters[names[dt]] || {}).map((k) => ({ vs: k, mult: defs.counters[names[dt]][k] })) },
         defence: { melee: T.mdef[dt], armour: T.armour[dt], armourReduction: red, resist },
         speed: { base: T.speed[dt], current: T.speed[dt] * c.spMod }, ammo: ranged ? { current: c.acid, max: c.acidMax } : null, effects: eff
       };
@@ -2777,7 +2887,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     if (G) { if (Math.hypot(sx - G.sx, sy - G.sy) > CTL.dragPx) G.moved = true; if (G.type === 'box') { box.x1 = sx; box.y1 = sy; } if (G.type === 'group') G.cur = toWorld(sx, sy); }
     if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(sx, sy); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); S.cursorLv = S.sim.levelAt(Math.max(0, wx), Math.max(0, wy)); }
     if (R.on && Math.hypot(sx - R.sx, sy - R.sy) > CTL.dragPx) { const [wx, wy] = toWorld(sx, sy); R.moved = true; R.face = Math.atan2(wy - R.wy, wx - R.wx); R.width = Math.hypot(wx - R.wx, wy - R.wy); }
-    if (S.sim && S.started) { const [cx, cy] = toContainer(sx, sy), hit = pickAt(cx, cy); S.hover = hit ? hit.id : -1; }   // samo najechanie niczego nie zmienia: tylko podświetlenie i panel informacji
+    if (S.sim && S.started) { const [cx, cy] = toContainer(sx, sy), hit = pickAt(cx, cy); S.hover = hit ? hit.id : -1; S.hoverAnt = hit ? hit.i : -1; }   // samo najechanie niczego nie zmienia: tylko podświetlenie i panel informacji
     if (pan.on) { cam.x += e.clientX - pan.x; cam.y += e.clientY - pan.y; pan.x = e.clientX; pan.y = e.clientY; applyCam(); }
   });
   view.addEventListener('pointerup', (e) => {
@@ -2857,6 +2967,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
         case 'pause': togglePause(); break; case 'faster': changeSpeed(1); break; case 'slower': changeSpeed(-1); break;
         case 'cancel': S.pending = null; G = null; box.on = false; R.on = false; S.selected.clear(); S.pinned = -1; buildCards(); buildCmdBar(); break;
         case 'help': toggleHelp(); break;
+        case 'tactical': toggleTactical(); break;
+        case 'overlayPanel': $('ovPanel').classList.toggle('hidden'); break;
       }
       return;
     }
@@ -2870,7 +2982,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · B + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
+  const HELP = 'LPM: zaznacz rotę (klik), Ctrl+LPM: dodaj lub usuń z zaznaczenia, ramka: kilka rot, LPM na pustym terenie: odznacz, LPM na wrogu: informacje · Ctrl+A: cała armia · PPM na terenie: ruch (bez walki po drodze), dwukrotny PPM: szybki ruch · PPM na wrogu: atak na jego rotę, dwukrotny: szarża (rota z umiejętnością) · Shift+PPM: dodaj do kolejki rozkazów (linie przerywane i numery pokazują kolejkę) · przeciągnięcie PPM: środek, kierunek i szerokość szyku (długość gestu) · Alt+LPM i przeciągnięcie: przesuń grupę w szyku, z Ctrl obróć · Ctrl+1-9: zapisz grupę, 1-9: wybierz (drugi raz: kamera) · G: zgrupuj lub rozgrupuj, Ctrl+G: zablokuj układ grupy · Backspace lub H: stój (czyści kolejkę), V: odwrót · B + klik: atak-marsz (z walką po drodze), M + klik: ruch · Z/X/C: linia, kolumna, klin · umiejętności: siatka po prawej lub Q/E/R/F/T · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · nakładki: przycisk Nakładki lub K (panel), J: tryb taktyczny (pole ostrzału z uwzględnieniem ścian i terenu), po wskazaniu wroga przy zaznaczonych rotach: wykonalność ostrzału (✔ pełny, ◐ częściowy, ▲ ograniczony, ✖ brak) i przyczyna blokady · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -3217,7 +3329,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
         sp.x = ISO.sx(sim.x[i], sim.y[i]); sp.y = ISO.sy(sim.x[i], sim.y[i]);
       } else if (shown[i]) { shown[i] = 0; sp.alpha = 0; }
     }
-    gGround.clear(); gOver.clear();
+    gGround.clear(); gOver.clear(); S.ovFrame = { sel: [], hoverOwn: -1, hoverEnemy: -1, enemyAll: 0, ownAll: 0, flash: [], targets: [], lines: 0, routes: 0, dests: 0, ranges: [], areas: [], blockers: [], aoe: [], contact: 0, burst: 0, preview: 0, previewNote: '', fireLevel: null, tip: '' };
     const ell = (g, x, y, R) => g.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R));
     // zasięg dowódców na ziemi
     for (const s of SIDES) for (let i = 0; i < cnt; i++) if (sim.alive[i] && sim.kinds[sim.type[i]] === 'dowodca' && SIDES[sim.side[i]] === s && seenByMe(i)) {
@@ -3261,18 +3373,14 @@ if (typeof module !== 'undefined') module.exports = Sim;
         for (const th of MBANDS.slice(0, 4).map((b) => b.min)) gOver.beginFill(0xffffff, 0.8).drawRect(x0 + W * th / 100 - 0.4 * k, yb - 15 * k + bh + k, 0.8 * k, bh - k).endFill();
         gOver.beginFill(0x20201a, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W, bh - k).endFill().beginFill(0x7aa7ff, 1).drawRect(x0, yb - 15 * k + 2 * bh + 2 * k, W * c.fatigue / 100, bh - k).endFill();
       }
-      if (sel) {
-        const rad = Math.sqrt(c.alive) * 5 + 14;
-        gOver.lineStyle(2 * k, 0xe6b422, 0.95); ell(gOver, c.ax, c.ay, rad);
-        drawOrder(c);
-      }
+      drawOutline(c, show, sel);
       // kapitan roty: złoty znacznik nad mrówką
-      if (c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
+      if (S.ov.extra && c.captain >= 0 && sim.alive[c.captain]) { const qx = ISO.sx(sim.x[c.captain], sim.y[c.captain]), qy = ISO.sy(sim.x[c.captain], sim.y[c.captain]) - 13 * k; gOver.lineStyle(0).beginFill(0xf2c230, 1).drawPolygon([qx, qy, qx - 3 * k, qy - 5 * k, qx + 3 * k, qy - 5 * k]).endFill(); }
     }
     // podgląd formowania podczas przeciągania PPM
     if (R.on && R.moved && !S.observe) for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width })) drawFormation(o.c, o.x, o.y, o.face, o.cols, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
     if (G && G.type === 'group' && G.moved) for (const o of planGroupMove(G)) drawFormation(o.c, o.x, o.y, o.face, null, S.sim.reachable(o.c, o.x, o.y) ? 'move' : 'bad', true);
-    if (!S.observe) drawTargets();
+    drawOverlays();
     drawFx(sim, k);
     for (let q = markers.length - 1; q >= 0; q--) { const m = markers[q]; m.t -= 0.02; if (m.t <= 0) { markers.splice(q, 1); continue; } if (m.kind === 'bad') { crossAt(m.x, m.y, ORDER_COL.bad, 10); continue; } gOver.lineStyle(2 * k, m.kind === 'move' ? 0x7fd0ff : 0xff7a5c, Math.min(1, m.t)); ell(gOver, m.x, m.y, (1.2 - Math.min(1, m.t)) * 60 + 8); }
     drawBox();
@@ -3303,34 +3411,212 @@ if (typeof module !== 'undefined') module.exports = Sim;
     gOver.lineStyle(2 * k, col, 0.95).moveTo(f0[0], f0[1]).lineTo(f1[0], f1[1]).moveTo(h1[0], h1[1]).lineTo(f1[0], f1[1]).lineTo(h2[0], h2[1]);
   }
   // aktywny rozkaz zaznaczonej roty: trasa z pathfindingu (przerywana), miejsce docelowe i kolejka z numerami; niewykonalny cel to czerwony krzyżyk, nie trasa przez ścianę
-  function drawOrder(c) {
+  function drawOrder(c, full) {
     const o = c.order, k = 1 / cam.z; if (!o) return;
     if (o.kind === 'hold') { gOver.lineStyle(1.6 * k, ORDER_COL.hold, 0.8); gOver.drawEllipse(ISO.sx(c.ax, c.ay), ISO.sy(c.ax, c.ay), ISO.rx(Math.sqrt(c.alive) * 5 + 22), ISO.ry(Math.sqrt(c.alive) * 5 + 22)); if (o.face != null) drawFormation(c, c.ax, c.ay, o.face, c.fcols || null, 'hold', false); }
     let fx = c.ax, fy = c.ay;
     if (!o.done && o.kind !== 'hold') {
-      const col = ORDER_COL[o.kind] || 0xffffff, pts = routeFor(c, o.x, o.y, fx, fy);
-      if (!pts) crossAt(o.x, o.y, ORDER_COL.bad, 9); else { dashPath(pts, col, 0.9, 1.8); if (o.kind !== 'attackTarget') drawFormation(c, o.x, o.y, o.face, c.fcols || null, o.kind, false); }
+      const col = ORDER_COL[o.kind] || 0xffffff, pts = full ? routeFor(c, o.x, o.y, fx, fy) : [0];   // przy wielu zaznaczonych: pełna trasa tylko dla kilku rot, reszta ma uproszczony znacznik celu
+      if (!pts) crossAt(o.x, o.y, ORDER_COL.bad, 9); else { if (full) dashPath(pts, col, 0.9, 1.8); if (o.kind !== 'attackTarget') { if (full) drawFormation(c, o.x, o.y, o.face, c.fcols || null, o.kind, false); else { gOver.lineStyle(1.6 * k, col, 0.9).beginFill(col, 0.2).drawEllipse(ISO.sx(o.x, o.y), ISO.sy(o.x, o.y), ISO.rx(8), ISO.ry(8)).endFill(); } } }
       fx = o.x; fy = o.y;
     }
-    for (const q of c.queue) {
+    if (full) for (const q of c.queue) {
       const col = ORDER_COL[q.kind] || 0xffffff, tcv = q.kind === 'attackTarget' ? S.sim.comps[q.target] : null, qx = tcv ? tcv.ax : q.x, qy = tcv ? tcv.ay : q.y, pts = S.sim.routeOf(fx, fy, qx, qy, 28);
       if (pts) dashPath(pts, col, 0.6, 1.4); else crossAt(qx, qy, ORDER_COL.bad, 7);
       gOver.lineStyle(1.8 * k, col, 0.95).beginFill(0x15120c, 0.7).drawCircle(ISO.sx(qx, qy), ISO.sy(qx, qy), 6 * k).endFill();
       fx = qx; fy = qy;
     }
   }
-  // cel ataku: narożniki wokół wskazanej wrogiej roty (dla każdej zaznaczonej roty z aktywnym rozkazem ataku; znika, gdy cel zginie)
-  function drawTargets() {
-    const sim = S.sim, k = 1 / cam.z, seen = new Set();
-    for (const c of selComps()) { const o = c.order; if (o && o.kind === 'attackTarget' && !o.done) seen.add(o.target); }
-    for (const id of seen) {
-      const t = sim.comps[id]; if (!t || t.alive <= 0) continue;
-      const me = SIDES.indexOf(S.side); if (!S.observe && !sim.compVisible(t, me)) continue;
-      const sx = ISO.sx(t.ax, t.ay), sy = ISO.sy(t.ax, t.ay), r = Math.sqrt(t.alive) * 5 + 16, L = Math.min(10, r * 0.5) * 1;
-      gOver.lineStyle(2.4 * k, ORDER_COL.attack, 0.95);
-      for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const x = sx + dx * r, y = sy + dy * r * 0.6; gOver.moveTo(x, y).lineTo(x - dx * L * 0.9, y).moveTo(x, y).lineTo(x, y - dy * L * 0.5); }
+  // ---------- znaczniki i nakładki taktyczne (etap C) ----------
+  // Wszystkie znaczniki są liczone z tych samych zapytań co symulacja: sim.shotAt/fireCheck/fireArea (zasięg, balistyka, ściany, teren, widoczność), sim.reachable (droga),
+  // sim.compHull (rzeczywiste położenie mrówek). S.ovFrame zapisuje, co narysowano w ostatniej klatce (do testów).
+  const OVD = DEFS0.ui.overlays, OV_KEY = 'p1.overlays';
+  const OV_DEF = { sel: true, ownAll: false, enemyHover: true, enemyAll: false, orders: true, range: true, tactical: false, fire: true, melee: false, area: true, extra: true, selColor: 'turkus', soft: false };
+  S.ov = Object.assign({}, OV_DEF); S.ov.colors = {};
+  try { const o = JSON.parse(localStorage.getItem(OV_KEY) || 'null'); if (o) { for (const k of Object.keys(OV_DEF)) if (typeof o[k] === typeof OV_DEF[k]) S.ov[k] = o[k]; if (o.colors) S.ov.colors = o.colors; } } catch (e) { /* brak pamięci przeglądarki: ustawienia domyślne */ }
+  const ovSave = () => { try { localStorage.setItem(OV_KEY, JSON.stringify(S.ov)); } catch (e) { /* ignoruj */ } };
+  const hexInt = (h) => parseInt(String(h).replace('#', ''), 16);
+  const ovHex = (n) => (n === 'select' ? (S.ov.colors.select || OVD.selectColors[S.ov.selColor] || OVD.colors.select) : (S.ov.colors[n] || OVD.colors[n]));
+  const ovCol = (n) => hexInt(ovHex(n));
+  const oA = (a) => (S.ov.soft ? a * 0.6 : a), oW = (w) => (S.ov.soft ? w * 0.75 : w);
+  const FLV = { green: { ic: '✔', lab: 'Pełny ostrzał' }, yellow: { ic: '◐', lab: 'Częściowy ostrzał' }, orange: { ic: '▲', lab: 'Ograniczony ostrzał' }, red: { ic: '✖', lab: 'Brak linii strzału' } };
+  const WHY = { range: 'Cel poza zasięgiem', wall: 'Ściana lub przeszkoda blokuje strzał', terrain: 'Teren blokuje strzał', ammo: 'Brak kwasu w puli roty' };
+  const whyText = (w) => (w && w.startsWith('partial:') ? 'część strzelców: ' + (WHY[w.slice(8)] || w.slice(8)).toLowerCase() : WHY[w] || '');
+  function applyOv() {
+    document.documentElement.style.setProperty('--selc', ovHex('select'));
+    const bo = $('bOv'); if (bo) bo.classList.toggle('on', S.ov.tactical);
+    for (const el of document.querySelectorAll('#ovPanel [data-ov]')) { const k = el.dataset.ov; if (el.type === 'checkbox') el.checked = !!S.ov[k]; else if (el.tagName === 'SELECT') el.value = S.ov[k]; else el.value = ovHex(k); }
+  }
+  function buildOvPanel() {
+    const rows = [['sel', 'Zaznaczenie i podświetlenie kursora'], ['ownAll', 'Obrysy wszystkich własnych rot'], ['enemyHover', 'Obrys wskazanego wroga i cel ataku'], ['enemyAll', 'Obrysy widocznych wrogów'], ['orders', 'Linie ruchu i rozkazy'], ['range', 'Zasięg ostrzału (wskaźnik)'], ['tactical', 'Tryb taktyczny: pole ostrzału (J)'], ['fire', 'Wykonalność ostrzału i przeszkody'], ['melee', 'Kontakt walki wręcz'], ['area', 'Obszary ataków (kwas, wybuch)'], ['extra', 'Dodatkowe oznaczenia (kapitan, efekty)'], ['soft', 'Łagodne efekty (słabsze obrysy)']];
+    const el = $('ovPanel');
+    el.innerHTML = '<div class="uh">Nakładki taktyczne</div>' + rows.map(([k, l]) => '<label class="ovr"><input type="checkbox" data-ov="' + k + '"> ' + l + '</label>').join('') +
+      '<div class="ovr">Kolor zaznaczenia <select data-ov="selColor">' + Object.keys(OVD.selectColors).map((n) => '<option value="' + n + '">' + n + '</option>').join('') + '</select></div>' +
+      '<div class="ovr">Kolory: ' + [['select', 'zaznaczenie'], ['enemyHover', 'wróg'], ['target', 'cel'], ['range', 'zasięg']].map(([k, l]) => '<label class="ovc">' + l + ' <input type="color" data-ov="' + k + '"></label>').join('') + '</div><button id="ovReset">Przywróć domyślne</button>';
+    el.addEventListener('change', (e) => { const t = e.target, k = t.dataset && t.dataset.ov; if (!k) return; if (t.type === 'checkbox') S.ov[k] = t.checked; else if (t.tagName === 'SELECT') { S.ov[k] = t.value; delete S.ov.colors.select; } else S.ov.colors[k] = t.value; ovSave(); applyOv(); });
+    $('ovReset').onclick = () => { for (const k of Object.keys(OV_DEF)) S.ov[k] = OV_DEF[k]; S.ov.colors = {}; ovSave(); applyOv(); };
+    $('bOv').onclick = () => el.classList.toggle('hidden');
+    applyOv();
+  }
+  function toggleTactical() { S.ov.tactical = !S.ov.tactical; ovSave(); applyOv(); flash(S.ov.tactical ? 'Tryb taktyczny: pole ostrzału włączone' : 'Tryb taktyczny wyłączony'); }
+
+  const ellG = (x, y, R, col, a, w, dash) => { if (dash) { const pts = []; for (let q = 0; q <= 40; q++) { pts.push([x + Math.cos(q / 40 * 6.2832) * R, y + Math.sin(q / 40 * 6.2832) * R]); } dashPath(pts, col, a, w); } else { gOver.lineStyle(w / cam.z, col, a); gOver.drawEllipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R)); } };
+  // obrys roty (otoczka wypukła rzeczywistych mrówek) w ekranie izometrycznym, rozsunięty o pad jednostek świata
+  function hullScreen(c, pad) {
+    const h = S.sim.compHull(c); if (!h.length) return null; let cx = 0, cy = 0; for (const p of h) { cx += p[0]; cy += p[1]; } cx /= h.length; cy /= h.length;
+    return h.map((p) => { const dx = p[0] - cx, dy = p[1] - cy, l = Math.hypot(dx, dy) || 1, x = p[0] + dx / l * pad, y = p[1] + dy / l * pad; return [ISO.sx(x, y), ISO.sy(x, y)]; });
+  }
+  function strokeHull(c, w, col, a, pad, fillA) {
+    const pts = hullScreen(c, pad); if (!pts) return; const k = 1 / cam.z;
+    if (pts.length < 3) { const q = pts[0]; gOver.lineStyle(w * k, col, a).drawCircle(q[0], q[1], (pad + 4) * 0.8); return; }
+    if (fillA) { gGround.lineStyle(0).beginFill(col, fillA).drawPolygon(pts.flat()).endFill(); }
+    gOver.lineStyle(w * k, col, a).moveTo(pts[0][0], pts[0][1]); for (let q = 1; q < pts.length; q++) gOver.lineTo(pts[q][0], pts[q][1]); gOver.lineTo(pts[0][0], pts[0][1]);
+  }
+  // obrysy własnych i wrogich rot (warstwy: zaznaczenie, kursor, wróg wskazany, opcjonalne obrysy wszystkich); intensywność zależy od liczby zaznaczonych rot
+  function drawOutline(c, show, sel) {
+    const F = S.ovFrame; if (!show) return;
+    const own = S.observe ? c.side === 0 : SIDES[c.side] === S.side, nSel = S.selected.size, hov = S.hover === c.id || (!own && S.pinned === c.id);
+    if (own && sel && S.ov.sel) {
+      const w = nSel <= 2 ? 2.6 : nSel <= 6 ? 2 : nSel <= 14 ? 1.5 : 1.1, a = nSel <= 6 ? 0.95 : nSel <= 14 ? 0.8 : 0.6, fa = nSel <= 6 ? 0.07 : nSel <= 14 ? 0.05 : 0.03;
+      strokeHull(c, oW(w + (hov ? 0.6 : 0)), ovCol('select'), oA(a), 5, oA(fa)); F.sel.push({ id: c.id, w, a });
+    } else if (own && hov && S.ov.sel) { strokeHull(c, oW(1.3), hexInt(ovHex('hover')), oA(0.55), 5, 0); F.hoverOwn = c.id; }
+    else if (!own && hov && S.ov.enemyHover) { strokeHull(c, oW(2.4), ovCol('enemyHover'), oA(0.95), 6, oA(0.05)); F.hoverEnemy = c.id; }
+    else if (!own && S.ov.enemyAll) { strokeHull(c, oW(1.1), ovCol('enemyHover'), oA(0.5), 5, 0); F.enemyAll++; }
+    else if (own && S.ov.ownAll) { strokeHull(c, oW(1), hexInt(ovHex('hover')), oA(0.35), 5, 0); F.ownAll++; }
+    if (c.lastDmgTick != null && S.sim.tick - c.lastDmgTick < 4 && !sel) { strokeHull(c, 1.2, 0xff5a4a, 0.5, 7, 0); F.flash.push(c.id); }   // krótkie oznaczenie otrzymania obrażeń
+  }
+  // punkt podejścia: przecięcie odcinka (atakująca rota -> środek celu) z obrysem celu; różne roty dostają różne punkty, nie jeden wspólny
+  function approachPt(c, t) { return S.sim.approachPoint(c, t); }
+  function drawTargets2(sel, F) {
+    const sim = S.sim, k = 1 / cam.z, me = SIDES.indexOf(S.side), by = new Map(), colT = ovCol('target');
+    for (const c of sel) { const o = c.order; if (o && o.kind === 'attackTarget' && !o.done) { if (!by.has(o.target)) by.set(o.target, []); by.get(o.target).push(c); } }
+    for (const [tid, atk] of by) {
+      const t = sim.comps[tid]; if (!t || t.alive <= 0) continue;
+      if (!S.observe && !sim.compVisible(t, me)) {   // cel poza widocznością: ostatnia znana pozycja, nie aktualna
+        const o = atk[0].order; ellG(o.x, o.y, 16, colT, 0.8, 1.6, true); F.targets.push({ id: tid, known: false, attackers: atk.map((c) => c.id) }); continue;
+      }
+      const hull = hullScreen(t, 8); if (!hull || !hull.length) continue;
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of hull) { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); }
+      const L = Math.min(12, (x1 - x0) * 0.3 + 3), mx = (x0 + x1) / 2;
+      gOver.lineStyle(2.6 * k, colT, 0.98);
+      for (const [dx, dy] of [[0, 0], [1, 0], [1, 1], [0, 1]]) { const x = dx ? x1 : x0, y = dy ? y1 : y0, sx = dx ? -1 : 1, sy = dy ? -1 : 1; gOver.moveTo(x, y + sy * L * 0.6).lineTo(x, y).lineTo(x + sx * L, y); }
+      gOver.lineStyle(1 * k, 0x000000, 0.7).beginFill(colT, 0.95).drawPolygon([mx - 5 * k, y0 - 12 * k, mx + 5 * k, y0 - 12 * k, mx, y0 - 3 * k]).endFill();   // znacznik celu nad rotą
+      let n = 0; const lines = []; atk.sort((a, b) => Math.hypot(a.ax - t.ax, a.ay - t.ay) - Math.hypot(b.ax - t.ax, b.ay - t.ay));
+      for (const c of atk) { if (n >= OVD.maxTargetLines) break; const pt = approachPt(c, t); dashPath([[c.ax, c.ay], pt], colT, 0.75, 1.4); lines.push([+pt[0].toFixed(1), +pt[1].toFixed(1)]); n++; F.lines++; }
+      F.targets.push({ id: tid, known: true, attackers: atk.map((c) => c.id), points: lines });
     }
   }
+  // wykonalność ostrzału (z pamięcią podręczną: przeliczana przy zmianie pozycji, celu albo co ok. sekundę)
+  const fcCache = new Map();
+  function fireCached(cid, tid) {
+    const sim = S.sim, c = sim.comps[cid], t = sim.comps[tid], key = cid + ':' + tid + ':' + Math.round(c.ax / 8) + ':' + Math.round(c.ay / 8) + ':' + Math.round(t.ax / 8) + ':' + Math.round(t.ay / 8) + ':' + (sim.tick >> 3) + ':' + c.alive + ':' + t.alive;
+    let r = fcCache.get(key); if (!r) { if (fcCache.size > 200) fcCache.clear(); r = sim.fireCheck(cid, tid); fcCache.set(key, r); } return r;
+  }
+  const faCache = new Map();
+  function areaCached(cid, x, y, R0) {
+    const key = cid + ':' + Math.round(x / 8) + ':' + Math.round(y / 8) + ':' + (S.sim.tick >> 4); let r = faCache.get(key); if (!r) { if (faCache.size > 60) faCache.clear(); r = S.sim.fireAreaAt(x, y, R0); faCache.set(key, r); } return r;
+  }
+  function drawCellMark(x, y, col) {
+    const C = S.sim.CELL, cx = Math.floor(x / C) * C, cy = Math.floor(y / C) * C, k = 1 / cam.z;
+    gOver.lineStyle(2.4 * k, col, 0.95).beginFill(col, 0.25).drawPolygon([ISO.sx(cx, cy), ISO.sy(cx, cy), ISO.sx(cx + C, cy), ISO.sy(cx + C, cy), ISO.sx(cx + C, cy + C), ISO.sy(cx + C, cy + C), ISO.sx(cx, cy + C), ISO.sy(cx, cy + C)]).endFill();
+  }
+  function drawArea(area, R0, a, dashed) {
+    const k = 1 / cam.z, n = area.rays.length, st = OVD.fire.rayStep, okc = ovCol('green'), rc = ovCol('red'), P = (r, d) => { const ang = r.a * Math.PI / 180; return [ISO.sx(area.x + Math.cos(ang) * d, area.y + Math.sin(ang) * d), ISO.sy(area.x + Math.cos(ang) * d, area.y + Math.sin(ang) * d)]; };
+    let blocked = 0;
+    // pole możliwego ostrzału (wypełnienie do zasięgu faktycznego) i klinowe obszary zablokowane (ściana lub teren) między zasięgiem faktycznym a teoretycznym
+    for (let q = 0; q < n; q++) {
+      const r = area.rays[q], r2 = area.rays[(q + 1) % n], a0 = P(r, 0);
+      gGround.lineStyle(0).beginFill(okc, oA(a * 0.5)).drawPolygon([a0[0], a0[1], ...P(r, r.reach), ...P(r2, r2.reach)]).endFill();
+      const bl = (x) => x.why === 'wall' || x.why === 'terrain';
+      if (bl(r) && bl(r2) && r.reach < R0 - st && r2.reach < R0 - st) { gGround.beginFill(rc, oA(a * 0.7)).drawPolygon([...P(r, r.reach), ...P(r, R0), ...P(r2, R0), ...P(r2, r2.reach)]).endFill(); blocked++; }
+    }
+    return blocked;
+  }
+  function drawFireOverlays(sel, F) {
+    const sim = S.sim, k = 1 / cam.z, me = SIDES.indexOf(S.side), rc = ovCol('range');
+    const shooters = sel.filter((c) => sim.fireShooter(c.id) >= 0).slice(0, 6);
+    if (S.ov.range || S.ov.tactical) for (const c of shooters) {
+      const i = sim.fireShooter(c.id), x = sim.x[i], y = sim.y[i], R0 = sim.T.range[sim.type[i]], o = c.order, moving = o && !o.done && (o.kind === 'move' || o.kind === 'attack');
+      if (moving && !S.ov.tactical) continue;   // aktywny rozkaz ruchu: pokazujemy trasę, nie pole ostrzału (chyba że tryb taktyczny)
+      const dry = c.acid <= 0; ellG(x, y, R0, dry ? 0x9a9a9a : rc, oA(dry ? 0.45 : 0.7), oW(1.4), dry);
+      const rec = { id: c.id, x, y, R0, ammo: c.acid, dry }; F.ranges.push(rec);
+      if (S.ov.tactical) { const area = areaCached(c.id, x, y, R0), bl = drawArea(area, R0, 0.35, false); rec.area = { rays: area.rays.length, blockedWedges: bl }; F.areas.push(rec.area); }
+    }
+    // podgląd po przeciągnięciu: zasięg z miejsca docelowego (niepotwierdzony; po dotarciu liczony od nowa)
+    if (R.on && R.moved && !S.observe && (S.ov.range || S.ov.tactical) && shooters.length) {
+      for (const o of planOrders('move', R.wx, R.wy, { face: R.face, width: R.width })) {
+        if (!shooters.includes(o.c) || !sim.reachable(o.c, o.x, o.y)) continue;
+        const R0 = sim.T.range[sim.type[sim.fireShooter(o.c.id)]]; ellG(o.x, o.y, R0, rc, oA(0.7), oW(1.4), true);
+        if (S.ov.tactical) drawArea(areaCached(o.c.id, o.x, o.y, R0), R0, 0.2, true);
+        F.preview++;
+      }
+      F.previewNote = 'Podgląd z miejsca docelowego (niepotwierdzony): po dotarciu zasięg i linia strzału liczone od nowa';
+    }
+  }
+  // kontekst wskazanego wroga względem zaznaczonych rot: możliwość ataku, zasięg, linia strzału, droga podejścia; zwraca linie opisu
+  function drawHoverContext(sel, F) {
+    const sim = S.sim, me = SIDES.indexOf(S.side), hid = S.hover; if (hid < 0 || S.observe || !sel.length) return [];
+    const t = sim.comps[hid]; if (!t || t.alive <= 0 || t.side === me || !sim.compVisible(t, me)) return [];
+    const lines = [], k = 1 / cam.z; let primaryFire = null;
+    for (const c of sel.slice(0, 4)) {
+      const nm = c.name.replace('Rota ', '') + ' #' + c.num;
+      if (sim.fireShooter(c.id) >= 0) {
+        const fc = fireCached(c.id, hid); if (!fc.visible) { lines.push({ lv: 'red', ic: FLV.red.ic, text: nm + ': cel niewidoczny' }); continue; }
+        const lab = fc.why === 'range' && fc.ok === 0 ? WHY.range : fc.why === 'ammo' ? WHY.ammo : FLV[fc.level].lab;
+        lines.push({ lv: fc.level, ic: FLV[fc.level].ic, text: nm + ': ' + lab + ' (' + Math.round(fc.frac * 100) + '% strzelców, ' + fc.ok + '/' + fc.shooters + ')' + (fc.ok < fc.shooters && fc.why !== 'ammo' && fc.why !== 'ok' && !(fc.ok === 0 && lab === WHY[fc.why]) ? ' — ' + whyText(fc.why) : ''), fc, id: c.id });
+        F.fireLevel = F.fireLevel || fc.level; if (!primaryFire && (fc.bx != null || fc.canFire)) primaryFire = { c, fc };
+      } else {
+        const ok = sim.reachable(c, t.ax, t.ay), kind = sim.names[c.domType];
+        lines.push({ lv: ok ? 'green' : 'red', ic: ok ? '✔' : '✖', text: nm + ': ' + (ok ? (kind === 'pekacz' ? 'wybuch przy kontakcie, rota podejdzie' : 'rota podejdzie i zaatakuje') : 'brak drogi podejścia'), id: c.id });
+      }
+    }
+    if (primaryFire && S.ov.fire) {
+      const { c, fc } = primaryFire;
+      if (fc.bx != null) {   // rzeczywista przyczyna blokady: ściana (komórka) albo teren (punkt toru)
+        const i = sim.fireShooter(c.id), kind = fc.why.includes('wall') ? 'wall' : 'terrain', col = ovCol('red');
+        gOver.lineStyle(1.4 * k, col, 0.8).moveTo(ISO.sx(sim.x[i], sim.y[i]), ISO.sy(sim.x[i], sim.y[i])).lineTo(ISO.sx(fc.bx, fc.by), ISO.sy(fc.bx, fc.by));
+        if (kind === 'wall') drawCellMark(fc.bx, fc.by, col); else { ellG(fc.bx, fc.by, 9, col, 0.95, 2.2, false); crossAt(fc.bx, fc.by, col, 6); }
+        F.blockers.push({ x: +fc.bx.toFixed(1), y: +fc.by.toFixed(1), kind });
+      }
+      if (S.ov.area && fc.canFire && fc.aoe > 0) {   // plama kwasu w miejscu trafienia: obejmuje tylko wrogów (brak ognia sojuszniczego w mechanice), celność < 100% = pocisk może chybić
+        let best = -1, bd = 1e18; const mx = S.hoverAnt >= 0 && sim.comp[S.hoverAnt] === hid ? S.hoverAnt : -1;
+        if (mx >= 0) best = mx; else for (const j of t.ants) if (sim.alive[j] && sim.visibleTo(me, j)) { const d = (sim.x[j] - t.ax) ** 2 + (sim.y[j] - t.ay) ** 2; if (d < bd) { bd = d; best = j; } }
+        if (best >= 0) {
+          const ex = sim.x[best], ey = sim.y[best]; ellG(ex, ey, fc.aoe, ovCol('area'), oA(0.95), oW(1.8), fc.accuracy < 1); let cnt = 0;
+          for (let j = 0; j < sim.count; j++) if (sim.alive[j] && sim.side[j] !== me && sim.visibleTo(me, j) && Math.hypot(sim.x[j] - ex, sim.y[j] - ey) <= fc.aoe) { cnt++; if (cnt <= 60) { gOver.lineStyle(0).beginFill(ovCol('area'), 0.9).drawCircle(ISO.sx(sim.x[j], sim.y[j]), ISO.sy(sim.x[j], sim.y[j]) - 2, 1.8 * k * 1.2).endFill(); } }
+          F.aoe.push({ x: +ex.toFixed(1), y: +ey.toFixed(1), r: fc.aoe, hits: cnt, uncertain: fc.accuracy < 1 });
+          lines.push({ lv: 'green', ic: '◎', text: 'Plama kwasu: promień ' + fc.aoe + ', obejmie ' + cnt + ' widocznych wrogich mrówek' + (fc.accuracy < 1 ? ' (celność ' + Math.round(fc.accuracy * 100) + '%, strzał może chybić)' : '') });
+        }
+      }
+    }
+    return lines;
+  }
+  function drawMeleeAndAreas(sel, F) {
+    const sim = S.sim, k = 1 / cam.z;
+    if (S.ov.melee) for (const c of sel) {
+      if (sim.fireShooter(c.id) >= 0) continue; let n = 0;
+      for (const i of c.ants) if (sim.alive[i] && sim.contact[i] && n < 150) { gOver.lineStyle(1 * k, 0xffffff, 0.8).drawCircle(ISO.sx(sim.x[i], sim.y[i]), ISO.sy(sim.x[i], sim.y[i]) - 2, 3.4 * k * 1.2); n++; }
+      F.contact += n;
+    }
+    if (S.ov.area) for (const c of sel) {   // wybuch pękaczy: rzeczywisty promień, gdy rota jest w trybie wybuchu (próbka mrówek)
+      if (sim.names[c.domType] !== 'pekacz' || !(c.abilUntil > sim.tick || c.berserk)) continue;
+      const R = sim.defs.units.pekacz.burst.radius, as = c.ants.filter((i) => sim.alive[i]), step = Math.max(1, Math.floor(as.length / 16));
+      for (let q = 0; q < as.length; q += step) { ellG(sim.x[as[q]], sim.y[as[q]], R, ovCol('area'), oA(0.5), oW(1), false); F.burst++; }
+    }
+  }
+  function drawOverlays() {
+    const sim = S.sim, F = S.ovFrame, sel = S.observe ? [] : selComps(), tip = $('ovTip');
+    if (S.ov.orders && sel.length) { const prim = primary(); const order = prim ? [prim, ...sel.filter((c) => c !== prim)] : sel; order.forEach((c, n) => { drawOrder(c, n < OVD.maxRoutes); if (n < OVD.maxRoutes) F.routes++; F.dests++; }); }
+    if (S.ov.enemyHover && !S.observe) drawTargets2(sel, F);
+    drawFireOverlays(sel, F); drawMeleeAndAreas(sel, F);
+    const lines = drawHoverContext(sel, F);
+    if (S.ov.fire && lines.length) { const html = lines.map((l) => '<div style="color:' + (l.lv === 'green' ? '#8fe08f' : l.lv === 'yellow' ? '#f3dc55' : l.lv === 'orange' ? '#f5a03a' : '#ff6a5e') + '">' + l.ic + ' ' + l.text + '</div>').join(''); if (tip.dataset.h !== html) { tip.dataset.h = html; tip.innerHTML = html; } tip.classList.remove('hidden'); const m = S.mouse || [0, 0], r = app.view.getBoundingClientRect(); tip.style.left = Math.min(window.innerWidth - 330, r.left + m[0] + 16) + 'px'; tip.style.top = Math.min(window.innerHeight - 90, r.top + m[1] + 18) + 'px'; F.tip = lines.map((l) => l.ic + ' ' + l.text).join('\n'); F.lines2 = lines.map((l) => ({ lv: l.lv, text: l.text })); }
+    else if (F.previewNote && S.ov.range) { tip.innerHTML = '<div style="color:#e8d98a">' + F.previewNote + '</div>'; tip.dataset.h = ''; tip.classList.remove('hidden'); const m = S.mouse || [0, 0], r = app.view.getBoundingClientRect(); tip.style.left = (r.left + m[0] + 16) + 'px'; tip.style.top = (r.top + m[1] + 18) + 'px'; F.tip = F.previewNote; }
+    else { tip.classList.add('hidden'); tip.dataset.h = ''; }
+    if (S._hv !== S.hover) { S._hv = S.hover; for (const d of $('cards').children) d.classList.toggle('hov', +d.dataset.id === S.hover); }
+  }
+  buildOvPanel();
+
   // pociski kwasu lecą łukiem ponad swoimi (celuje się tylko z uwzględnieniem przeszkód terenu), po trafieniu zostaje plama; wybuchy pękaczy to rozchodzący się pierścień
   function drawFx(sim, k) {
     const fx = sim.fx, tick = sim.tick;
@@ -3346,7 +3632,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   }
   const boxG = new PIXI.Graphics(); app.stage.addChild(boxG);
-  function drawBox() { boxG.clear(); if (box.on && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5) boxG.lineStyle(1, 0xe6b422, 0.9).beginFill(0xe6b422, 0.08).drawRect(Math.min(box.x0, box.x1), Math.min(box.y0, box.y1), Math.abs(box.x1 - box.x0), Math.abs(box.y1 - box.y0)).endFill(); }
+  function drawBox() { boxG.clear(); if (box.on && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 5) boxG.lineStyle(1, ovCol('select'), 0.9).beginFill(ovCol('select'), 0.08).drawRect(Math.min(box.x0, box.x1), Math.min(box.y0, box.y1), Math.abs(box.x1 - box.x0), Math.abs(box.y1 - box.y0)).endFill(); }
 
   // ---------- zdarzenia na pasku ----------
   let lastEv = 0;
@@ -3402,7 +3688,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, world, get atlas() { return atlas; }, toScreen: (x, y) => [ISO.sx(x, y) * cam.z + cam.x, ISO.sy(x, y) * cam.z + cam.y], markers, R, ctl: CTL, get G() { return G; } };
+  window.__P1 = { S, startBattle, centerOn, app, cam, SIDES, ISO, world, get atlas() { return atlas; }, toScreen: (x, y) => [ISO.sx(x, y) * cam.z + cam.x, ISO.sy(x, y) * cam.z + cam.y], markers, R, ctl: CTL, get G() { return G; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

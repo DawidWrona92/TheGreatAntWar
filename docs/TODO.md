@@ -39,6 +39,13 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Statystyki pojedynczej mrówki w interfejsie (obecnie tylko rota); tryb porównania dwóch rot; własne ustawienia układu paneli.
 - Minimapa: wysokości wzgórz, markery i polecenia (np. ruch prawym klikiem na minimapie) są poza zakresem etapu B.
 
+## Nakładki taktyczne (etap C)
+- Broń kierunkowa i blokowanie strzału przez jednostki nie istnieją w mechanice; gdyby doszły (np. działka, tarcze), nakładka musi dostać odpowiednie zapytania (sektor, blokada przez rotę) zamiast domyślnego koła.
+- Jednostki neutralne i ogień sojuszniczy: brak w grze, więc brak oznaczeń.
+- Widok pojedynczych mrówek (paski zdrowia na mrówkę) na żądanie gracza.
+- Podgląd zasięgu z miejsca docelowego liczony od kotwicy; dokładniejszy wymagałby symulacji rozstawienia szyku.
+- Minimapa: markery rozkazów i klik prawym przyciskiem jako rozkaz ruchu.
+
 ## Armie (etap 3)
 - Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
 - Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).

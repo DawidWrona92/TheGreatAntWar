@@ -34,7 +34,7 @@ Nie utworzyłem drugiego systemu rozkazów: rozszerzyłem istniejący (`c.order`
 | 12 informacja zwrotna: trasa, cel ataku, podgląd formacji, kolejka, stan roty, komunikat | trasa dokładnie z pathfindingu (`sim.routeOf`), narożniki celu ataku, podgląd formacji (czerwony, gdy nieosiągalna), kolejka, stan roty w opisie karty i portrecie (bezczynna, w ruchu, w walce, zablokowana, brak drogi, szał, odwrót), komunikaty w dzienniku zdarzeń |
 
 ## 4. Mapa przypisań (`ui.controls.keys` w JSON, jedno miejsce)
-Ctrl+A zaznacz wszystko, G grupuj, Ctrl+G zablokuj układ, Backspace i H stój, V odwrót, M ruch (pending), B atak-marsz (pending), Z/X/C szyk, Spacja pauza, +/- prędkość, Esc anuluj, / pomoc; umiejętności Q/E/R/F/T.
+Ctrl+A zaznacz wszystko, G grupuj, Ctrl+G zablokuj układ, Backspace i H stój, J tryb taktyczny (pole ostrzału), K panel nakładek, V odwrót, M ruch (pending), B atak-marsz (pending), Z/X/C szyk, Spacja pauza, +/- prędkość, Esc anuluj, / pomoc; umiejętności Q/E/R/F/T.
 
 ## 5. Ograniczenia i luki
 - Pojedyncze mrówki nie są sterowalne (zgodnie z zasadą: nie przebudowywać roty w pojedyncze jednostki).

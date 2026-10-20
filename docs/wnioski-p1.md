@@ -155,6 +155,23 @@ Zakres z listy użytkownika (specyfikacja interfejsu, statystyk i walki). Decyzj
 - Czas lotu pocisku i zasięg strzału nie zmieniły się (etap 4); celność kwasu jest losowa, ale zasięg pozostaje wg balistyki.
 - Wygląd interfejsu sprawdziłem tylko na zrzutach w programowym renderze (kilka klatek na sekundę); czytelność przy bardzo wielu rotach na ekranie oceniona na zrzucie z 23 rotami.
 
+## Etap C rozszerzenia: znaczniki i nakładki taktyczne
+Zakres: specyfikacja znaczników i nakładek (sekcje 1-19). Decyzja 73 w `projekt-bitwy.md`, pseudokod 4.20, zrzut `wyniki/p1-etap-c-nakladki.png`. Specyfikacja jest wymaganiem projektowym tej gry, nie odwzorowaniem funkcji Total War (źródeł nie dało się pobrać).
+
+**Zrobione:** obrysy zaznaczenia, kursora, wskazanego wroga i celu rozkazu; trasy z pathfindingu (z limitem pełnych tras przy wielu rotach), uproszczone znaczniki celu; zasięg plujek i tryb taktyczny z polem faktycznego ostrzału; wykonalność ostrzału w czterech poziomach z etykietą, ikoną i przyczyną; podświetlenie rzeczywistej przeszkody; plama kwasu; kontakt walki wręcz; wybuch pękaczy; panel nakładek z niezależnymi przełącznikami i kolorami; podświetlenie karty przy najechaniu; podgląd zasięgu z miejsca docelowego (niepotwierdzony). Zapytania są w rdzeniu (`shotAt`, `fireCheck`, `fireArea`, `compHull`, `approachPoint`) i mają testy; nie zmieniają stanu symulacji (skrót stanu po 300 krokach z zapytaniami i bez jest identyczny).
+
+**Zgodność z mechaniką i luki (mówię wprost):**
+- Plujka strzela w każdą stronę i nie ma sektora, więc nakładka pokazuje koło; punkty 6.5 specyfikacji (broń kierunkowa, test 10) nie mają w grze odpowiednika. Test sprawdza, że zasięg jest równy we wszystkich kierunkach i nie zależy od obrotu roty.
+- Pociski nie są blokowane przez jednostki (ani własne, ani wrogie); blokują je ściany, a na mapach ze wzgórzami także teren (dwa tory: płaski i stromy). Dlatego nakładka nigdy nie pokazuje „zasłonięte przez własną piechotę”.
+- Kwas i wybuch trafiają wyłącznie wrogów: w grze nie ma ognia sojuszniczego, więc test 18 (oznaczanie zagrożonych swoich) nie ma przedmiotu; sprawdziłem w rdzeniu, że własna mrówka stojąca obok celu nie dostaje obrażeń.
+- Jednostki neutralne nie istnieją, więc kolor neutralny jest tylko w konfiguracji.
+- Wykonalność ostrzału jest liczona na próbce (do 40 strzelców i 8 widocznych mrówek celu), z mrówkami jako „modelami”. Pozycje poszczególnych mrówek w czasie lotu pocisku i ich ruch w trakcie strzału nie są przewidywane.
+- Pole ostrzału liczone jest z jednej przedstawicielskiej mrówki (najbliższej środka roty); rota rozciągnięta na zboczu może mieć strzelców o różnych polach.
+- Podgląd z miejsca docelowego liczony jest od pozycji kotwicy (nie od rozmieszczenia mrówek po dotarciu) i dlatego opisany jako niepotwierdzony; po dotarciu rota liczy wszystko od nowa.
+- Wskazanie wroga przy zaznaczonych rotach wręcz podaje tylko, czy jest droga podejścia (`sim.reachable`), nie przewiduje, ilu członków roty fizycznie dosięgnie celu w korytarzu.
+- Nie ma przełączenia na widok pojedynczych mrówek; pasek zdrowia i morale są zawsze na poziomie roty.
+- Wygląd i czytelność oceniłem na zrzutach z programowego renderu (kilka klatek na sekundę), przy 9 zaznaczonych rotach w teście i przy pełnej armii obu stron na mapie 4.
+
 ## Poprawka ruchu w korytarzach (po etapie 5)
 Zgłoszenie: w oblężeniu mrówki blokują się w wąskich korytarzach, zwłaszcza gdy cel jest blisko, ale za zakrętem o ok. 90°. Diagnoza i rozwiązanie: decyzja 70 w `projekt-bitwy.md`. Pomiary (`node tests/p1-korytarze.js`, `wyniki/p1-korytarze.json`), odsetek mrówek na miejscu w szyku po dojściu kotwicy do celu, przed i po: zakręt N->W 85% -> 100%, N->E 85% -> 100%, bliski cel za rogiem 61% -> 100%, rampa i zakręt w pierścieniu 1 83% -> 100%, wejście do kopca z pola startu (rota 100) 49% -> 100%, kontrola prosto 100% -> 100%. Przepływ całej armii (bez obrońców poza gwardią w sercu, 330 s): po poprawce 90% atakujących na poziomie 1 po 154 s (przed: 201 s), a połowa na poziomie 2 po 307 s (przed: nigdy).
 Koszt: mediana kroku przy ok. 4000 mrówek ok. 14-16 ms zamiast 12-13 ms (p99 bez zmian, wynika z kilku pierwszych kroków po starcie).
