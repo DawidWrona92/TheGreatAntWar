@@ -124,6 +124,27 @@ const { openPage, ROOT } = require('./browser-lib');
     assert.ok(/Straty/.test(endText) && /Ocalałe roty/.test(endText) && /Przyczyny/.test(endText));
     await page.screenshot({ path: path.join(shots, 'p1-ekran-koniec.png') });
     ok('ekran końcowy pokazuje straty, ocalałe roty i przyczyny', endText.slice(0, 80).replace(/\s+/g, ' '));
+    // etap 1: wybór typu mapy w menu, każdy typ startuje, nazwa w pasku, teren dzielony na kafle, zrzut ekranu każdej mapy
+    await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
+    const opts = await page.$$eval('#mMap option', (o) => o.map((x) => x.textContent));
+    assert.strictEqual(opts.length, 5, 'menu powinno mieć 5 typów mapy: ' + opts);
+    for (const id of [1, 2, 3, 4, 5]) {
+      await page.selectOption('#mMap', String(id));
+      const dis = await page.$eval('#mPass', (e) => e.disabled);
+      assert.strictEqual(dis, id !== 3, 'suwak przesmyku powinien działać tylko na mapie 3 (typ ' + id + ')');
+      await page.evaluate(() => { document.getElementById('mSeed').value = 1; });
+      await page.click('#mStart');
+      await page.evaluate(() => { __P1.S.paused = false; });
+      await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 30000 });
+      const info = await page.evaluate(() => ({ id: __P1.S.sim.mapInfo.id, w: __P1.S.sim.W, h: __P1.S.sim.H, name: document.getElementById('mapName').textContent, chunks: __P1.world.children[0].children.length, z: __P1.cam.z, ants: __P1.S.sim.count }));
+      assert.strictEqual(info.id, String(id)); assert.ok(info.name.startsWith(id + '. '), 'nazwa mapy w pasku: ' + info.name); assert.ok(info.chunks >= 1 && info.z > 0.1, JSON.stringify(info));
+      if (id >= 4) assert.ok(info.chunks > 1, 'duża mapa powinna mieć kilka kafli terenu: ' + info.chunks);
+      await page.evaluate(() => { __P1.S.paused = true; }); await page.waitForTimeout(250);
+      await page.screenshot({ path: path.join(shots, 'p1-mapa-' + id + '.png') });
+      await page.evaluate(() => { __P1.S.paused = false; });
+      ok('mapa typu ' + id + ' startuje i jest rysowana (' + info.w + '×' + info.h + ', kafli terenu: ' + info.chunks + ', zoom ' + info.z.toFixed(2) + ')');
+      await page.evaluate(() => { document.getElementById('menu').classList.remove('hidden'); });
+    }
     assert.deepStrictEqual(errors, [], 'błędy w konsoli: ' + errors.join('; '));
     ok('brak błędów w konsoli przeglądarki');
   } catch (e) { failed++; out.push('FAIL ' + e.message + '\n' + (errors.length ? '       błędy: ' + errors.join('; ') : '')); }

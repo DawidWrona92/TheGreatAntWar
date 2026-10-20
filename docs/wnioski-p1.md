@@ -25,6 +25,27 @@ Proxy: AI przeciw AI na mapie „dno lasu” 2000 x 1200, 6 ziaren na szerokoś�
 - Suwak zaopatrzenia ma teraz wyraźny wpływ (192, 6 ziaren): przy WK 100 i LH 0 wygrywa WK 6/6, przy WK 0 i LH 100 wygrywa WK 1/6, przy 60 i 60 jest 4/6. Dane: `docs/wyniki/p1-zaopatrzenie.json`.
 - Mapa z bocznicą i kilkoma przeszkodami daje wyraźniej decydujące bitwy niż poprzednia z jednym murem: obie strony tracą po ok. 1000-1150 mrówek, a rozstrzygnięcie zapada przed końcem czasu.
 
+## Etap 1 rozszerzenia: wybór typu mapy
+Menu ma listę pięciu typów mapy (parametr URL `map=1..5`). Struktura map (wykonane: `node tools/mapa-metryki.js 12`, 12 ziaren na typ; surowe dane w `wyniki/p1-mapy-metryki.json`):
+
+| typ | nazwa | rozmiar | powierzchnia do chodzenia | otwarty teren | najwęższe miejsce najszerszej trasy | kręta droga | przekrój pasa środkowego | równoległe przejścia (średnio) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Otwarta polana | 2000×1200 | 2,29 mln | 99% | 229 | 1,00 | 1076 | 1,3 |
+| 2 | Kilka przeszkód | 2000×1200 | 2,25 mln | 98% | 211 | 1,01 | 771 | 1,9 |
+| 3 | Pień z kilkoma trasami | 2000×1200 | 2,15 mln | 94% | 176 | 1,09 | 224 | 2,0 |
+| 4 | Gęsty i kręty podszyt | 2600×1400 | 2,98 mln | 84% | 75 | 1,24 | 196 | 5,7 |
+| 5 | Chaparral: gąszcz i tunele | 3000×1500 | 3,37 mln | 77% | 48 | 1,55 | 99 | 6,7 |
+
+Jak to czytać: „najwęższe miejsce” to szerokość trasy, którą da się przejść najszerzej, w jej najwęższym punkcie (jednostki świata, ciało zwykłej mrówki ma średnicę 8, taran 12); „kręta droga” to długość najkrótszej trasy do wejścia do gniazda przez odległość w linii prostej; „przekrój” to łączna szerokość wszystkich przejść w najwęższym przekroju (maksymalny przepływ komórek); „równoległe przejścia” to średnia liczba osobnych otwartych odcinków (co najmniej 48) w przekrojach poprzecznych pasa (typ 3 liczy tylko zachodnią połowę, bez przesmyku). Powierzchnia do chodzenia rośnie z 2,15 mln (typ 3) do 2,98 i 3,37 mln (typy 4 i 5): strefy rozmieszczenia armii są stałe, więc mapy gęste musiały być większe o 40-57%, a nie o tyle, ile zajmują zarośla.
+
+Nawigacja (wykonane: test `nawigacja` i skrypt z obroną zastąpioną niezniszczalnym manekinem; roty WK zmniejszone do 60%): na mapie 4 90% atakujących stoi przy gnieździe po ok. 215 s, na mapie 5 po ok. 385 s (przy pełnych rotach: mapa 4 90% po 320 s, mapa 5 80% po 450 s). Na otwartej mapie 1 to ok. 115 s dla 95%. Nikt nigdy nie stał w ścianie w żadnej próbce.
+
+AI przeciw AI (wykonane: `node tests/p1-experiment.js --seeds 4 --maps 1,2,3,4,5`, 4 ziarna, to nie jest pomiar balansu): wygrane Wielkiej Kolonii 0/4, 0/4, 3/4, 2/4, 2/4 dla typów 1-5; bitwy kończą się rozstrzygnięciem na wszystkich typach (żadna nie utknęła). Na otwartej polanie AI atakujących przegrywa, bo nie manewruje: wchodzi czołowo w linię plujek. To cecha obecnego AI, nie błąd mapy. Wyniki: `wyniki/p1-mapy-bitwy.json`.
+
+Przy pierwszej wersji gąszczu rota rozciągała się w korytarzu: mrówki, które nie widziały swojego miejsca w szyku, biegły przed kotwicą do celu, spójność spadała do 0,1, kotwica pełzła z 10% prędkości, a rota padała ze zmęczenia i traciła kontrolę (na mapie 4 po 300 s tylko ok. 40% atakujących było przy gnieździe). Naprawa: na mapach 4 i 5 mrówka bez widoku na swoje miejsce idzie za kotwicą (decyzja 38).
+
+Zrzuty: `wyniki/p1-mapa-1.png` ... `p1-mapa-5.png`.
+
 ## Błędy znalezione po drodze (każdy ma test)
 - Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.
 - Plug stał poza przejściem, był za wąski, obracał się za wrogiem, a szybkie mrówki i nacisk tłumu przepychały się przez szyk. Test: nieśmiertelny zamknięty plug nie przepuszcza nikogo przy 64, 128 i 256.
@@ -35,10 +56,12 @@ Proxy: AI przeciw AI na mapie „dno lasu” 2000 x 1200, 6 ziaren na szerokoś�
 - Pomiary czasu kroku w Node były zawyżone kilkukrotnie, bo rdzeń działał w `node:vm`; teraz jest wykonywany w głównym kontekście.
 
 ## Testy
-`npm install && npm test`. Rdzeń (18 testów): zakres i nazwy rot, gwardia dowolnego typu, w walce ciała nie nakładają się (najgorszy pomiar 2,6% mrówek w nakładającej się parze), swoi mijają się poza walką, ciało w kontakcie stoi, zmęczenie, kapitan, determinizm (także z rozkazami), granice, kwas i uzupełnienia, geometria plugu, wpływ szerokości, kontrola feromonowa, wydajność. Przeglądarka: start, kółko myszy, marsz grupy rot z zachowaniem rozmieszczenia, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy.
+`npm install && npm test`. Rdzeń (24 testy; etap 1 dodał: identyczność typu 3 względem wersji sprzed etapu, różnice strukturalne pięciu typów, 25 ziaren na typ pod względem osiągalności i wolnych stref, linia zamiast plugu na mapach bez przesmyku, przesunięcie układu rot, nawigacja atakujących; `ONLY=fragment node tests/p1-core.test.js` uruchamia wybrane testy). Pierwotnie rdzeń (18 testów): zakres i nazwy rot, gwardia dowolnego typu, w walce ciała nie nakładają się (najgorszy pomiar 2,6% mrówek w nakładającej się parze), swoi mijają się poza walką, ciało w kontakcie stoi, zmęczenie, kapitan, determinizm (także z rozkazami), granice, kwas i uzupełnienia, geometria plugu, wpływ szerokości, kontrola feromonowa, wydajność. Przeglądarka: start, kółko myszy, marsz grupy rot z zachowaniem rozmieszczenia, pauza z rozkazem, klawisze, grupy, ramka, restart, suwak, ekran końcowy.
 Krok symulacji przy ok. 4200 mrówkach w Node: mediana 9 ms, p99 17 ms, max 50 ms przy budżecie 50 ms (20 Hz). To czas sandboxa, nie kryterium 15.2.
 
 ## Nie zweryfikowane
+- Etap 1 (mapy): czy mapy 4 i 5 są fajne do grania, czy gęstość i kręte korytarze sprawdzają się w walce, czy marsz przez gąszcz trwa za długo (ok. 4-7 minut dla całej armii; limit bitwy to 15 minut). Typ 3 jest dotychczasowym układem stałym (ziarno zmienia tylko mech). Nie ma elewacji, widoczności ani ukrywania się w mchu (etap 4): osłona (mech) tylko zmniejsza obrażenia. Zarośla (nowy typ komórki) blokują ruch jak pień i nie dają ukrycia.
+- Etap 1: AI zna tylko jeden plan (atak na gniazdo najkrótszą trasą), więc na mapach z wieloma trasami nie oskrzydla. Sprawdzono tylko 4 ziarna na typ.
 - Czy to jest fajne: czy dowodzenie rotami bawi, czy unikaty są czytelne w ruchu, czy po trzech bitwach da się powiedzieć, dlaczego się wygrało, czy zmęczenie i kapitan są zrozumiałe. Wymaga gry człowieka.
 - Wydajność 50 klatek/s w Chrome na typowym PC. Renderer w piaskownicy jest programowy, więc FPS tu nic nie mówi.
 - Gwardia typu Taran lub Odźwierny ma tylko statystyki elity (bez Szarży i Zamknięcia); gwardia pękaczy detonuje przy kontakcie.

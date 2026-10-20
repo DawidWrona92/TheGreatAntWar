@@ -38,7 +38,7 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 23. Piechota jest wspólna. Specjalne: Taran (odporny na masę, odrzuca), Biegacz (szybki, poluje na plujki), Pękacz (jednorazowy, oblepia), Odźwierny (plug, zamykany), Plujka (kwas, ograniczona amunicja), dowódca. Ciężki wojownik jest wspólny dla obu stron i jest podstawą ciężkiej gwardii.
 24. Kontry to mnożniki obrażeń (tabela poniżej). Elita dziedziczy kontry typu bazowego.
 25. Kwas to wspólna pula roty plujek: start `acidStart` strzałów na plujkę, napływ zależny od suwaka zaopatrzenia. Uzupełnienia (wojownicy z rezerwy) wchodzą w tempie zależnym od suwaka zaopatrzenia i trafiają do roty z największym niedoborem.
-26. Plug zamyka główny przesmyk od startu. Szerokość przesmyku (32-320) zmienia przebieg bitwy. Mapa to „dno lasu” 2000 x 1200: pień z głównym przesmykiem i wąską bocznicą, kilka głazów, korzeni i kłód oraz plamy mchu (osłona) i gniazdo z wejściem od zachodu. Przeszkody są danymi w JSON.
+26. Na mapie typu 3 plug zamyka główny przesmyk od startu. Szerokość przesmyku (32-320) zmienia przebieg bitwy. Mapa to „dno lasu” 2000 x 1200: pień z głównym przesmykiem i wąską bocznicą, kilka głazów, korzeni i kłód oraz plamy mchu (osłona) i gniazdo z wejściem od zachodu. Przeszkody są danymi w JSON.
 27. Tempo walki ustawia jeden mnożnik `cdScale` (czas między atakami), niezależny od balansu między typami.
 28. Przebieg jest deterministyczny: ziarno, stały krok 20 Hz, osobne strumienie losowe (mapa, uzupełnienia, walka), kolejka poleceń. Ten sam dziennik poleceń daje ten sam stan.
 
@@ -47,6 +47,15 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 30. Nad rotą zawsze widać tylko chorągiew z literą typu. Po zaznaczeniu lub najechaniu pojawia się panel: nazwa, liczebność (aktualnie/max), pasek zdrowia podzielony na mrówki (cała = pełne, ranna = połowa, martwa = puste), pasek morale ze znacznikami progów i pasek zmęczenia.
 31. Interfejs w stylu Warhammera na drewnianych panelach (tekstura desek generowana w kodzie): na dole wąskie karty rot (liczebność, ikona typu, pasek zdrowia, morale, zmęczenie), w lewym dolnym rogu portret zaznaczonej roty, po prawej siatka umiejętności 3x3 (obecnie 5 umiejętności i 4 puste pola na kolejne) z klawiszami Q, E, R, F, G, nad kartami pasek rozkazów (szyki, stój, ruch, odwrót).
 32. Parametry są w jednym obiekcie i można je zmieniać suwakami na żywo, zapisać i wczytać.
+
+**Mapy (etap 1 rozszerzenia P1)**
+33. Przed bitwą wybiera się jeden z pięciu typów mapy (`world.mapTypes`, od najprostszego): 1 otwarta polana, 2 kilka przeszkód, 3 pień z kilkoma trasami, 4 gęsty i kręty podszyt, 5 chaparral (gąszcz i tunele). Typy 1, 2, 4 i 5 są generowane z ziarna (osobny strumień losowy `mapgen`, więc nie przesuwa pozostałych strumieni). Typ 3 to dotychczasowa mapa „dno lasu” bez zmian: układ jest stały, a ziarno zmienia tylko plamy mchu. Dzięki temu wyniki z P1 nadal dotyczą typu 3 i test regresji sprawdza, że przebieg jest identyczny jak przed etapem 1.
+34. Każdy typ ma gniazdo na wschodzie (`W - 200`, `H / 2`) i strefę startu atakującego na zachodzie. Układ rot w `scenario` jest zapisany dla mapy 2000 x 1200 i przy tworzeniu bitwy przesuwany: strona zachodnia o `dy = (H - 1200) / 2`, wschodnia o `dx = W - 2000` i `dy`. Strefy rozmieszczenia (zachodnia: x < 470; wschodnia: x > `W - 1100`, y w pasie 370 wokół osi) generator zostawia wolne od przeszkód.
+35. Generatory: *open* to 4-6 drobnych kamyków; *scattered* to 8-11 głazów, korzeni i kłód z odstępem co najmniej 150 jednostek (brak wąskich gardeł); *thicket* to labirynt w pasie między strefami: siatka o kroku `pitch`, drzewo rozpinające (przeszukiwanie w głąb), część ścian usuwana (`braid`, daje pętle, czyli kilka tras), ściany jako kapsuły o promieniu `wallR` z losowym przesunięciem wierzchołków (`jitter`), ściany czołowe pasa z `doors` wejściami w losowych rzędach. Rodzaj ściany losowany z `mix`: zarośla (nowy typ komórki 6, blokuje jak pień), pnie, korzenie, kamienie. Po bokach pasa rozrzucone są zarośla i głazy.
+36. Walidacja mapy: każdy kandydat jest rasteryzowany i mierzony (`mapMetrics`): musi istnieć trasa od strefy startu do wejścia do gniazda, a najszersza trasa musi mieć w najwęższym miejscu co najmniej `minWidth` (transformata odległości do ścian). Inaczej losowany jest kolejny wariant (do 12 prób). Metryki: odsetek otwartego terenu, szerokość najszerszej trasy w najwęższym miejscu, kręta droga (długość najkrótszej trasy przez odległość w linii prostej) oraz, w narzędziu `tools/mapa-metryki.js`, łączna szerokość przejść w najwęższym przekroju pasa środkowego (maksymalny przepływ).
+37. Mapy bez głównego przesmyku (1, 2, 4, 5): `world.gap = null`; odźwierni stają jako zwykła linia obrony (`role: line`, bez zamykania, z ciała dobranego odstępem), a suwak szerokości przesmyku jest wyłączony. Zamknięcie szyku nadal jest dostępne jako umiejętność gracza.
+38. Mapy z korytarzami (4 i 5, `world.followAnchor`): mrówka, która nie widzi swojego miejsca w szyku (albo miejsce leży w ścianie), idzie za kotwicą roty (pole przepływu do kotwicy, odświeżane co 0,5 s po zmianie jej komórki), a nie przed nią do celu rozkazu. Błąd szyku jest mierzony drogą do kotwicy ponad promień szyku. Bez tego rota w krętym korytarzu rozciągała się, spójność spadała do 0,1 i kotwica pełzła z 10% prędkości, a rota traciła kontrolę od zmęczenia. Na mapach 1-3 zachowanie jest dotychczasowe.
+39. Duże mapy: tekstura terenu jest dzielona na kafle 2048 px z zakładką 2 px (limit tekstury GPU to zwykle 4096-8192 px), a minimalny zoom kamery zależy od rozmiaru mapy.
 
 **Poza zakresem P1:** kampania, ekonomia, lotnictwo, wnętrze gniazda, splot, beczki, dźwięk, obrót całego układu rot przy marszu grupy, aktywne umiejętności gwardii innych niż dowódcy (gwardia typu Taran/Odźwierny ma tylko statystyki elity; gwardia pękaczy detonuje przy kontakcie).
 
@@ -64,7 +73,7 @@ Dokument opisuje, jak działa bitwa w prototypie `prototypy/p1-bitwa.html`, i je
 | `world.nestR` | 64 |
 | `world.retreatWK` | [110, 600] |
 
-Mapa „dno lasu” 2000 x 1200. Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie; blokują 1, 3, 4 i 5. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica (ok. 65 jednostek). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
+Mapa typu 3 („dno lasu”) 2000 x 1200 i jej przeszkody (poniżej). Siatka terenu 16x16 jednostek: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla; blokują wszystkie poza 0 i 2. Przeszkody są w `world.map.obstacles` jako kapsuły o promieniu `r` wzdłuż łamanej (`line`) albo dyski (`at`); `gapTop` i `gapBottom` oznaczają brzegi głównego przesmyku wyśrodkowanego w `world.gap` o szerokości `passage` (zawsze otwartego). W pniu jest też wąska bocznica (ok. 65 jednostek). Gniazdo to pierścień murów z wejściem od zachodu. Dodatkowo `world.map.coverRandom` losowych plam mchu (osłona, ziarno `map`).
 
 Przeszkody:
 | Typ | Promień | Położenie |
@@ -80,6 +89,15 @@ Przeszkody:
 | stone | 72 | [1390, 900] |
 | wood | 14 | [[1500, 470], [1570, 740]] |
 | root | 60 | [1650, 200] |
+
+### Typy map (`world.mapTypes`)
+| Typ | Nazwa | Rozmiar | Generator | Parametry |
+|---|---|---|---|---|
+| 1 | Otwarta polana | 2000x1200 | open | `pebbles` [4, 6], `cover` 10 |
+| 2 | Kilka przeszkód | 2000x1200 | scattered | `count` [8, 11], `sep` 150, `cover` 14 |
+| 3 | Pień z kilkoma trasami | 2000x1200 | legacy |  |
+| 4 | Gęsty i kręty podszyt | 2600x1400 | thicket | `pitch` 128, `wallR` 26, `jitter` 8, `braid` 0.1, `doors` 6, `follow` True, `cover` 40, `minWidth` 52, `mix` {'brush': 0.45, 'wood': 0.25, 'root': 0.15, 'stone': 0.15} |
+| 5 | Chaparral: gąszcz i tunele | 3000x1500 | thicket | `pitch` 116, `wallR` 28, `jitter` 6, `braid` 0.04, `doors` 4, `follow` True, `cover` 70, `minWidth` 44, `mix` {'brush': 0.62, 'wood': 0.18, 'root': 0.12, 'stone': 0.08} |
 
 ### Jednostki
 Pola: zdrowie, prędkość (jedn./s), obrażenia, kontakt (`reach`, szczelina między ciałami w jedn.), czas między atakami (s, przed `cdScale`), zasięg wypatrywania, promień ciała, masa, pancerz (ułamek redukcji obrażeń wręcz), zasięg (plujka), umiejętność. Elita `gwardia_<typ>` jest generowana dla każdego typu poza dowódcą.
@@ -615,6 +633,49 @@ function check_end():               // raz na sekundę, idempotentne
     elif seconds >= timeLimit:                  defender wins "minął czas, obrona utrzymana"
 ```
 Raport bitwy (wejście dla P3, ten sam format wyniku): ziarno, szerokość przejścia, czas, wynik, straty i zabójstwa wg typu, ocalali wg typu, rezerwa, lista rot (liczebność początkowa i końcowa, straty, kontrola, stan) oraz dziennik zdarzeń z przyczynami.
+
+### 4.14 Generowanie mapy (przed `Sim.create`)
+```
+applyMapType(defs, id, rng):
+  mt = defs.world.mapTypes[id]; W = mt.w; H = mt.h
+  dx = W - 2000; dy = (H - 1200) / 2
+  world.nest = (1800 + dx, 600 + dy); world.retreatWK.y += dy
+  dla WK: at += (0, dy), spawn += (0, dy);  dla LH: at += (dx, dy), spawn += (dx, dy)
+  jeśli mt.gen == legacy: zostaw world.map (stały układ), policz metryki, koniec
+  world.gap = null; role plug -> line (closed = false)
+  strefy wolne: zachodnia x < 470, wschodnia x > W - 1100 (y w pasie 370 wokół osi), okolica gniazda
+  dla próby 0..11:
+    obstacles = GENERATORS[mt.gen](rng.fork("mapgen" + próba), mt, W, H, strefy)
+    m = mapMetrics(rasterize(world, obstacles))
+    jeśli m.reachable i m.bottleneck >= mt.minWidth: przyjmij, przerwij
+  (po 12 próbach: najlepsza osiągalna)
+
+thicket(rng, mt, ...):
+  pas = [480, W - 1100] x [0, H]; nx = round(szerokość / pitch), ny = round(H / pitch)
+  drzewo rozpinające komórek: przeszukiwanie w głąb od losowej komórki zachodniej ściany
+  dla każdej zamkniętej ściany: z prawdopodobieństwem braid otwórz (pętla)
+  wierzchołki siatki (i, j) przesuń o losowe (+-jitter, +-jitter); brzegi poziome zostają na y = 0 i y = H
+  każda zamknięta ściana wewnętrzna -> kapsuła(wierzchołek A, wierzchołek B, r = wallR), rodzaj z mix
+  ściany czołowe pasa (i = 0 i i = nx): kapsuły wszędzie poza doors losowymi rzędami
+  poza pasem: kilka rozrzuconych zarośli i głazów (scatter), nie w strefach rot
+
+rasterize(world, obstacles):  # pierwszy pasujący obiekt z listy wygrywa
+  brzeg mapy = 1; dla każdej przeszkody: komórki, których środek leży bliżej niż r od odcinka lub punktu
+  jeśli gap: wytnij otwarty przesmyk; wytnij wnętrze gniazda i pierścień muru (wejście od zachodu)
+
+mapMetrics(world, grid):
+  D = transformata odległości do ścian (chamfer 3-4)
+  bottleneck = max po trasach (strefa startu -> przed wejściem do gniazda) z min po komórkach trasy z D, jako szerokość
+  tortuosity = długość najkrótszej trasy (wagi 10/14) / odległość w linii prostej
+```
+Kotwica i pole przepływu na mapach z korytarzami (rozszerzenie 4.6 i 4.7, `followAnchor`):
+```
+raz na krok, po ruchu kotwicy: jeśli (tick + id roty) % 10 == 0 i komórka kotwicy się zmieniła: afield = pole_przepływu(komórka kotwicy)
+w pętli mrówki, gdy mrówka nie walczy:
+  jeśli sd > 12 i (slot w ścianie lub brak widoczności do slotu) i afield:
+     kierunek = gradient(afield); błąd_szyku += max(0, droga_do_kotwicy - |slot|) - sd
+  w przeciwnym razie idź do slotu
+```
 
 ## 5. Uwagi do przeniesienia na C++ lub C#
 

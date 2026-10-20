@@ -7,6 +7,7 @@ const { runBattle } = require('./p1-run');
 
 const results = [];
 function test(name, fn) {
+  if (process.env.ONLY && !name.includes(process.env.ONLY)) return;
   const t0 = Date.now();
   try { const note = fn(); results.push({ name, ok: true, note: note || '', ms: Date.now() - t0 }); }
   catch (e) { results.push({ name, ok: false, note: e.message, ms: Date.now() - t0 }); }
@@ -251,6 +252,117 @@ test('wydajność: krok symulacji przy ok. 4000 mrówek (czas w piaskownicy, nie
   const med = times[times.length >> 1], p99 = times[Math.floor(times.length * 0.99)];
   assert.ok(med < 50, 'mediana kroku ' + med.toFixed(1) + ' ms przekracza budżet 50 ms (20 Hz)');
   return n + ' mrówek: mediana ' + med.toFixed(2) + ' ms, p99 ' + p99.toFixed(2) + ' ms, max ' + times[times.length - 1].toFixed(1) + ' ms';
+});
+
+// ---------- etap 1: typy mapy ----------
+const SIDEN = ['WK', 'LH'];
+function makeMap(map, seed, mod) { const { Sim, defs } = loadP1(); if (mod) mod(defs); return Sim.create({ defs, seed, map }); }
+const avgOf = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+// flood fill 8-kierunkowy (bez ścinania narożników) od komórki; używany do sprawdzania osiągalności
+function reachableFrom(sim, x, y) {
+  const C = sim.CELL, COLS = sim.COLS, ROWS = sim.ROWS, g = sim.grid, seen = new Uint8Array(COLS * ROWS);
+  const bl = (i) => g[i] === 1 || g[i] === 3 || g[i] === 4 || g[i] === 5 || g[i] === 6;
+  let s = Math.floor(y / C) * COLS + Math.floor(x / C); const q = [s]; seen[s] = 1;
+  for (let h = 0; h < q.length; h++) {
+    const c = q[h] % COLS, r = (q[h] / COLS) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const nx = c + dx, ny = r + dy; if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
+      const ni = ny * COLS + nx; if (seen[ni] || bl(ni)) continue;
+      if (dx && dy && (bl(r * COLS + nx) || bl(ny * COLS + c))) continue;
+      seen[ni] = 1; q.push(ni);
+    }
+  }
+  return (px, py) => seen[Math.floor(py / C) * COLS + Math.floor(px / C)] === 1;
+}
+
+test('typ mapy 3 to dotychczasowa mapa: ten sam teren i ten sam przebieg co przed etapem 1', () => {
+  // skróty zapisane przed wprowadzeniem typów mapy (siatka terenu i stan po 600 krokach)
+  const base = { '1:64': ['-2668302', 'd83a32c0'], '1:192': ['-1695179022', 'b9b8ee0d'], '7:64': ['1221057424', '4405f5b1'], '7:192': ['-471453296', '1db337c2'] };
+  for (const key in base) {
+    const [seed, passage] = key.split(':').map(Number), sim = make(seed, passage);
+    let h = 0; for (let i = 0; i < sim.grid.length; i++) h = (Math.imul(h, 31) + sim.grid[i]) | 0;
+    for (let k = 0; k < 600; k++) sim.step();
+    assert.strictEqual(String(h), base[key][0], 'teren zmienił się dla ' + key);
+    assert.strictEqual(sim.hash(), base[key][1], 'przebieg zmienił się dla ' + key);
+  }
+  return 'siatka i skrót stanu po 600 krokach identyczne dla 4 przypadków';
+});
+
+test('pięć typów mapy różni się strukturą: otwarty teren i najwęższe miejsce maleją, kręta droga i przekrój rosną', () => {
+  const rows = {};
+  for (const map of [1, 2, 3, 4, 5]) {
+    const ms = [1, 2, 3, 4, 5, 6].map((seed) => makeMap(map, seed)); const m = ms.map((x) => x.mapInfo.metrics);
+    rows[map] = { open: avgOf(m.map((x) => x.open)), bn: avgOf(m.map((x) => x.bottleneck)), tort: avgOf(m.map((x) => x.tortuosity)), area: avgOf(ms.map((x) => { let f = 0; for (const v of x.grid) if (v === 0 || v === 2) f++; return f * 256; })) };
+  }
+  for (let t = 2; t <= 5; t++) {
+    assert.ok(rows[t].open <= rows[t - 1].open + 0.005, 'otwarty teren rośnie przy typie ' + t);
+    assert.ok(rows[t].bn <= rows[t - 1].bn + 1, 'najwęższe miejsce rośnie przy typie ' + t);
+    assert.ok(rows[t].tort >= rows[t - 1].tort - 0.005, 'kręta droga maleje przy typie ' + t);
+  }
+  assert.ok(rows[1].bn >= 150 && rows[2].bn >= 150, 'mapy otwarte mają wąskie gardła');
+  assert.ok(rows[4].bn < rows[3].bn * 0.6 && rows[5].bn < rows[4].bn * 0.8, 'typy 4 i 5 nie są wyraźnie węższe');
+  assert.ok(rows[5].open < rows[3].open - 0.1 && rows[5].tort > rows[3].tort + 0.2, 'typ 5 nie jest wyraźnie gęstszy i bardziej kręty od typu 3');
+  for (const t of [1, 2, 3, 4, 5]) assert.ok(rows[t].area > 2.0e6 && rows[t].area < 3.6e6, 'powierzchnia do chodzenia typu ' + t + ' = ' + rows[t].area);
+  return Object.keys(rows).map((t) => t + ': otwarte ' + (rows[t].open * 100).toFixed(0) + '%, gardło ' + rows[t].bn.toFixed(0) + ', kręta ' + rows[t].tort.toFixed(2)).join(' | ');
+});
+
+test('generator: 25 ziaren na typ daje mapy osiągalne, z wolnymi strefami rot i minimalną szerokością trasy', () => {
+  let worst = 1e9, retries = 0, n = 0;
+  for (const map of [1, 2, 4, 5]) for (let seed = 1; seed <= 25; seed++) {
+    const sim = makeMap(map, seed), mi = sim.mapInfo, m = mi.metrics, mt = sim.defs.world.mapTypes[map];
+    assert.ok(m.reachable, 'brak trasy: mapa ' + map + ' ziarno ' + seed);
+    if (mt.minWidth) { assert.ok(m.bottleneck >= mt.minWidth, 'trasa za wąska: mapa ' + map + ' ziarno ' + seed + ' ' + m.bottleneck); worst = Math.min(worst, m.bottleneck); }
+    retries += mi.attempts - 1; n++;
+    const reach = reachableFrom(sim, sim.defs.world.nest[0] - 130, sim.defs.world.nest[1]);
+    assert.ok(reach(sim.defs.world.nest[0], sim.defs.world.nest[1]), 'wnętrze gniazda nieosiągalne: mapa ' + map + ' ziarno ' + seed);
+    for (const c of sim.comps) assert.ok(reach(c.ax, c.ay), 'rota ' + c.name + ' (' + SIDEN[c.side] + ') stoi w miejscu nieosiągalnym: mapa ' + map + ' ziarno ' + seed);
+    const bad = sim.comps.filter((c) => { for (const i of c.ants) if (sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)] > 0 && sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)] !== 2) return true; return false; });
+    assert.strictEqual(bad.length, 0, 'mrówki startują w ścianach: mapa ' + map + ' ziarno ' + seed);
+  }
+  return n + ' map, najwęższa trasa ' + worst.toFixed(0) + ', powtórzeń losowania: ' + retries;
+});
+
+test('mapy bez głównego przesmyku: odźwierni stają jako zwykła linia (nie zamykają), mapa z przesmykiem zachowuje plug', () => {
+  for (const map of [1, 2, 4, 5]) {
+    const sim = makeMap(map, 1);
+    assert.ok(!sim.comps.some((c) => c.role === 'plug' || c.closed), 'mapa ' + map + ' ma zamknięty plug');
+    assert.ok(sim.comps.some((c) => c.role === 'line' && c.name === 'Rota odźwiernych'), 'mapa ' + map + ' bez linii odźwiernych');
+  }
+  const sim3 = makeMap(3, 1); assert.ok(sim3.comps.some((c) => c.role === 'plug' && c.closed));
+  return 'typy 1, 2, 4, 5: linia obrony; typ 3: plug zamykający przesmyk';
+});
+
+test('układ rot jest przesunięty razem z gniazdem: atakujący przy zachodnim brzegu, obrońcy przy gnieździe na każdej mapie', () => {
+  for (const map of [1, 2, 3, 4, 5]) {
+    const sim = makeMap(map, 1), nest = sim.defs.world.nest;
+    assert.ok(Math.abs(nest[0] - (sim.W - 200)) < 1e-6 && Math.abs(nest[1] - sim.H / 2) < 1e-6, 'gniazdo nie jest na wschodzie, w połowie wysokości: mapa ' + map);
+    for (const c of sim.comps) {
+      if (c.side === 0) assert.ok(c.ax < 500 && Math.abs(c.ay - sim.H / 2) < 520, 'WK poza strefą startu: ' + c.name + ' ' + c.ax + ',' + c.ay);
+      else assert.ok(c.ax > nest[0] - 1000 && c.ax < nest[0] + 100 && Math.abs(c.ay - nest[1]) < 300, 'LH poza strefą obrony: ' + c.name + ' ' + c.ax + ',' + c.ay);
+    }
+  }
+  return 'sprawdzono 5 typów map';
+});
+
+function dummyDefenders(d) {
+  for (const c of d.scenario.sides.WK.companies) for (const k in c.units) if (k !== 'dowodca' && k !== '@guard') c.units[k] = Math.round(c.units[k] * 0.6); // mniejsze roty: test sprawdza nawigację, nie przepustowość
+  d.units.dummy = { name: 'Manekin', hp: 1e9, speed: 1, dmg: 0, reach: 1, cd: 1, aggro: 0, radius: 4, mass: 1, rank: 2, armor: 0, size: 0.5 };
+  d.scenario.sides.LH.companies = [{ role: 'reserve', at: [1800, 600], units: { dummy: 3 } }]; d.scenario.sides.LH.reserve = 0;
+}
+test('nawigacja: bez obrony atakujący docierają do gniazda na mapach krętej i bardzo gęstej, nikt nie stoi w ścianie', () => {
+  const out = [];
+  for (const [map, tmax, need] of [[4, 400, 0.9], [5, 450, 0.9]]) {
+    const sim = makeMap(map, 1, dummyDefenders), nest = sim.defs.world.nest; let wall = 0, tReach = null;
+    const near = () => { let a = 0, t = 0; for (let i = 0; i < sim.count; i++) if (sim.alive[i] && sim.side[i] === 0) { t++; if (Math.hypot(sim.x[i] - nest[0], sim.y[i] - nest[1]) < 250) a++; } return a / t; };
+    for (let k = 0; k < tmax * 20; k++) {
+      sim.step(); if (sim.result) sim.result = null; // zakończenie bitwy nie jest tu celem
+      if (k % 100 === 0) { for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { const g = sim.grid[Math.floor(sim.y[i] / 16) * sim.COLS + Math.floor(sim.x[i] / 16)]; if (g === 1 || g === 3 || g === 4 || g === 5 || g === 6) wall++; } if (tReach === null && near() >= need) tReach = k / 20; }
+    }
+    assert.strictEqual(wall, 0, 'mrówki w ścianach na mapie ' + map);
+    assert.ok(tReach !== null, 'mapa ' + map + ': mniej niż ' + need * 100 + '% atakujących doszło do gniazda w ' + tmax + ' s (doszło ' + (near() * 100).toFixed(0) + '%)');
+    out.push('mapa ' + map + ': ' + need * 100 + '% przy gnieździe po ' + tReach + ' s');
+  }
+  return out.join('; ');
 });
 
 let failed = 0;

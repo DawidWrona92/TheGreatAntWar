@@ -61,6 +61,8 @@ button:hover{border-color:var(--acc)}button.on{background:#51461f;border-color:v
 #side.hide{transform:translateX(100%)}
 #side h3{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
 #side details{border-top:1px solid var(--line);padding:4px 0}#side summary{cursor:pointer;font-weight:600}
+#mapName{color:var(--dim);font-size:12px;white-space:nowrap}
+.mapdesc{margin:2px 0 8px;font-size:12px;color:var(--dim);min-height:48px}
 .row{display:grid;grid-template-columns:1fr 92px 46px;gap:6px;align-items:center;margin:2px 0;font-size:12px}
 .row input[type=range]{width:100%}.row span.v{text-align:right;font-variant-numeric:tabular-nums}
 #diag{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.5;margin:0;white-space:pre}
@@ -83,7 +85,7 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
 <div id="topbar">
   <strong>Wojna superkolonii · P1</strong>
   <span class="cnt wk" id="cntWK">WK 0</span><span class="cnt lh" id="cntLH">LH 0</span>
-  <span id="clock">0:00</span>
+  <span id="clock">0:00</span><span id="mapName" class="dim" title="Typ mapy"></span>
   <button id="bPause" title="Spacja">Pauza</button>
   <button id="bSlow" title="−">−</button><span id="spd">1×</span><button id="bFast" title="+">+</button>
   <button id="bRestart" title="Ten sam seed i parametry">Restart</button>
@@ -118,7 +120,9 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       <button id="cWK" class="on">Wielka Kolonia (czarna)<small>Masa, centralne dowodzenie, tarany, biegacze, pękacze. Atakujesz.</small></button>
       <button id="cLH">Lake Hodges (czerwona)<small>Odźwierni, plujki z kwasem, wytrzymałe roty. Bronisz gniazda.</small></button>
     </div>
-    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Szerokość głównego przesmyku</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
+    <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Typ mapy</span><select id="mMap"></select><span></span></div>
+    <p id="mMapDesc" class="mapdesc"></p>
+    <div class="row" id="mPassRow" style="grid-template-columns:150px 1fr 50px"><span>Szerokość głównego przesmyku</span><input type="range" id="mPass" min="32" max="320" step="16" value="192"><span class="v" id="mPassV">192</span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Ziarno (seed)</span><input type="number" id="mSeed" value="1" min="0" style="width:90px"><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Gwardia dowódcy</span><select id="mGuard"><option value="infantry">lekka (wojownicy)</option><option value="ciezki" selected>ciężka (wojownicy ciężcy)</option><option value="biegacz">biegacze</option><option value="taran">tarany</option><option value="pekacz">pękacze</option><option value="odzwierny">odźwierni</option><option value="plujka">plujki</option></select><span></span></div>
     <div class="row" style="grid-template-columns:150px 1fr 50px"><span>Tryb</span><label><input type="checkbox" id="mObs"> obserwuj (AI przeciw AI)</label><span></span></div>
@@ -151,6 +155,21 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
         { "type": "root", "r": 60, "at": [1650, 200] }
       ],
       "coverRandom": 14
+    },
+    "mapTypes": {
+      "comment": "Pięć typów mapy, od najprostszej do najbardziej złożonej. Wszystkie mają gniazdo na wschodzie i strefę startu atakującego na zachodzie; układ rot z sekcji scenario jest zapisany dla mapy 2000x1200 i przesuwany (strona zachodnia o dy, wschodnia o dx i dy) na inne rozmiary. Typ 3 używa układu z world.map bez zmian.",
+      "1": { "name": "Otwarta polana", "gen": "open", "w": 2000, "h": 1200, "pebbles": [4, 6], "cover": 10,
+             "desc": "Prawie pusty teren: kilka drobnych kamyków i plamy mchu. Brak przesmyków, a odźwierni stają jako zwykła linia. Wszystko zależy od manewru." },
+      "2": { "name": "Kilka przeszkód", "gen": "scattered", "w": 2000, "h": 1200, "count": [8, 11], "sep": 150, "cover": 14,
+             "desc": "Otwarty teren z pojedynczymi głazami, korzeniami i kłodami rozstawionymi co najmniej 150 jednostek od siebie. Lokalne utrudnienia, brak wąskich gardeł." },
+      "3": { "name": "Pień z kilkoma trasami", "gen": "legacy", "w": 2000, "h": 1200,
+             "desc": "Dotychczasowa mapa: pień z głównym przesmykiem (suwak szerokości), wąska bocznica i obejścia wokół głazów. Układ stały, ziarno zmienia tylko plamy mchu." },
+      "4": { "name": "Gęsty i kręty podszyt", "gen": "thicket", "w": 2600, "h": 1400, "pitch": 128, "wallR": 26, "jitter": 8, "braid": 0.1, "doors": 6, "follow": true, "cover": 40, "minWidth": 52,
+             "mix": { "brush": 0.45, "wood": 0.25, "root": 0.15, "stone": 0.15 },
+             "desc": "Pas zarośli między strefą startu a gniazdem: kręte korytarze o szerokości ok. 76-100 jednostek, ślepe zaułki i pętle dające kilka tras. Mapa powiększona, żeby przestrzeń do chodzenia była porównywalna." },
+      "5": { "name": "Chaparral: gąszcz i tunele", "gen": "thicket", "w": 3000, "h": 1500, "pitch": 116, "wallR": 28, "jitter": 6, "braid": 0.04, "doors": 4, "follow": true, "cover": 70, "minWidth": 44,
+             "mix": { "brush": 0.62, "wood": 0.18, "root": 0.12, "stone": 0.08 },
+             "desc": "Gęsty podszyt w stylu kalifornijskiego chaparralu: wiele wąskich (ok. 54-90 jednostek) krętych przejść i tuneli z krzewów, mało pętli, wiele ślepych zaułków. Największa mapa." }
     }
   },
   "params": {
@@ -269,6 +288,229 @@ const Sim = (function () {
     return { seed: base, next, range: (a, b) => a + (b - a) * next(), fork: (label) => createRng(base + ':' + label) };
   }
 
+  // ---------- mapy: rasteryzacja przeszkód, generatory, metryki ----------
+  // Wartości komórek terenu: 0 otwarte, 1 pień lub kłoda, 2 osłona (mech), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla
+  const OBS_TYPE = { wood: 1, stone: 4, root: 5, brush: 6 };
+  const NEST_RING = [4.3, 5.5];   // promienie (w komórkach): wnętrze gniazda i mur; wejście od zachodu
+  function segDist(px, py, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1; const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / l2)); return Math.hypot(px - a[0] - t * dx, py - a[1] - t * dy); }
+  // siatka terenu z listy przeszkód (kapsuły i koła); pierwszy pasujący obiekt z listy wygrywa
+  function rasterize(world, obstacles) {
+    const W = world.w, H = world.h, COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL), grid = new Uint8Array(COLS * ROWS);
+    const gap = world.gap, passage = world.passage, nestC = world.nest;
+    const border = (r, c) => r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (border(r, c)) grid[r * COLS + c] = 1;
+    const pt = (p) => (p === 'gapTop' ? [gap[0], gap[1] - passage / 2] : p === 'gapBottom' ? [gap[0], gap[1] + passage / 2] : p);
+    for (const o of obstacles) {
+      const v = OBS_TYPE[o.type], line = o.line && o.line.map(pt), pts = o.at ? [o.at] : line;
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+      const c0 = Math.max(1, Math.floor((x0 - o.r) / CELL) - 1), c1 = Math.min(COLS - 2, Math.ceil((x1 + o.r) / CELL) + 1);
+      const r0 = Math.max(1, Math.floor((y0 - o.r) / CELL) - 1), r1 = Math.min(ROWS - 2, Math.ceil((y1 + o.r) / CELL) + 1);
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+        if (grid[r * COLS + c] !== 0) continue;
+        const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
+        let d;
+        if (o.at) d = Math.hypot(cx - o.at[0], cy - o.at[1]);
+        else { d = 1e9; for (let k = 0; k + 1 < line.length; k++) d = Math.min(d, segDist(cx, cy, line[k], line[k + 1])); }
+        if (d < o.r) grid[r * COLS + c] = v;
+      }
+    }
+    // główny przesmyk (jeśli mapa go ma) zawsze otwarty na całej szerokości
+    if (gap) for (let r = 1; r < ROWS - 1; r++) for (let c = 1; c < COLS - 1; c++) {
+      const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
+      if (Math.abs(cx - gap[0]) < 40 && Math.abs(cy - gap[1]) <= passage / 2) grid[r * COLS + c] = 0;
+    }
+    // gniazdo: wnętrze otwarte, mur z wejściem od zachodu
+    const nr = Math.ceil(NEST_RING[1] + 1);
+    const nc = Math.floor(nestC[0] / CELL), nrw = Math.floor(nestC[1] / CELL);
+    for (let r = Math.max(1, nrw - nr); r <= Math.min(ROWS - 2, nrw + nr); r++) for (let c = Math.max(1, nc - nr); c <= Math.min(COLS - 2, nc + nr); c++) {
+      const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL, dx = cx - nestC[0], dy = cy - nestC[1], d = Math.hypot(dx, dy);
+      if (d > NEST_RING[0] * CELL && d < NEST_RING[1] * CELL) {
+        let da = Math.atan2(dy, dx) - Math.PI; da = Math.atan2(Math.sin(da), Math.cos(da));
+        grid[r * COLS + c] = Math.abs(da) > 0.4 ? 3 : 0;
+      } else if (d <= NEST_RING[0] * CELL) grid[r * COLS + c] = 0;
+    }
+    return grid;
+  }
+  const isWall = (v) => v === 1 || v === 3 || v === 4 || v === 5 || v === 6;
+
+  // Metryki układu terenu: odsetek otwartego terenu, szerokość najszerszej trasy w jej najwęższym miejscu
+  // (transformata odległości do ścian), kręta droga jako stosunek długości najkrótszej trasy do linii prostej.
+  function mapMetrics(world, grid) {
+    const COLS = Math.ceil(world.w / CELL), ROWS = Math.ceil(world.h / CELL), N = COLS * ROWS;
+    let open = 0, inner = 0;
+    for (let r = 1; r < ROWS - 1; r++) for (let c = 1; c < COLS - 1; c++) { inner++; if (!isWall(grid[r * COLS + c])) open++; }
+    // transformata odległości (chamfer 3-4, jednostka = 1/3 komórki)
+    const D = new Int16Array(N);
+    for (let i = 0; i < N; i++) D[i] = isWall(grid[i]) ? 0 : 9999;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const i = r * COLS + c; let d = D[i]; if (!d) continue;
+      if (c > 0) d = Math.min(d, D[i - 1] + 3); if (r > 0) { d = Math.min(d, D[i - COLS] + 3); if (c > 0) d = Math.min(d, D[i - COLS - 1] + 4); if (c < COLS - 1) d = Math.min(d, D[i - COLS + 1] + 4); }
+      D[i] = d;
+    }
+    for (let r = ROWS - 1; r >= 0; r--) for (let c = COLS - 1; c >= 0; c--) {
+      const i = r * COLS + c; let d = D[i]; if (!d) continue;
+      if (c < COLS - 1) d = Math.min(d, D[i + 1] + 3); if (r < ROWS - 1) { d = Math.min(d, D[i + COLS] + 3); if (c < COLS - 1) d = Math.min(d, D[i + COLS + 1] + 4); if (c > 0) d = Math.min(d, D[i + COLS - 1] + 4); }
+      D[i] = d;
+    }
+    const cellOf = (x, y) => Math.floor(y / CELL) * COLS + Math.floor(x / CELL);
+    const nearest = (x, y) => { let best = -1, bd = 1e18; for (let r = 1; r < ROWS - 1; r++) for (let c = 1; c < COLS - 1; c++) if (D[r * COLS + c] >= 3) { const d = ((c + 0.5) * CELL - x) ** 2 + ((r + 0.5) * CELL - y) ** 2; if (d < bd) { bd = d; best = r * COLS + c; } } return best; };
+    const dyL = (world.h - 1200) / 2, Zr = zonesFor(world.w, world.h, world.nest).wk;
+    const start = nearest(230, 600 + dyL), goal = nearest(world.nest[0] - (NEST_RING[1] + 3) * CELL, world.nest[1]); // cel: tuż przed wejściem do gniazda (samo wejście ma stałą szerokość)
+    const gx = ((goal % COLS) + 0.5) * CELL, gy = (((goal / COLS) | 0) + 0.5) * CELL;
+    const isSrc = new Uint8Array(N), isGoal = new Uint8Array(N); const srcList = [];
+    for (let r = 1; r < ROWS - 1; r++) for (let c = 1; c < COLS - 1; c++) {
+      const x = (c + 0.5) * CELL, y = (r + 0.5) * CELL, i = r * COLS + c;
+      if (x >= Zr[0] && x <= Zr[2] && y >= Zr[1] && y <= Zr[3] && D[i] >= 3) { isSrc[i] = 1; srcList.push(i); }
+      if (Math.hypot(x - gx, y - gy) < 48 && D[i] >= 3) isGoal[i] = 1;
+    }
+    // najszersza trasa: największy próg t, przy którym ze strefy startu da się dojść do celu przez komórki o D >= t (czterokierunkowo, ostrożnie)
+    const reach = (t) => {
+      const seen = new Uint8Array(N), q = []; let hit = false;
+      for (const i of srcList) if (D[i] >= t) { seen[i] = 1; q.push(i); }
+      for (let h = 0; h < q.length && !hit; h++) {
+        const cur = q[h]; if (isGoal[cur]) { hit = true; break; }
+        const c = cur % COLS, r = (cur / COLS) | 0;
+        for (const n of [c > 0 ? cur - 1 : -1, c < COLS - 1 ? cur + 1 : -1, r > 0 ? cur - COLS : -1, r < ROWS - 1 ? cur + COLS : -1]) if (n >= 0 && !seen[n] && D[n] >= t) { seen[n] = 1; q.push(n); }
+      }
+      return hit;
+    };
+    let lo = 3, hi = 400;
+    if (!reach(lo)) return { open: open / inner, reachable: false, bottleneck: 0, tortuosity: 0, pathLen: 0, startCell: start };
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (reach(mid)) lo = mid; else hi = mid - 1; }
+    const bottleneck = Math.max(0, (2 * lo / 3 - 1)) * CELL;
+    // długość najkrótszej trasy (wagi 10/14 jak w polach przepływu)
+    const dist = new Int32Array(N).fill(-1), q = [goal]; dist[goal] = 0;
+    const nb = [[1, 0, 10], [-1, 0, 10], [0, 1, 10], [0, -1, 10], [1, 1, 14], [1, -1, 14], [-1, 1, 14], [-1, -1, 14]];
+    const bl = (i) => isWall(grid[i]);
+    for (let h = 0; h < q.length; h++) {
+      const cur = q[h], c = cur % COLS, r = (cur / COLS) | 0;
+      for (const [dx, dy, w] of nb) {
+        const nx = c + dx, ny = r + dy; if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
+        const ni = ny * COLS + nx; if (bl(ni)) continue;
+        if (dx !== 0 && dy !== 0 && (bl(r * COLS + nx) || bl(ny * COLS + c))) continue;
+        const nd = dist[cur] + w; if (dist[ni] < 0 || nd < dist[ni]) { dist[ni] = nd; q.push(ni); }
+      }
+    }
+    const pathLen = dist[start] < 0 ? 0 : dist[start] / 10 * CELL;
+    const sx = (start % COLS + 0.5) * CELL, sy = (((start / COLS) | 0) + 0.5) * CELL;
+    return { open: open / inner, reachable: dist[start] >= 0, bottleneck, tortuosity: pathLen / Math.max(1, Math.hypot(gx - sx, gy - sy)), pathLen, startCell: start };
+  }
+
+  // prostokąty stref rozmieszczenia rot (muszą zostać wolne): [x0, y0, x1, y1]
+  function zonesFor(W, H, nest) {
+    const dy = (H - 1200) / 2;
+    return { wk: [0, Math.max(0, dy + 190), 470, Math.min(H, dy + 1170)], lh: [W - 1100, dy + 230, W, dy + 970], nest: { c: nest, r: NEST_RING[1] * CELL + 70 } };
+  }
+  function shapeBox(s) { const pts = s.at ? [s.at] : s.line; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); } return [x0 - s.r, y0 - s.r, x1 + s.r, y1 + s.r]; }
+  function segsOf(s) { return s.at ? [[s.at, s.at]] : s.line.slice(1).map((p, k) => [s.line[k], p]); }
+  function segSegDist(a, b) {
+    const ccw = (p, q, r) => (r[1] - p[1]) * (q[0] - p[0]) > (q[1] - p[1]) * (r[0] - p[0]);
+    if (ccw(a[0], b[0], b[1]) !== ccw(a[1], b[0], b[1]) && ccw(a[0], a[1], b[0]) !== ccw(a[0], a[1], b[1])) return 0;
+    return Math.min(segDist(a[0][0], a[0][1], b[0], b[1]), segDist(a[1][0], a[1][1], b[0], b[1]), segDist(b[0][0], b[0][1], a[0], a[1]), segDist(b[1][0], b[1][1], a[0], a[1]));
+  }
+  function shapeGap(a, b) { let d = 1e9; for (const sa of segsOf(a)) for (const sb of segsOf(b)) d = Math.min(d, segSegDist(sa, sb)); return d - a.r - b.r; }
+  // rozstawia przeszkody losowo w dozwolonych prostokątach, z odstępem sep między nimi i poza strefami wykluczonymi
+  function scatter(rng, o) {
+    const out = [];
+    for (let k = 0; k < o.n; k++) for (let tries = 0; tries < 400; tries++) {
+      const rc = o.allow[Math.floor(rng.next() * o.allow.length)], s = o.make(rng, rc);
+      const b = shapeBox(s);
+      if (b[0] < 70 || b[1] < 70 || b[2] > o.W - 70 || b[3] > o.H - 70) continue;
+      if (o.exclude.some((e) => b[2] > e[0] - 60 && b[0] < e[2] + 60 && b[3] > e[1] - 60 && b[1] < e[3] + 60)) continue;
+      if (o.nest && b[2] > o.nest.c[0] - o.nest.r - 40 && b[0] < o.nest.c[0] + o.nest.r && b[3] > o.nest.c[1] - o.nest.r && b[1] < o.nest.c[1] + o.nest.r) continue;
+      if (o.keep.concat(out).some((p) => shapeGap(s, p) < o.sep)) continue;
+      out.push(s); break;
+    }
+    return out;
+  }
+  const pick = (rng, mix) => { let t = rng.next(), last = null; for (const k in mix) { last = k; t -= mix[k]; if (t < 0) return k; } return last; };
+  function genOpen(rng, mt, W, H, Z) {
+    const n = Math.round(rng.range(mt.pebbles[0], mt.pebbles[1] + 0.999));
+    return scatter(rng, { n, W, H, sep: 120, keep: [], exclude: [Z.wk, Z.lh], nest: Z.nest, allow: [[300, 120, W - 300, H - 120]],
+      make: (r, rc) => ({ type: r.next() < 0.7 ? 'stone' : 'root', r: Math.round(r.range(10, 18)), at: [r.range(rc[0], rc[2]), r.range(rc[1], rc[3])] }) });
+  }
+  function genScattered(rng, mt, W, H, Z) {
+    const n = Math.round(rng.range(mt.count[0], mt.count[1] + 0.999));
+    return scatter(rng, { n, W, H, sep: mt.sep, keep: [], exclude: [Z.wk, Z.lh], nest: Z.nest, allow: [[250, 100, W - 250, H - 100]],
+      make: (r, rc) => {
+        const x = r.range(rc[0], rc[2]), y = r.range(rc[1], rc[3]), k = r.next();
+        if (k < 0.3) { const a = r.range(0, Math.PI), l = r.range(70, 130); return { type: 'wood', r: Math.round(r.range(14, 18)), line: [[x - Math.cos(a) * l, y - Math.sin(a) * l], [x + Math.cos(a) * l, y + Math.sin(a) * l]] }; }
+        if (k < 0.55) return { type: 'root', r: Math.round(r.range(46, 70)), at: [x, y] };
+        return { type: 'stone', r: Math.round(r.range(k < 0.85 ? 40 : 18, k < 0.85 ? 66 : 28)), at: [x, y] };
+      } });
+  }
+  // gąszcz: labirynt z korytarzami o szerokości kroku siatki, krzywe ściany z kapsuł; losowe usunięcie części ścian daje pętle (kilka tras)
+  function genThicket(rng, mt, W, H, Z) {
+    const bx0 = 480, bx1 = W - 1100, nx = Math.max(3, Math.round((bx1 - bx0) / mt.pitch)), ny = Math.max(3, Math.round(H / mt.pitch));
+    const px = (bx1 - bx0) / nx, py = H / ny, N = nx * ny;
+    const openE = new Uint8Array(N), openS = new Uint8Array(N), seen = new Uint8Array(N);
+    const start = Math.floor(rng.next() * ny) * nx; seen[start] = 1;
+    const stack = [start];
+    while (stack.length) {
+      const cur = stack[stack.length - 1], ci = cur % nx, cj = (cur / nx) | 0, nb = [];
+      if (ci > 0 && !seen[cur - 1]) nb.push(0); if (ci < nx - 1 && !seen[cur + 1]) nb.push(1);
+      if (cj > 0 && !seen[cur - nx]) nb.push(2); if (cj < ny - 1 && !seen[cur + nx]) nb.push(3);
+      if (!nb.length) { stack.pop(); continue; }
+      const d = nb[Math.floor(rng.next() * nb.length)];
+      let nxt;
+      if (d === 0) { nxt = cur - 1; openE[nxt] = 1; } else if (d === 1) { nxt = cur + 1; openE[cur] = 1; } else if (d === 2) { nxt = cur - nx; openS[nxt] = 1; } else { nxt = cur + nx; openS[cur] = 1; }
+      seen[nxt] = 1; stack.push(nxt);
+    }
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      if (i < nx - 1 && !openE[j * nx + i] && rng.next() < mt.braid) openE[j * nx + i] = 1;
+      if (j < ny - 1 && !openS[j * nx + i] && rng.next() < mt.braid) openS[j * nx + i] = 1;
+    }
+    const J = mt.jitter, V = [];
+    for (let j = 0; j <= ny; j++) { V.push([]); for (let i = 0; i <= nx; i++) V[j].push([bx0 + i * px + rng.range(-J, J), (j === 0 || j === ny ? j * py : j * py + rng.range(-J, J))]); }
+    const obs = [];
+    const wall = (a, b) => obs.push({ type: pick(rng, mt.mix), r: mt.wallR, line: [[Math.round(a[0]), Math.round(a[1])], [Math.round(b[0]), Math.round(b[1])]] });
+    for (let j = 1; j < ny; j++) for (let i = 0; i < nx; i++) if (!openS[(j - 1) * nx + i]) wall(V[j][i], V[j][i + 1]);
+    for (let j = 0; j < ny; j++) for (let i = 1; i < nx; i++) if (!openE[j * nx + i - 1]) wall(V[j][i], V[j + 1][i]);
+    // ściany czołowe pasa (od strony strefy startu i od strony gniazda) z kilkoma wejściami w losowych rzędach
+    const doorRows = () => { const rows = new Set(); while (rows.size < Math.min(mt.doors, ny)) rows.add(Math.floor(rng.next() * ny)); return rows; };
+    if (mt.doors) for (const i of [0, nx]) { const dr = doorRows(); for (let j = 0; j < ny; j++) if (!dr.has(j)) wall(V[j][i], V[j + 1][i]); }
+    // poza pasem labiryntu: rozproszone zarośla i głazy po obu stronach, poza strefami rot
+    const side = [[90, 90, bx0 - 20, H - 90], [bx1 + 20, 90, W - 90, H - 90]];
+    const extra = scatter(rng, { n: 8, W, H, sep: 110, keep: [], exclude: [Z.wk, Z.lh], nest: Z.nest, allow: side,
+      make: (r, rc) => ({ type: pick(r, { brush: 0.5, stone: 0.3, wood: 0.2 }), r: Math.round(r.range(30, 56)), at: [r.range(rc[0], rc[2]), r.range(rc[1], rc[3])] }) });
+    return obs.concat(extra);
+  }
+  const GENERATORS = { open: genOpen, scattered: genScattered, thicket: genThicket };
+
+  // Przygotowuje świat dla wybranego typu mapy: rozmiar, gniazdo, przesunięcie układu rot, lista przeszkód.
+  // Mapa jest sprawdzana (trasa od strefy startu do gniazda, minimalna szerokość); przy porażce losuje się inny wariant.
+  function applyMapType(defs, mapId, rng) {
+    const world = defs.world, mt = world.mapTypes[mapId];
+    if (!mt) throw new Error('Nieznany typ mapy: ' + mapId);
+    const W = mt.w || world.w, H = mt.h || world.h, dx = W - 2000, dy = (H - 1200) / 2;
+    world.followAnchor = !!mt.follow; world.w = W; world.h = H; world.nest = [1800 + dx, 600 + dy]; world.retreatWK = [world.retreatWK[0], world.retreatWK[1] + dy];
+    for (const sn of SIDES) {
+      const sd = defs.scenario.sides[sn], sx = sn === 'WK' ? 0 : dx;
+      for (const cd of sd.companies) { cd.at = [cd.at[0] + sx, cd.at[1] + dy]; }
+      sd.spawn = [sd.spawn[0] + sx, sd.spawn[1] + dy, sd.spawn[2], sd.spawn[3]];
+    }
+    const info = { id: String(mapId), name: mt.name, desc: mt.desc, gen: mt.gen, w: W, h: H };
+    if (mt.gen === 'legacy') {
+      world.gap = world.gap.slice(); world.map = { obstacles: world.map.obstacles, coverRandom: world.map.coverRandom };
+      info.metrics = mapMetrics(world, rasterize(world, world.map.obstacles)); info.attempts = 1;
+      return info;
+    }
+    // mapy bez głównego przesmyku: odźwierni stają jako zwykła linia obrony (nie ma czego zamykać)
+    world.gap = null;
+    for (const sn of SIDES) for (const cd of defs.scenario.sides[sn].companies) if (cd.role === 'plug') { cd.role = 'line'; cd.closed = false; delete cd.spacing; }
+    const Z = zonesFor(W, H, world.nest), minW = mt.minWidth || 0;
+    let obstacles = null, best = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const r = rng.fork('mapgen' + attempt), cand = GENERATORS[mt.gen](r, mt, W, H, Z), grid = rasterize(world, cand), m = mapMetrics(world, grid);
+      if (!best || m.bottleneck > best.m.bottleneck) best = { cand, m, attempt };
+      if (m.reachable && m.bottleneck >= minW) { obstacles = cand; info.attempts = attempt + 1; info.metrics = m; break; }
+    }
+    if (!obstacles) { if (!best.m.reachable) throw new Error('Nie udało się wygenerować mapy ' + mapId + ' (brak trasy)'); obstacles = best.cand; info.attempts = 12; info.metrics = best.m; }
+    world.map = { obstacles, coverRandom: mt.cover };
+    return info;
+  }
+
   function create(opts) {
     const defs = JSON.parse(JSON.stringify(opts.defs));
     if (opts.passage != null) defs.world.passage = opts.passage;
@@ -276,13 +518,14 @@ const Sim = (function () {
     if (opts.supply) for (const s of SIDES) if (opts.supply[s] != null) defs.params.supply[s] = opts.supply[s];
     const seed = opts.seed == null ? 1 : opts.seed;
     const rng = createRng(seed), rngMap = rng.fork('map'), rngSpawn = rng.fork('spawn'), rngCombat = rng.fork('combat');
+    const mapInfo = applyMapType(defs, opts.map == null ? 3 : opts.map, rng); // rozmiar, gniazdo, przeszkody i przesunięcie układu rot
     // Dowódca może być dowolnego typu: gwardia dowódcy to elitarna wersja każdego typu bazowego (generowana tu)
     for (const k of Object.keys(defs.units)) if (k !== 'dowodca' && !defs.units[k].base) defs.units['gwardia_' + k] = { name: 'Gwardzista: ' + defs.units[k].name.toLowerCase(), base: k };
     const aiSides = new Set(opts.aiSides || SIDES);
-    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control;
+    const W = defs.world.w, H = defs.world.h, P = defs.params, PC = P.control, FOLLOW = !!defs.world.followAnchor;
     const COLS = Math.ceil(W / CELL), ROWS = Math.ceil(H / CELL);
     const HC = Math.ceil(W / HASH), HR = Math.ceil(H / HASH);
-    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides };
+    const sim = { defs, seed, W, H, COLS, ROWS, CELL, HZ, DT, SIDES, CS_FULL, CS_WEAK, CS_LOST, aiSides, mapInfo };
 
     // ---------- tabele typów (przebudowywane po zmianie suwaków) ----------
     let names, kinds, nT, ti, T, mult;
@@ -310,42 +553,16 @@ const Sim = (function () {
     sim.rebuildTables = buildTables;
 
     // ---------- teren ----------
-    // 0 otwarte, 1 pień lub kłoda, 2 osłona (mech, paprocie), 3 mur gniazda, 4 głaz, 5 korzenie; blokują 1, 3, 4 i 5
-    const grid = new Uint8Array(COLS * ROWS);
-    const BLK = new Uint8Array([0, 1, 0, 1, 1, 1]);
-    const gap = defs.world.gap, passage = defs.world.passage;
+    // 0 otwarte, 1 pień lub kłoda, 2 osłona (mech, paprocie), 3 mur gniazda, 4 głaz, 5 korzenie, 6 zarośla; blokują wszystkie poza 0 i 2
+    const BLK = new Uint8Array([0, 1, 0, 1, 1, 1, 1]);
+    const gap = defs.world.gap, passage = defs.world.passage;   // gap jest null na mapach bez głównego przesmyku
     const nestC = defs.world.nest;
-    (function buildTerrain() {
-      const TYPE = { wood: 1, stone: 4, root: 5 };
-      const pt = (p) => (p === 'gapTop' ? [gap[0], gap[1] - passage / 2] : p === 'gapBottom' ? [gap[0], gap[1] + passage / 2] : p);
-      const segDist = (px, py, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1; const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / l2)); return Math.hypot(px - a[0] - t * dx, py - a[1] - t * dy); };
-      const obs = defs.world.map.obstacles.map((o) => ({ v: TYPE[o.type], r: o.r, at: o.at, line: o.line && o.line.map(pt) }));
-      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
-        const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
-        let v = 0;
-        if (r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1) v = 1;
-        else {
-          for (const o of obs) {
-            let d;
-            if (o.at) d = Math.hypot(cx - o.at[0], cy - o.at[1]);
-            else { d = 1e9; for (let k = 0; k + 1 < o.line.length; k++) d = Math.min(d, segDist(cx, cy, o.line[k], o.line[k + 1])); }
-            if (d < o.r) { v = o.v; break; }
-          }
-          // główny przesmyk zawsze otwarty na całej szerokości
-          if (Math.abs(cx - gap[0]) < 40 && Math.abs(cy - gap[1]) <= passage / 2) v = 0;
-          const dx = cx - nestC[0], dy = cy - nestC[1], d = Math.hypot(dx, dy);
-          if (d > 4.3 * CELL && d < 5.5 * CELL) {
-            let da = Math.atan2(dy, dx) - Math.PI;
-            da = Math.atan2(Math.sin(da), Math.cos(da));
-            v = Math.abs(da) > 0.4 ? 3 : 0;
-          } else if (d <= 4.3 * CELL) v = 0;
-        }
-        grid[r * COLS + c] = v;
-      }
-      const patches = defs.world.map.coverRandom;
+    const grid = rasterize(defs.world, defs.world.map.obstacles);
+    (function coverPatches() {
+      const patches = defs.world.map.coverRandom, mid = gap ? gap[0] : W / 2;
       for (let k = 0; k < patches; k++) {
         const west = k < patches / 2;
-        const px = west ? rngMap.range(150, gap[0] - 150) : rngMap.range(gap[0] + 150, nestC[0] - 200);
+        const px = west ? rngMap.range(150, mid - 150) : rngMap.range(mid + 150, nestC[0] - 200);
         const py = rngMap.range(100, H - 100), pr = rngMap.range(2, 4) * CELL;
         for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
           if (grid[r * COLS + c] !== 0) continue;
@@ -380,7 +597,12 @@ const Sim = (function () {
       const key = cellAt(x, y);
       let f = fields.get(key);
       if (f) return f;
-      f = new Int32Array(COLS * ROWS).fill(-1);
+      f = buildField(key, new Int32Array(COLS * ROWS));
+      fields.set(key, f);
+      return f;
+    }
+    function buildField(key, f) {
+      f.fill(-1);
       const q = [key]; f[key] = 0;
       const nb = [[1, 0, 10], [-1, 0, 10], [0, 1, 10], [0, -1, 10], [1, 1, 14], [1, -1, 14], [-1, 1, 14], [-1, -1, 14]];
       const isB = (i) => BLK[grid[i]] === 1;
@@ -396,7 +618,6 @@ const Sim = (function () {
           if (f[ni] < 0 || nd < f[ni]) { f[ni] = nd; q.push(ni); }
         }
       }
-      fields.set(key, f);
       return f;
     }
     const flow = { x: 0, y: 0 };
@@ -459,7 +680,7 @@ const Sim = (function () {
             control: 100, cstate: CS_FULL, cmdIn: true, engaged: 0, engCnt: 0, err: 0, errSum: 0, errN: 0, cohesion: 1,
             deaths: [], lost: 0, lostBy: {}, startBy: {}, abilCdUntil: 0, abilUntil: 0, closed: !!cd.closed, acid: 0, acidMax: 0,
             cmdDiedAt: -1e9, dirty: true, speed: 20, spMod: 1, cdMod: 1, berserk: false, moving: false, field: null, aiUntil: 0, aiTarget: -1,
-            captain: -1, captainPenaltyUntil: 0, lastCause: ''
+            captain: -1, captainPenaltyUntil: 0, lastCause: '', afield: null, afKey: -1, afTick: -1e9
           };
           comps.push(c);
           if (cd.units['@guard']) { const gk = 'gwardia_' + (defs.units[sd.guardType] && !defs.units[sd.guardType].base && sd.guardType !== 'dowodca' ? sd.guardType : 'ciezki'); cd.units[gk] = cd.units['@guard']; delete cd.units['@guard']; }
@@ -708,6 +929,15 @@ const Sim = (function () {
       if (c.dirty || tick - (c.repackTick || 0) > 5 * HZ) repack(c);
     }
 
+    // Mapy z korytarzami (world.followAnchor): pole przepływu do kotwicy roty, odświeżane co najwyżej co pół sekundy po zmianie jej komórki.
+    // Mrówka, która nie widzi swojego miejsca w szyku, idzie wtedy za kotwicą, a nie przed nią do celu rozkazu.
+    function refreshAnchorField(c) {
+      const key = cellAt(c.ax, c.ay);
+      if (c.afield && (key === c.afKey || (tick + c.id) % 10 !== 0)) return; // rozłożone w czasie: jedna lub dwie roty na krok
+      if (!c.afield) c.afield = new Int32Array(COLS * ROWS);
+      buildField(key, c.afield); c.afKey = key; c.afTick = tick;
+    }
+
     // ---------- przesuwanie kotwicy rity ----------
     function updateAnchor(c) {
       const o = c.eff;
@@ -736,6 +966,7 @@ const Sim = (function () {
         let da = c.tface - c.face; da = Math.atan2(Math.sin(da), Math.cos(da));
         c.face += Math.max(-0.12, Math.min(0.12, da)); c.fx = Math.cos(c.face); c.fy = Math.sin(c.face);
       }
+      if (FOLLOW) refreshAnchorField(c);
       if (c.errN > 0) { c.err = c.errSum / c.errN; c.errSum = 0; c.errN = 0; c.cohesion = Math.max(0.1, Math.min(1, 1 - (c.err - 8) / 40)); }
     }
 
@@ -884,7 +1115,14 @@ const Sim = (function () {
           if (fighting) c.engCnt++;
         }
         if (!goalSet) {
-          if (sd > 12 && !losClear(ax[i], ay[i], sw[0], sw[1]) && c.field && flowDir(c.field, ax[i], ay[i])) { gx = ax[i] + flow.x * 20; gy = ay[i] + flow.y * 20; }
+          if (FOLLOW) {
+            // błąd szyku mierzony drogą do kotwicy (ponad promień szyku), bo w korytarzu miejsca w szyku leżą w ścianach
+            if (sd > 12 && c.afield && (blocked(sw[0], sw[1]) || !losClear(ax[i], ay[i], sw[0], sw[1])) && flowDir(c.afield, ax[i], ay[i])) {
+              gx = ax[i] + flow.x * 20; gy = ay[i] + flow.y * 20;
+              const pd = c.afield[cellAt(ax[i], ay[i])];
+              if (pd >= 0) c.errSum += Math.max(0, pd / 10 * CELL - Math.hypot(slotU[i], slotV[i])) - sd;
+            } else { gx = sw[0]; gy = sw[1]; }
+          } else if (sd > 12 && !losClear(ax[i], ay[i], sw[0], sw[1]) && c.field && flowDir(c.field, ax[i], ay[i])) { gx = ax[i] + flow.x * 20; gy = ay[i] + flow.y * 20; }
           else { gx = sw[0]; gy = sw[1]; }
         }
         // prędkość
@@ -989,11 +1227,10 @@ const Sim = (function () {
           if (c.abilType === 'dowodca' && mine.some((o) => o.cstate === CS_WEAK && dist(o, c) < defs.scenario.sides[sn].auraR)) useAbility(c);
         } else {
           const home = c.home || (c.home = [c.order.x, c.order.y]);
-          const enemyAtGap = foes.filter((e) => Math.hypot(e.ax - gap[0], e.ay - gap[1]) < 220);
           if (c.role === 'plug') {
             order(c, 'hold', home[0], home[1], 0);
             if (!c.closed) useAbility(c); // obrońca zamyka wejście od początku bitwy
-          } else if (c.role === 'artillery') {
+          } else if (c.role === 'artillery' || c.role === 'line') {
             order(c, 'hold', home[0], home[1], 0);
           } else {
             // kontratak na słabszą lub zdezorganizowaną rotę w pobliżu
@@ -1058,7 +1295,7 @@ const Sim = (function () {
       return h.toString(16);
     };
     sim.report = function () {
-      const out = { seed, passage, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
+      const out = { seed, passage, map: mapInfo.id, tick, seconds: tick / HZ, result: sim.result, sides: {}, events: events.slice(), timeline: timeline.slice() };
       SIDES.forEach((sn, s) => {
         const surv = {}; for (let i = 0; i < count; i++) if (alive[i] && side[i] === s) { const k = names[type[i]]; surv[k] = (surv[k] || 0) + 1; }
         out.sides[sn] = {
@@ -1070,7 +1307,7 @@ const Sim = (function () {
     };
     return sim;
   }
-  return { create, HZ, DT, CELL, SIDES };
+  return { create, HZ, DT, CELL, SIDES, mapMetrics, rasterize };
 })();
 if (typeof module !== 'undefined') module.exports = Sim;
 /*SIM-END*/
@@ -1090,7 +1327,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192),
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3),
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -1281,6 +1518,12 @@ if (typeof module !== 'undefined') module.exports = Sim;
         const h = 6;
         tile(c, cx, top, HUM[k]); isoBox(c, cx, top, h, '#6b4d2b', '#553b21', '#3d2b17');
         c.fillStyle = '#8e6a3c'; c.fillRect(cx - 9 + (k % 3) * 4, top - h + 3, 10, 1); c.fillRect(cx + 1, top - h + 7, 7, 1);
+      } else if (v === 6) {
+        // zarośla (chaparral): gęsty krzew, ciemna zieleń z jaśniejszymi liśćmi i patykami
+        const h = 12 + (k % 3);
+        tile(c, cx, top, HUM[k]); isoBox(c, cx, top, h, k % 2 ? '#4a7a2e' : '#42702a', '#2f5420', '#1f3a15');
+        for (let t = 0; t < 7; t++) { c.fillStyle = t % 3 ? '#6aa341' : '#223f16'; c.fillRect(cx - 10 + Math.floor(nz(col, r, 60 + t) * 20), top - h + Math.floor(nz(col, r, 70 + t) * 8), 2, 2); }
+        c.fillStyle = '#6b4a2a'; c.fillRect(cx - 3 + (k % 3) * 2, top - h + 3, 1, 4);
       } else if (v === 3) { tile(c, cx, top, DIRT[k]); isoBox(c, cx, top, 8, '#8a6238', '#6c4a2a', '#4e351f'); c.fillStyle = '#b08350'; c.fillRect(cx - 4, top - 6, 3, 1); }
       else if (v === 2) {
         tile(c, cx, top, MOSS[k]);
@@ -1300,14 +1543,25 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const ell = (x, y, R, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R), 0, 0, 7); c.fill(); };
     ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.32)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(60,40,20,0.45)');
     ell(nest[0] - 78, nest[1], 7, '#241508');
-    return PIXI.Texture.from(cv);
+    return cv;
+  }
+  // duże mapy nie mieszczą się w jednej teksturze GPU (limit zwykle 4096-8192 px): teren dzielimy na kafle 2048 px z zakładką 2 px
+  function chunkTerrain(cv) {
+    const box = new PIXI.Container(), T = 2048, ov = 2;
+    for (let y = 0; y < cv.height; y += T) for (let x = 0; x < cv.width; x += T) {
+      const w = Math.min(T + ov, cv.width - x), h = Math.min(T + ov, cv.height - y), t = document.createElement('canvas');
+      t.width = w; t.height = h; t.getContext('2d').drawImage(cv, x, y, w, h, 0, 0, w, h);
+      const sp = new PIXI.Sprite(PIXI.Texture.from(t)); sp.position.set(x, y); box.addChild(sp);
+    }
+    return box;
   }
   /*ISO-END*/
 
   function setupScene(sim) {
     ISO.H = sim.H; world.removeChildren(); gGround.clear(); labels.removeChildren();
     if (!atlas) atlas = makeAntAtlas(sim.names, sim.kinds);
-    terrainSpr = new PIXI.Sprite(makeIsoTerrain(sim));
+    if (terrainSpr) terrainSpr.destroy({ children: true, texture: true, baseTexture: true });
+    terrainSpr = chunkTerrain(makeIsoTerrain(sim));
     antsPC = new PIXI.ParticleContainer(sim.cap, { vertices: true, position: true, rotation: false, uvs: true, tint: true }, 16384, false);
     sprites = []; shown = new Uint8Array(sim.cap); dirOf = new Uint8Array(sim.cap).fill(255);
     for (let i = 0; i < sim.cap; i++) {
@@ -1325,7 +1579,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   }
   function fitCamera() {
     const w = app.screen.width, h = app.screen.height - 150, [cw, ch] = ISO.size(S.sim), z = Math.min(w / cw, h / ch);
-    cam.z = z; cam.x = (w - cw * z) / 2; cam.y = 40 + (h - ch * z) / 2; applyCam();
+    cam.z = z; cam.minZ = Math.min(0.4, z * 0.9); cam.x = (w - cw * z) / 2; cam.y = 40 + (h - ch * z) / 2; applyCam();
   }
   // kamera nie może uciec poza mapę: co najmniej 120 px zawartości zostaje na ekranie
   function applyCam() {
@@ -1340,9 +1594,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
 
   // ---------- bitwa: start / restart ----------
   function startBattle() {
-    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
+    S.sim = Sim.create({ defs: S.defs, seed: S.seed, passage: S.passage, map: S.map, guard: { [S.side]: S.guard }, aiSides: S.observe ? SIDES : SIDES.filter((s) => s !== S.side) });
     S.selected.clear(); S.groups = {}; S.pending = null; S.acc = 0; S.over = false; S.stepMax = 0; S.started = true;
-    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar();
+    setupScene(S.sim); fitCamera(); buildCards(); buildCmdBar(); $('mapName').textContent = S.sim.mapInfo.id + '. ' + S.sim.mapInfo.name;
     $('end').classList.add('hidden'); $('menu').classList.add('hidden'); $('ticker').innerHTML = ''; lastEv = 0;
     if (q.get('autoselect')) for (const c of S.sim.comps) if (SIDES[c.side] === S.side) S.selected.add(c.id);
   }
@@ -1445,7 +1699,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     e.preventDefault();
     if (drag.on && drag.active) { drag.steps = Math.max(-6, Math.min(6, drag.steps + (e.deltaY < 0 ? 1 : -1))); return; } // w trakcie formowania kółko zmienia szerokość szyku
     const r = view.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top;
-    const [cx, cy] = toContainer(sx, sy), nz = Math.max(0.4, Math.min(8, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+    const [cx, cy] = toContainer(sx, sy), nz = Math.max(cam.minZ || 0.4, Math.min(8, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
     cam.z = nz; cam.x = sx - cx * nz; cam.y = sy - cy * nz; applyCam();
   }, { passive: false });
   const keys = {};
@@ -1494,11 +1748,19 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('cWK').onclick = () => { S.side = 'WK'; $('cWK').classList.add('on'); $('cLH').classList.remove('on'); };
   $('cLH').onclick = () => { S.side = 'LH'; $('cLH').classList.add('on'); $('cWK').classList.remove('on'); };
   $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
+  // typ mapy: lista z world.mapTypes; suwak przesmyku działa tylko na mapie z głównym przesmykiem (typ 3)
+  const MAPT = DEFS0.world.mapTypes;
+  for (const id of Object.keys(MAPT).filter((k) => MAPT[k].gen)) { const o = document.createElement('option'); o.value = id; o.textContent = id + '. ' + MAPT[id].name + ' (' + MAPT[id].w + '×' + MAPT[id].h + ')'; $('mMap').appendChild(o); }
+  function syncMapRow() {
+    const mt = MAPT[S.map]; $('mMapDesc').textContent = mt ? mt.desc : '';
+    const has = mt && mt.gen === 'legacy'; $('mPass').disabled = !has; $('mPassRow').style.opacity = has ? 1 : 0.4; $('mPassRow').title = has ? '' : 'Ten typ mapy nie ma głównego przesmyku';
+  }
+  $('mMap').onchange = () => { S.map = +$('mMap').value; syncMapRow(); };
   $('mSeed').onchange = () => { S.seed = Math.max(0, +$('mSeed').value | 0); };
   $('mObs').onchange = () => { S.observe = $('mObs').checked; };
   $('mGuard').onchange = () => { S.guard = $('mGuard').value; };
   $('mStart').onclick = () => { S.seed = Math.max(0, +$('mSeed').value | 0); S.observe = $('mObs').checked; startBattle(); };
-  function syncMenu() { $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen) S.map = 3; $('mMap').value = S.map; syncMapRow(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
   // ---------- drewniany interfejs ----------
   // tekstura desek: cztery deski z usłojeniem, sękami i szwami; używana jako tło paneli (.wood)
@@ -1768,7 +2030,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, get atlas() { return atlas; } };
+  window.__P1 = { S, startBattle, app, cam, SIDES, ISO, world, get atlas() { return atlas; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

@@ -1,0 +1,464 @@
+{
+ "generated": "wykonane: node tests/p1-experiment.js",
+ "seeds": 4,
+ "widths": null,
+ "maps": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "overrides": {},
+ "summary": {
+  "1": {
+   "runs": 4,
+   "winsWK": 0,
+   "winRateWK": 0,
+   "reasons": {
+    "minął czas, obrona utrzymana": 3,
+    "rozbicie atakujących": 1
+   },
+   "seconds": {
+    "min": 446,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 1130,
+    "median": 1131,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 878,
+    "median": 895,
+    "p90": 909,
+    "max": 909
+   },
+   "stepMeanMs": 2.62,
+   "stepMaxMs": 123.9
+  },
+  "2": {
+   "runs": 4,
+   "winsWK": 0,
+   "winRateWK": 0,
+   "reasons": {
+    "minął czas, obrona utrzymana": 3,
+    "rozbicie atakujących": 1
+   },
+   "seconds": {
+    "min": 718,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 1132,
+    "median": 1150,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 898,
+    "median": 920,
+    "p90": 926,
+    "max": 926
+   },
+   "stepMeanMs": 1.88,
+   "stepMaxMs": 60.3
+  },
+  "3": {
+   "runs": 4,
+   "winsWK": 3,
+   "winRateWK": 0.75,
+   "reasons": {
+    "rozbicie atakujących": 1,
+    "Wielka Kolonia zajęła gniazdo": 2,
+    "zniszczenie obrońców": 1
+   },
+   "seconds": {
+    "min": 413,
+    "median": 561,
+    "p90": 578,
+    "max": 578
+   },
+   "lostWK": {
+    "min": 1069,
+    "median": 1150,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 874,
+    "median": 1091,
+    "p90": 1102,
+    "max": 1102
+   },
+   "stepMeanMs": 4.24,
+   "stepMaxMs": 83.7
+  },
+  "4": {
+   "runs": 4,
+   "winsWK": 2,
+   "winRateWK": 0.5,
+   "reasons": {
+    "Wielka Kolonia zajęła gniazdo": 2,
+    "rozbicie atakujących": 1,
+    "minął czas, obrona utrzymana": 1
+   },
+   "seconds": {
+    "min": 134,
+    "median": 853,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 260,
+    "median": 1146,
+    "p90": 1178,
+    "max": 1178
+   },
+   "lostLH": {
+    "min": 44,
+    "median": 833,
+    "p90": 870,
+    "max": 870
+   },
+   "stepMeanMs": 5.84,
+   "stepMaxMs": 61.8
+  },
+  "5": {
+   "runs": 4,
+   "winsWK": 2,
+   "winRateWK": 0.5,
+   "reasons": {
+    "Wielka Kolonia zajęła gniazdo": 2,
+    "minął czas, obrona utrzymana": 2
+   },
+   "seconds": {
+    "min": 580,
+    "median": 901,
+    "p90": 901,
+    "max": 901
+   },
+   "lostWK": {
+    "min": 561,
+    "median": 837,
+    "p90": 1048,
+    "max": 1048
+   },
+   "lostLH": {
+    "min": 224,
+    "median": 513,
+    "p90": 735,
+    "max": 735
+   },
+   "stepMeanMs": 6.22,
+   "stepMaxMs": 60.6
+  }
+ },
+ "runs": [
+  {
+   "seed": 1,
+   "map": 1,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1131,
+   "lostLH": 878,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.424462380410655,
+   "stepMaxMs": 123.910772,
+   "hash": "c1c69ae4",
+   "controlLost": 31
+  },
+  {
+   "seed": 2,
+   "map": 1,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1130,
+   "lostLH": 895,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.303883893229749,
+   "stepMaxMs": 75.777315,
+   "hash": "108f239d",
+   "controlLost": 27
+  },
+  {
+   "seed": 3,
+   "map": 1,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1131,
+   "lostLH": 909,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.174974768257483,
+   "stepMaxMs": 50.600422,
+   "hash": "e58aa630",
+   "controlLost": 30
+  },
+  {
+   "seed": 4,
+   "map": 1,
+   "winner": "LH",
+   "reason": "rozbicie atakujących",
+   "seconds": 446,
+   "lostWK": 1178,
+   "lostLH": 890,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.574622465022417,
+   "stepMaxMs": 86.379804,
+   "hash": "d826d196",
+   "controlLost": 32
+  },
+  {
+   "seed": 1,
+   "map": 2,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1135,
+   "lostLH": 920,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.9598368505549424,
+   "stepMaxMs": 46.928047,
+   "hash": "b873f129",
+   "controlLost": 28
+  },
+  {
+   "seed": 2,
+   "map": 2,
+   "winner": "LH",
+   "reason": "rozbicie atakujących",
+   "seconds": 718,
+   "lostWK": 1178,
+   "lostLH": 905,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 2.050300511768796,
+   "stepMaxMs": 46.240321,
+   "hash": "3a19922b",
+   "controlLost": 28
+  },
+  {
+   "seed": 3,
+   "map": 2,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1150,
+   "lostLH": 926,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.7609426051609443,
+   "stepMaxMs": 60.318996,
+   "hash": "62a92491",
+   "controlLost": 32
+  },
+  {
+   "seed": 4,
+   "map": 2,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1132,
+   "lostLH": 898,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 1.7551331185904602,
+   "stepMaxMs": 30.20452,
+   "hash": "c50c84be",
+   "controlLost": 27
+  },
+  {
+   "seed": 1,
+   "map": 3,
+   "winner": "LH",
+   "reason": "rozbicie atakujących",
+   "seconds": 462,
+   "lostWK": 1178,
+   "lostLH": 874,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 4.5958593372294345,
+   "stepMaxMs": 51.504682,
+   "hash": "768746d2",
+   "controlLost": 28
+  },
+  {
+   "seed": 2,
+   "map": 3,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 413,
+   "lostWK": 1069,
+   "lostLH": 979,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 5.141466197820811,
+   "stepMaxMs": 58.491694,
+   "hash": "4039d59e",
+   "controlLost": 27
+  },
+  {
+   "seed": 3,
+   "map": 3,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 561,
+   "lostWK": 1150,
+   "lostLH": 1091,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.7355663787878712,
+   "stepMaxMs": 83.726228,
+   "hash": "d5031a",
+   "controlLost": 42
+  },
+  {
+   "seed": 4,
+   "map": 3,
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 578,
+   "lostWK": 1149,
+   "lostLH": 1102,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.4831416997404854,
+   "stepMaxMs": 62.85924,
+   "hash": "86df92e7",
+   "controlLost": 40
+  },
+  {
+   "seed": 1,
+   "map": 4,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 429,
+   "lostWK": 977,
+   "lostLH": 662,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 5.964919716899739,
+   "stepMaxMs": 50.249885,
+   "hash": "4967fc6a",
+   "controlLost": 15
+  },
+  {
+   "seed": 2,
+   "map": 4,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 134,
+   "lostWK": 260,
+   "lostLH": 44,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 8.962948922761212,
+   "stepMaxMs": 61.750003,
+   "hash": "6964c190",
+   "controlLost": 3
+  },
+  {
+   "seed": 3,
+   "map": 4,
+   "winner": "LH",
+   "reason": "rozbicie atakujących",
+   "seconds": 853,
+   "lostWK": 1178,
+   "lostLH": 833,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 5.02634161342321,
+   "stepMaxMs": 45.812966,
+   "hash": "4cf8ca91",
+   "controlLost": 31
+  },
+  {
+   "seed": 4,
+   "map": 4,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 1146,
+   "lostLH": 870,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 3.3944423951720335,
+   "stepMaxMs": 51.649792,
+   "hash": "2592dd38",
+   "controlLost": 28
+  },
+  {
+   "seed": 1,
+   "map": 5,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 580,
+   "lostWK": 1048,
+   "lostLH": 735,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 5.544046503879338,
+   "stepMaxMs": 45.230267,
+   "hash": "e4dc224d",
+   "controlLost": 22
+  },
+  {
+   "seed": 2,
+   "map": 5,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 837,
+   "lostLH": 395,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 6.222434655271919,
+   "stepMaxMs": 60.567543,
+   "hash": "491c25c0",
+   "controlLost": 11
+  },
+  {
+   "seed": 3,
+   "map": 5,
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 876,
+   "lostWK": 636,
+   "lostLH": 513,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 6.19763919777394,
+   "stepMaxMs": 56.880097,
+   "hash": "5f23b6ee",
+   "controlLost": 16
+  },
+  {
+   "seed": 4,
+   "map": 5,
+   "winner": "LH",
+   "reason": "minął czas, obrona utrzymana",
+   "seconds": 901,
+   "lostWK": 561,
+   "lostLH": 224,
+   "startWK": 1082,
+   "startLH": 1002,
+   "stepMeanMs": 6.905408835405109,
+   "stepMaxMs": 47.153358,
+   "hash": "1f9a085f",
+   "controlLost": 7
+  }
+ ]
+}
