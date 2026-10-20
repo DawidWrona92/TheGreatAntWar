@@ -192,8 +192,10 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Rodzaj scenariusza: czy jest gniazdo (cel i mur), jak zachowuje się AI każdej strony (advance: idzie do celu, hold: broni pozycji) i jak kończy się bitwa (nest: zajęcie gniazda lub zniszczenie, z upływem czasu wygrywa obrońca; annihilate: zniszczenie przeciwnika, z upływem czasu wygrywa strona z większym odsetkiem ocalałych).",
       "bitwa": { "name": "Bitwa", "nest": false, "posture": { "WK": "advance", "LH": "advance" }, "end": "annihilate", "reinforce": { "WK": false, "LH": false },
                  "desc": "Standardowe starcie dwóch armii na wybranej mapie. Nie ma gniazda ani celu terenowego: obie strony idą na siebie, wygrywa ten, kto zniszczy przeciwnika, a po upływie czasu ten, kto ma większy odsetek ocalałych." },
-      "oblezenie": { "name": "Oblężenie", "nest": true, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest", "reinforce": { "WK": false, "LH": true },
+      "oblezenie": { "name": "Oblężenie płaskie (stare)", "hidden": true, "nest": true, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest", "reinforce": { "WK": false, "LH": true },
                      "desc": "Atakujący (Wielka Kolonia) szturmuje gniazdo, obrońca (Lake Hodges) broni go i jako jedyny uzupełnia straty (atakujący nie ma uzupełnień). Atakujący wygrywa, zajmując gniazdo lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Na tym etapie bez przewagi budżetowej atakującego (budżety są w etapie 3) i bez wnętrza kopca (etap 5)." },
+      "kopiec": { "name": "Oblężenie", "nest": true, "wall": false, "posture": { "WK": "advance", "LH": "hold" }, "end": "nest", "reinforce": { "WK": false, "LH": true }, "map": "kopiec", "timeLimit": 1500,
+                  "desc": "Szturm na wielopoziomowy kopiec. Atakujący (Wielka Kolonia) startuje na niewielkim obszarze przed kopcem i musi przedostać się przez wąskie wejścia, korytarze i rampy na kolejne poziomy do serca gniazda; obrońca (Lake Hodges) siedzi wewnątrz, jako jedyny uzupełnia straty, a spanikowane roty cofają się do serca po korytarzach. Atakujący wygrywa, zajmując serce lub niszcząc obrońców, obrońca wygrywa po upływie czasu. Mapa jest stała (kopiec), wybór typu mapy nie działa." },
       "przeprawa": { "name": "Przeprawa", "nest": false, "map": "stream", "posture": { "WK": "advance", "LH": "hold" }, "end": "annihilate", "reinforce": { "WK": false, "LH": false },
                      "desc": "Potok przecina pole bitwy. Woda jest nieprzejezdna, a przejść można tylko po łańcuchach dużych kamieni (trzy przeprawy o różnej szerokości). Atakujący przeprawia się, obrońca trzyma drugi brzeg; woda nie zasłania strzału. Wygrywa zniszczenie przeciwnika, a po upływie czasu większy odsetek ocalałych. Mapa jest stała (potok), wybór typu mapy nie działa." }
     },
@@ -211,6 +213,11 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "stream": { "name": "Potok z kamieniami", "gen": "stream", "hidden": true, "w": 3000, "h": 3200, "hills": { "n": [3, 5], "h": [20, 34], "r": [260, 400], "banks": { "east": [26, 300], "west": [16, 280] } }, "cover": 40, "minWidth": 44, "scatter": 26,
                   "fords": [ { "dy": -1200, "stoneR": [58, 64] }, { "dy": 0, "stoneR": [44, 48] }, { "dy": 1200, "stoneR": [58, 64] } ],
                   "desc": "Potok o szerokości ok. 176 jednostek przecina mapę z północy na południe. Trzy brody (łańcuchy trzech dużych kamieni) leżą ok. 1200 jednostek od siebie: środkowy jest wąski (łatwy do obrony) i najbliższy armiom, dwa skrajne są szerokie i odległe. Przejście armii z brodu na bród trwa od ok. 20 s (biegacze) do ponad 70 s (tarany), więc o każdy bród toczy się osobna bitwa." },
+      "kopiec": { "name": "Kopiec (wielopoziomowe gniazdo)", "gen": "mound", "hidden": true, "w": 2400, "h": 1500,
+                  "mound": { "center": [104, 47], "heartHalf": 8, "corridor": 5, "wall": 4, "rings": 3, "heights": [0, 12, 24, 36], "gates": [-14, 14], "gateW": 4, "rampW": 3,
+                             "ramps": [ { "from": 0, "sides": ["N", "S"], "at": 0.5 }, { "from": 1, "sides": ["E", "W"], "at": 0.5 }, { "from": 2, "sides": ["N", "S"], "at": 0.5 } ],
+                             "staging": [60, 250, 700, 1250], "captureR": 96 },
+                  "desc": "Kopiec o trzech poziomach: pierścienie-korytarze (szerokość 80) wokół serca gniazda, każdy wyżej od poprzedniego (podłoga 0, 12, 24, 36) i oddzielony ścianą grubości 64. Do wyższego poziomu prowadzą tylko rampy-tunele szerokości 48, do kopca dwa wejścia (szerokość 64) od zachodu. Atakujący startuje na małym polu przed kopcem, serce gniazda leży w centrum." },
       "5": { "name": "Chaparral: gąszcz wąskich przejść", "gen": "thicket", "w": 3000, "h": 1500, "hills": { "n": [3, 5], "h": [22, 38], "r": [260, 400] }, "pitch": 116, "wallR": 28, "jitter": 6, "braid": 0.04, "doors": 4, "follow": true, "cover": 70, "minWidth": 44,
              "mix": { "brush": 0.62, "wood": 0.18, "root": 0.12, "stone": 0.08 },
              "desc": "Gęsty podszyt w stylu kalifornijskiego chaparralu: ściany z krzewów, pni i kamieni tworzą wąskie, kręte korytarze o szerokości ok. 48-60 jednostek (najszersza trasa zwęża się do ok. 48), z wieloma ślepymi zaułkami i czterema wejściami w czołowych ścianach pasa. To korytarze między ścianami, a nie zadaszone tunele: nic tu jeszcze nie ukrywa jednostek (to etap 4). Największa mapa (o ok. 57% więcej terenu do chodzenia niż typ 3)." }
@@ -287,25 +294,25 @@ table.rep{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}tabl
       "comment": "Wzorce armii AI: udział budżetu na typ jednostki dla każdej frakcji (sides = frakcje, które mają dość jednostek w puli), typ gwardii, przydatność w scenariuszach (fit: atakujący att / obrońca def) i opis. Wybór 'auto' bierze wzorzec o najwyższym fit zależnie od scenariusza i roli, z premią z tabeli counters, gdy znana jest armia przeciwnika.",
       "zrownowazona": { "name": "Zrównoważona", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
         "shares": { "WK": { "infantry": 0.5, "ciezki": 0.1, "taran": 0.12, "pekacz": 0.1, "biegacz": 0.18 }, "LH": { "infantry": 0.3, "ciezki": 0.2, "plujka": 0.25, "odzwierny": 0.25 } },
-        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 1.0 }, "przeprawa": { "att": 1.0, "def": 1.0 } }, "desc": "Wszystkiego po trochu: masa piechoty, ciężcy, wsparcie i specjaliści frakcji." },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 1.0 }, "kopiec": { "att": 1.0, "def": 1.0 }, "przeprawa": { "att": 1.0, "def": 1.0 } }, "desc": "Wszystkiego po trochu: masa piechoty, ciężcy, wsparcie i specjaliści frakcji." },
       "ciezka": { "name": "Ciężka", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
         "shares": { "WK": { "ciezki": 0.5, "taran": 0.22, "infantry": 0.18, "pekacz": 0.1 }, "LH": { "ciezki": 0.5, "odzwierny": 0.2, "infantry": 0.15, "plujka": 0.15 } },
-        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 0.9 }, "przeprawa": { "att": 0.8, "def": 0.9 } }, "desc": "Skupiona na ciężkich wojownikach (zdrowie 24, pancerz 30%): wytrzymała i wolna." },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 1.0, "def": 0.9 }, "kopiec": { "att": 1.0, "def": 0.9 }, "przeprawa": { "att": 0.8, "def": 0.9 } }, "desc": "Skupiona na ciężkich wojownikach (zdrowie 24, pancerz 30%): wytrzymała i wolna." },
       "lekka": { "name": "Lekka masa", "sides": ["WK", "LH"], "guard": { "WK": "infantry", "LH": "infantry" },
         "shares": { "WK": { "infantry": 0.72, "pekacz": 0.13, "biegacz": 0.15 }, "LH": { "infantry": 0.75, "plujka": 0.25 } },
-        "fit": { "bitwa": 0.8, "oblezenie": { "att": 0.7, "def": 0.5 }, "przeprawa": { "att": 0.6, "def": 0.5 } }, "desc": "Dużo tanich wojowników: liczebność kosztem jakości, szybka (prędkość 30 zamiast 22)." },
+        "fit": { "bitwa": 0.8, "oblezenie": { "att": 0.7, "def": 0.5 }, "kopiec": { "att": 0.7, "def": 0.5 }, "przeprawa": { "att": 0.6, "def": 0.5 } }, "desc": "Dużo tanich wojowników: liczebność kosztem jakości, szybka (prędkość 30 zamiast 22)." },
       "flankujaca": { "name": "Flankująca (szybka)", "sides": ["WK"], "guard": { "WK": "biegacz" },
         "shares": { "WK": { "biegacz": 0.42, "infantry": 0.33, "ciezki": 0.1, "pekacz": 0.15 } },
-        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 0.6 }, "przeprawa": { "att": 1.3, "def": 0.8 } }, "desc": "Wielu biegaczy (prędkość 62, polują na plujki) i lekka piechota: manewr i uderzenia z boku, kosztem wytrzymałości." },
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 0.6 }, "kopiec": { "att": 0.8, "def": 0.6 }, "przeprawa": { "att": 1.3, "def": 0.8 } }, "desc": "Wielu biegaczy (prędkość 62, polują na plujki) i lekka piechota: manewr i uderzenia z boku, kosztem wytrzymałości." },
       "szturmowa": { "name": "Szturmowa (tarany i pękacze)", "sides": ["WK"], "guard": { "WK": "ciezki" },
         "shares": { "WK": { "taran": 0.32, "pekacz": 0.2, "infantry": 0.38, "ciezki": 0.1 } },
-        "fit": { "bitwa": 0.9, "oblezenie": { "att": 1.3, "def": 0.6 }, "przeprawa": { "att": 0.8, "def": 0.6 } }, "desc": "Tarany i pękacze do przełamania linii i odźwiernych, z piechotą w tle." },
+        "fit": { "bitwa": 0.9, "oblezenie": { "att": 1.3, "def": 0.6 }, "kopiec": { "att": 1.3, "def": 0.6 }, "przeprawa": { "att": 0.8, "def": 0.6 } }, "desc": "Tarany i pękacze do przełamania linii i odźwiernych, z piechotą w tle." },
       "wytrwala": { "name": "Wytrwała (na wyczerpanie)", "sides": ["WK", "LH"], "guard": { "WK": "ciezki", "LH": "ciezki" },
         "shares": { "WK": { "ciezki": 0.4, "infantry": 0.4, "pekacz": 0.2 }, "LH": { "odzwierny": 0.3, "ciezki": 0.3, "plujka": 0.25, "infantry": 0.15 } },
-        "fit": { "bitwa": 0.9, "oblezenie": { "att": 0.7, "def": 1.2 }, "przeprawa": { "att": 0.7, "def": 1.1 } }, "desc": "Wytrzymałe i trudne do ruszenia roty (ciężcy, odźwierni, pękacze wiążące wroga) i stałe uzupełnienia: wyczerpuje przeciwnika." },
+        "fit": { "bitwa": 0.9, "oblezenie": { "att": 0.7, "def": 1.2 }, "kopiec": { "att": 0.7, "def": 1.2 }, "przeprawa": { "att": 0.7, "def": 1.1 } }, "desc": "Wytrzymałe i trudne do ruszenia roty (ciężcy, odźwierni, pękacze wiążące wroga) i stałe uzupełnienia: wyczerpuje przeciwnika." },
       "dystansowa": { "name": "Dystansowa (plujki)", "sides": ["LH"], "guard": { "LH": "ciezki" },
         "shares": { "LH": { "plujka": 0.4, "odzwierny": 0.2, "ciezki": 0.25, "infantry": 0.15 } },
-        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 1.15 }, "przeprawa": { "att": 0.7, "def": 1.3 } }, "desc": "Dużo plujek (kwas, zasięg 80, obszarowo) osłoniętych ciężką piechotą i odźwiernymi." }
+        "fit": { "bitwa": 1.0, "oblezenie": { "att": 0.8, "def": 1.15 }, "kopiec": { "att": 0.8, "def": 1.15 }, "przeprawa": { "att": 0.7, "def": 1.3 } }, "desc": "Dużo plujek (kwas, zasięg 80, obszarowo) osłoniętych ciężką piechotą i odźwiernymi." }
     },
     "counters": [
       { "vs": "ranged", "min": 0.25, "boost": { "flankujaca": 1.5, "szturmowa": 1.2 }, "why": "szybcy polują na plujki" },
@@ -439,6 +446,40 @@ const Sim = (function () {
     }
     return grid;
   }
+  // ---------- kopiec (etap 5): wielopoziomowe gniazdo ----------
+  // Poziomy to pierścienie-korytarze wokół serca gniazda, każdy na własnej wysokości, oddzielone grubymi ścianami (ziemia);
+  // przejścia między poziomami to rampy-tunele przez ściany, jedyne przejście do wyższego pierścienia. Wejścia zewnętrzne to przerwy w murze
+  // zewnętrznym od zachodu. Siatka, wysokości i punkty orientacyjne wynikają wyłącznie z world.mound (komórki; odległość to norma maksimum od środka).
+  const MOUND_CACHE = new Map();
+  function moundBuild(world) {
+    const M = world.mound, key = JSON.stringify(M) + '|' + world.w + 'x' + world.h;
+    if (MOUND_CACHE.has(key)) return MOUND_CACHE.get(key);
+    const COLS = Math.ceil(world.w / CELL), ROWS = Math.ceil(world.h / CELL), N = COLS * ROWS, grid = new Uint8Array(N), height = new Float32Array(N);
+    const [cx, cy] = M.center, R = M.rings, hh = M.heights;
+    // pasma od środka: serce [0, heartHalf), potem na przemian ściana i pierścień (wewnątrz do zewnątrz), na końcu mur zewnętrzny
+    const bands = []; let d = M.heartHalf; bands.push({ kind: 'heart', lo: 0, hi: d, level: R, h: hh[R] });
+    for (let k = R - 1; k >= 0; k--) { bands.push({ kind: 'wall', k, lo: d, hi: d + M.wall, h: hh[k + 1] }); d += M.wall; bands.push({ kind: 'ring', k, lo: d, hi: d + M.corridor, level: k, h: hh[k] }); d += M.corridor; }
+    bands.push({ kind: 'outer', lo: d, hi: d + M.wall, h: hh[0] }); const outerHalf = d + M.wall;
+    const ringOf = (k) => bands.find((b) => b.kind === 'ring' && b.k === k), wallOf = (k) => bands.find((b) => b.kind === 'wall' && b.k === k);
+    const sideOf = (ox, oy) => (Math.abs(ox) > Math.abs(oy) ? (ox < 0 ? 'W' : 'E') : (oy < 0 ? 'N' : 'S'));
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const i = r * COLS + c, ox = c + 0.5 - cx, oy = r + 0.5 - cy, dd = Math.max(Math.abs(ox), Math.abs(oy)), b = bands.find((q) => dd >= q.lo && dd < q.hi);
+      if (r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1) { grid[i] = 1; continue; }
+      if (!b) continue;
+      const side = sideOf(ox, oy), along = side === 'N' || side === 'S' ? ox : oy;
+      height[i] = b.h;
+      if (b.kind === 'heart' || b.kind === 'ring') continue;
+      if (b.kind === 'outer') { if (side === 'W' && M.gates.some((g) => Math.abs(oy - g) < M.gateW / 2)) continue; grid[i] = 3; continue; }
+      // ściana między pierścieniem k i k+1: rampa tam, gdzie ją przewidziano
+      const rp = M.ramps.find((q) => q.from === b.k && q.sides.includes(side) && Math.abs(along - q.at) < M.rampW / 2);
+      if (rp) { height[i] = hh[b.k] + (hh[b.k + 1] - hh[b.k]) * (b.hi - dd) / (b.hi - b.lo); continue; }
+      grid[i] = 3;
+    }
+    const heart = [cx * CELL, cy * CELL];
+    const out = { grid, height, COLS, ROWS, bands, outerHalf, heart, ringOf, wallOf, sideOf, center: [cx, cy] };
+    MOUND_CACHE.set(key, out); return out;
+  }
+  const buildGrid = (world) => (world.mound ? moundBuild(world).grid.slice() : rasterize(world, world.map.obstacles));
   const isWall = (v) => v === 1 || v === 3 || v === 4 || v === 5 || v === 6 || v === 7;
 
   // Metryki układu terenu: odsetek otwartego terenu, szerokość najszerszej trasy w jej najwęższym miejscu
@@ -640,7 +681,8 @@ const Sim = (function () {
   function applyScenario(defs, id) {
     const cfg = defs.world.scenarioTypes[id];
     if (!cfg || !cfg.posture) throw new Error('Nieznany scenariusz: ' + id);
-    defs.world.nestWall = cfg.nest;
+    if (cfg.timeLimit) defs.world.timeLimit = cfg.timeLimit;   // marsz po pierścieniach kopca i walka w wejściach trwają dłużej niż na płaskiej mapie
+    defs.world.nestWall = cfg.wall != null ? cfg.wall : cfg.nest;   // wall: false, gdy gniazdo jest częścią mapy (kopiec), a nie murem z rasterize
     defs.scenario.mode = { id, nest: cfg.nest, posture: cfg.posture, end: cfg.end, reinforce: cfg.reinforce || { WK: true, LH: true } };
     return { id, name: cfg.name, desc: cfg.desc, nest: cfg.nest, end: cfg.end, map: cfg.map };
   }
@@ -658,6 +700,16 @@ const Sim = (function () {
       sd.spawn = [sd.spawn[0] + sx, sd.spawn[1] + dy, sd.spawn[2], sd.spawn[3]];
     }
     const info = { id: String(mapId), name: mt.name, desc: mt.desc, gen: mt.gen, w: W, h: H };
+    world.mound = null;
+    if (mt.gen === 'mound') {
+      // kopiec: stały układ (bez losowania), serce gniazda jest celem i miejscem odwrotu; korytarze wymagają marszu za kotwicą roty
+      world.mound = JSON.parse(JSON.stringify(mt.mound)); world.hills = null; world.followAnchor = true; world.gap = null; world.fords = null;
+      const B = moundBuild(world); world.nest = B.heart.slice(); world.nestR = mt.mound.captureR; world.retreatWK = [mt.mound.staging[0] + 20, H / 2];
+      world.map = { obstacles: [], coverRandom: 0 };
+      const sp = defs.scenario.sides.LH.spawn = [world.nest[0] + 40, world.nest[1] - 24, 56, 48];   // uzupełnienia obrońcy pojawiają się w sercu
+      info.attempts = 1; info.widthOk = true; info.metrics = { mound: true }; void sp;
+      return info;
+    }
     if (mt.gen === 'legacy') {
       world.gap = world.gap.slice(); world.map = { obstacles: world.map.obstacles, coverRandom: world.map.coverRandom };
       info.metrics = mapMetrics(world, rasterize(world, world.map.obstacles)); info.attempts = 1;
@@ -690,7 +742,7 @@ const Sim = (function () {
   function budgetFor(defs, scenarioId, side, tier) {
     const A = defs.army, base = A.budgets[tier];
     if (base == null) throw new Error('Nieznany poziom budżetu: ' + tier);
-    return Math.round(scenarioId === 'oblezenie' && side === defs.scenario.attacker ? base * A.siegeAttackerRatio : base);
+    return Math.round((scenarioId === 'oblezenie' || scenarioId === 'kopiec') && side === defs.scenario.attacker ? base * A.siegeAttackerRatio : base);
   }
   // lista naruszeń reguł: pula frakcji, liczba dowódców, rozmiary rot, budżet
   function armyProblems(defs, side, a, budget) {
@@ -705,6 +757,86 @@ const Sim = (function () {
     if (cost > budget) out.push('koszt armii ' + cost + ' przekracza budżet ' + budget);
     return out;
   }
+  // Obrona kopca: roty stoją w odcinkach prostych korytarzy pierścieni (kolumną wzdłuż korytarza, twarzą w stronę, z której idzie atakujący),
+  // elitarna gwardia dowódcy w sercu. Odcinki omijają ujścia ramp i wejść; rota musi się zmieścić w odcinku, inaczej błąd „brak miejsca”.
+  function moundDist(B) {
+    if (B.dist) return B.dist;
+    const C = B.COLS, N = B.COLS * B.ROWS, D = new Int32Array(N).fill(-1), src = Math.floor(B.ROWS / 2) * C + 8;
+    // odległość (w komórkach, 4-sąsiedztwo) od środka pola startu atakującego; wolne komórki to podłoga (0 i 2)
+    const q = [src]; D[src] = 0;
+    for (let h = 0; h < q.length; h++) { const i = q[h]; for (const j of [i - 1, i + 1, i - C, i + C]) if (j >= 0 && j < N && D[j] < 0 && (B.grid[j] === 0 || B.grid[j] === 2)) { D[j] = D[i] + 1; q.push(j); } }
+    return (B.dist = D);
+  }
+  function moundSegments(world, B) {
+    const M = world.mound, [cx, cy] = M.center, D = moundDist(B), C = B.COLS, segs = [];
+    const dAt = (ox, oy) => D[Math.floor(cy + oy) * C + Math.floor(cx + ox)];
+    for (let k = 0; k < M.rings; k++) {
+      const rb = B.ringOf(k), cc = (rb.lo + rb.hi) / 2, half = rb.lo - 1;
+      for (const side of ['N', 'S', 'W', 'E']) {
+        const horiz = side === 'N' || side === 'S', sg = side === 'N' || side === 'W' ? -1 : 1;
+        // przerwy: ujścia ramp z poziomu k-1 (z zewnątrz) i wyjścia na k+1 oraz wejścia zewnętrzne
+        const gaps = [];
+        for (const rp of M.ramps) if ((rp.from === k || rp.from === k - 1) && rp.sides.includes(side)) gaps.push(rp.at);
+        if (k === 0 && side === 'W') for (const g of M.gates) gaps.push(g);
+        gaps.sort((p, q) => p - q);
+        let a0 = -half; const cuts = [];
+        for (const g of gaps) { cuts.push([a0, g - M.rampW / 2 - 1]); a0 = g + M.rampW / 2 + 1; } cuts.push([a0, half]);
+        for (const [lo, hi] of cuts) if (hi - lo >= 6) {
+          const pt = (a) => (horiz ? [a, sg * cc] : [sg * cc, a]);
+          const e0 = pt(lo), e1 = pt(hi), d0 = dAt(e0[0], e0[1]), d1 = dAt(e1[0], e1[1]);
+          segs.push({ k, side, horiz, lo, hi, cc: sg * cc, towardHigh: d1 < d0, dMin: Math.min(d0, d1), dMax: Math.max(d0, d1), cursor: 0 });
+        }
+      }
+    }
+    return segs;
+  }
+  function layoutMoundDefense(defs, a, ctx) {
+    const A = defs.army, world = ctx.world, M = world.mound, B = moundBuild(world), U = defs.units, [cx, cy] = M.center, W16 = M.corridor * CELL;
+    const classes = ARMY_CLASSES.LH, out = [], items = [], segs = moundSegments(world, B);
+    const info = (type, size) => {
+      const isCmd = type === '@cmd', mr = isCmd ? U[a.guard].radius * 1.1 : U[type].radius, n = isCmd ? A.guardSize + 1 : size, s = Math.max(SPACING, mr * 2.1);
+      const cols = Math.max(2, Math.floor((W16 - 2 * (mr + 2)) / s) + 1), rows = Math.ceil(n / cols);
+      return { type, size, n, s, cols, len: rows * s + 10, cls: classes.findIndex((g) => g.includes(type)) };
+    };
+    for (let k = 0; k < a.commanders; k++) items.push(info('@cmd', 0));
+    for (const c of a.companies) items.push(info(c.type, c.size));
+    items.sort((p, q) => p.cls - q.cls || q.size - p.size);
+    // pierścienie wg klasy: odźwierni i ciężka piechota z przodu (zewnętrzne), plujki głębiej, dowódcy w sercu
+    const pref = { odzwierny: [0, 1], plujka: [1, 2, 0], infantry: [0, 1, 2, -1], ciezki: [0, 1, 2, -1] };
+    const roleOf = (type) => (type === '@cmd' ? 'reserve' : A.roles.LH[type]);
+    const emit = (it, x, y, face) => out.push({ role: roleOf(it.type), at: [Math.round(x), Math.round(y)], face, units: it.type === '@cmd' ? { '@guard': A.guardSize, dowodca: 1 } : { [it.type]: it.size }, delay: 0, spacing: 0, fcols: it.cols });
+    // serce: swobodne bloki w komnacie (nie ma korytarza), twarzą do północnej lub południowej rampy; pakowanie od północy, najpierw gwardia dowódcy
+    const hx = cx * CELL, hy = cy * CELL, hr = M.heartHalf * CELL - 14, placed = [];
+    const heartPlace = (it) => {
+      const cols = Math.max(2, Math.min(Math.floor(2 * hr / it.s), Math.ceil(Math.sqrt(it.n * 1.1)))), rows = Math.ceil(it.n / cols), w = cols * it.s, d = rows * it.s;
+      for (let y = hy - hr; y + d <= hy + hr; y += 8) for (let x = hx - hr; x + w <= hx + hr; x += 8) {
+        if (placed.some((q) => x < q[2] + 6 && x + w > q[0] - 6 && y < q[3] + 6 && y + d > q[1] - 6)) continue;
+        placed.push([x, y, x + w, y + d]);
+        emit(Object.assign({}, it, { cols }), x + w / 2, y + d / 2, y + d / 2 < hy ? -Math.PI / 2 : Math.PI / 2); return true;
+      }
+      return false;
+    };
+    // rota o fcols kolumnach w odcinku ma szerokość korytarza; głębokość rows * s leży wzdłuż osi korytarza
+    const fixed = items.filter((it) => it.type === '@cmd'), rest = items.filter((it) => it.type !== '@cmd');
+    for (const it of fixed) if (!heartPlace(it)) throw new Error('brak miejsca w kopcu: gwardia dowódcy');
+    for (const it of rest) {
+      let done = false;
+      for (const k of pref[it.type]) {
+        if (k === -1) { if (heartPlace(it)) { done = true; break; } continue; }
+        const cand = segs.filter((g) => g.k === k && (g.hi - g.lo) * CELL - g.cursor >= it.len);
+        if (!cand.length) continue;
+        // klasy frontowe: odcinek najbliżej atakującego; plujki: najdalej
+        const front = it.cls === 0 || it.type === 'infantry' || it.type === 'ciezki';
+        cand.sort((p, q) => (front ? p.dMin - q.dMin : q.dMax - p.dMax) || (q.hi - q.lo) - (p.hi - p.lo));
+        const g = cand[0], start = g.towardHigh ? g.hi * CELL - g.cursor : g.lo * CELL + g.cursor;
+        const along = start + (g.towardHigh ? -it.len / 2 : it.len / 2), x = g.horiz ? hx + along : hx + g.cc * CELL, y = g.horiz ? hy + g.cc * CELL : hy + along;
+        const face = g.horiz ? (g.towardHigh ? 0 : Math.PI) : (g.towardHigh ? Math.PI / 2 : -Math.PI / 2);
+        emit(it, x, y, face); g.cursor += it.len; done = true; break;
+      }
+      if (!done) throw new Error('brak miejsca w kopcu: ' + it.type + ' ' + it.size);
+    }
+    return out;
+  }
   // odcisk roty w szyku liniowym (szerokość wzdłuż frontu, głębokość wzdłuż kierunku marszu); wzór jak w repack
   function footprint(defs, type, size, guard, tight) {
     const U = defs.units, mr = type === '@cmd' ? U[guard].radius * 1.1 : U[type].radius, n = type === '@cmd' ? defs.army.guardSize + 1 : size;
@@ -714,14 +846,16 @@ const Sim = (function () {
   // Rozmieszcza rotę po rocie w strefie startu strony (kolumny od frontu do tyłu, klasy razem); gdy się nie mieści, rzuca błąd
   // najpierw zwykły odstęp w szyku; gdy armia się nie mieści, ciaśniejszy (9,5 zamiast 11), a dopiero potem błąd
   function layoutArmy(defs, side, a, ctx) {
+    if (ctx.world.mound && side === 'LH') return layoutMoundDefense(defs, a, ctx);
     try { return layoutArmyAt(defs, side, a, ctx, false); } catch (e) { if (!/brak miejsca/.test(e.message)) throw e; }
     return layoutArmyAt(defs, side, a, ctx, true);
   }
   function layoutArmyAt(defs, side, a, ctx, tight) {
     const A = defs.army, world = ctx.world, W = world.w, H = world.h, Z = zonesFor(W, H, world.nest), dy = (H - 1200) / 2, east = side === 'LH';
-    const xFront = east ? (world.gap ? world.gap[0] + 90 : W - 1040) : 425, // 425: ściany czołowe gąszczu (mapy 4 i 5) wchodzą w strefę do ok. x = 440
-       xBack = east ? (ctx.mode.nest ? W - 340 : W - 110) : 30;
-    const y0 = east ? dy + 250 : Math.max(70, Z.wk[1]), y1 = east ? dy + 950 : Math.min(H - 70, Z.wk[3]), face = east ? Math.PI : 0;
+    const MS = world.mound && !east ? world.mound.staging : null;   // kopiec: atakujący stoi na małym polu przed kopcem
+    const xFront = MS ? MS[2] - 10 : east ? (world.gap ? world.gap[0] + 90 : W - 1040) : 425, // 425: ściany czołowe gąszczu (mapy 4 i 5) wchodzą w strefę do ok. x = 440
+       xBack = MS ? MS[0] + 10 : east ? (ctx.mode.nest ? W - 340 : W - 110) : 30;
+    const y0 = MS ? MS[1] : east ? dy + 250 : Math.max(70, Z.wk[1]), y1 = MS ? MS[3] : east ? dy + 950 : Math.min(H - 70, Z.wk[3]), face = east ? Math.PI : 0;
     const out = [], classes = ARMY_CLASSES[side], items = [];
     let plugDone = !(east && world.gap && ctx.mode.posture.LH === 'hold');
     const add = (type, size) => {
@@ -738,12 +872,12 @@ const Sim = (function () {
     // kształt rot: w klasie z kilkoma rotami dobieramy szerokość tak, by kolumna wypełniła strefę (k rot obok siebie), co mieści więcej mrówek
     const byCls = {}; for (const it of items) (byCls[it.cls] = byCls[it.cls] || []).push(it);
     for (const k in byCls) {
-      const list = byCls[k]; if (list.length < 2) continue;
+      const list = byCls[k]; if (list.length < 2 || MS) continue;   // kopiec: zwarte bloki przed wejściem, nie cienkie linie na całą strefę
       const avgW = list.reduce((t, it) => t + it.w, 0) / list.length, per = Math.max(1, Math.min(list.length, Math.floor((zh + GL) / (avgW + GL)))), wt = (zh + GL) / per - GL;
       for (const it of list) { const c = Math.max(4, Math.floor(wt / it.s)); it.cols = c; it.w = c * it.s; it.d = Math.ceil(it.n / c) * it.s; }
     }
     // siatka terenu (bez osłon i bez losowych plam): rota nie może stanąć na przeszkodzie (np. stałe głazy na mapie 3)
-    const grid = ctx.grid || (ctx.grid = rasterize(world, world.map.obstacles)), GC = Math.ceil(W / CELL);
+    const grid = ctx.grid || (ctx.grid = buildGrid(world)), GC = Math.ceil(W / CELL);
     const free = (cx, cy, w, d) => {
       for (let yy = Math.floor((cy - w / 2 - 4) / CELL); yy <= Math.floor((cy + w / 2 + 4) / CELL); yy++) for (let xx = Math.floor((cx - d / 2 - 4) / CELL); xx <= Math.floor((cx + d / 2 + 4) / CELL); xx++) { const v = grid[yy * GC + xx]; if (v !== 0 && v !== 2 && v !== 8) return false; }
       return true;
@@ -861,6 +995,15 @@ const Sim = (function () {
         armyInfo[sn] = { budget, cost: armyCost(defs, a), army: JSON.parse(JSON.stringify(a)), composed: !given, style: a.style || null };
       }
     } else if (opts.armies) throw new Error('opts.armies wymaga opts.budget');
+    // kopiec: układ rot ze scenariusza jest zapisany dla płaskiej mapy, więc te same roty rozmieszczamy w strefie przed kopcem i w jego korytarzach
+    if (defs.world.mound && !opts.budget) {
+      const actx = { world: defs.world, mode: MODE };
+      for (const sn of SIDES) {
+        const sd = defs.scenario.sides[sn], a = { guard: sd.guardType, commanders: 0, companies: [] };
+        for (const cd of sd.companies) for (const k in cd.units) { if (k === '@guard') a.commanders++; else if (k !== 'dowodca') a.companies.push({ type: k, size: cd.units[k] }); }
+        sd.companies = layoutArmy(defs, sn, a, actx);
+      }
+    }
     // plug (zamknięty szyk odźwiernych) ma sens tylko tam, gdzie jest przesmyk do zamknięcia i obrońca broni pozycji;
     // w pozostałych przypadkach odźwierni stają jako zwykła linia (nieruchomy zamknięty mur nie może iść do ataku)
     if (!defs.world.gap || MODE.posture.LH !== 'hold') for (const sn of SIDES) for (const cd of defs.scenario.sides[sn].companies) if (cd.role === 'plug') { cd.role = 'line'; cd.closed = false; delete cd.spacing; }
@@ -903,7 +1046,7 @@ const Sim = (function () {
     const SIGHT = new Uint8Array([0, 1, 0, 1, 1, 1, 1, 0, 0]); // zasłaniają widok i strzał (woda nie zasłania)
     const gap = defs.world.gap, passage = defs.world.passage;   // gap jest null na mapach bez głównego przesmyku
     const nestC = defs.world.nest;
-    const grid = rasterize(defs.world, defs.world.map.obstacles);
+    const grid = buildGrid(defs.world);
     (function coverPatches() {
       const patches = defs.world.map.coverRandom, mid = gap ? gap[0] : W / 2;
       for (let k = 0; k < patches; k++) {
@@ -918,13 +1061,15 @@ const Sim = (function () {
     })();
     sim.grid = grid; sim.losClear = losClear;
     // ---- elewacja (etap 4): wysokości w środkach komórek, gradient, wysokość z interpolacją dwuliniową
-    const HILLS = !!(defs.world.hills && EL.on);
+    const MOUND = defs.world.mound ? moundBuild(defs.world) : null, HILLS = !!(MOUND || (defs.world.hills && EL.on));
     let height = null, gradX = null, gradY = null;
     if (HILLS) {
-      height = genHeights(defs.world, defs.world.hills, rng.fork('terrain'));
+      height = MOUND ? MOUND.height : genHeights(defs.world, defs.world.hills, rng.fork('terrain'));
       gradX = new Float32Array(COLS * ROWS); gradY = new Float32Array(COLS * ROWS);
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
-        const i = r * COLS + c, cl = c > 0 ? c - 1 : c, cr = c < COLS - 1 ? c + 1 : c, ru = r > 0 ? r - 1 : r, rd = r < ROWS - 1 ? r + 1 : r;
+        // na kopcu ściana między poziomami nie może dawać podłodze fałszywego nachylenia: różnice tylko z sąsiadów, którzy są podłogą
+        const ok = (rr, cc) => !MOUND || !BLK[grid[rr * COLS + cc]];
+        const i = r * COLS + c, cl = c > 0 && ok(r, c - 1) ? c - 1 : c, cr = c < COLS - 1 && ok(r, c + 1) ? c + 1 : c, ru = r > 0 && ok(r - 1, c) ? r - 1 : r, rd = r < ROWS - 1 && ok(r + 1, c) ? r + 1 : r;
         gradX[i] = (height[r * COLS + cr] - height[r * COLS + cl]) / ((cr - cl || 1) * CELL); gradY[i] = (height[rd * COLS + c] - height[ru * COLS + c]) / ((rd - ru || 1) * CELL);
       }
     }
@@ -936,7 +1081,9 @@ const Sim = (function () {
     // nachylenie wzdłuż kierunku ruchu (dodatnie pod górę) i mnożnik prędkości
     function slopeAt(x, y, dx, dy) { const i = cellAt(x, y); return gradX[i] * dx + gradY[i] * dy; }
     function slopeMul(sl) { return sl > 0 ? Math.max(EL.minUp, 1 / (1 + EL.upK * sl)) : Math.min(EL.maxDown, 1 - EL.downK * sl); }
-    sim.hills = HILLS; sim.height = height; sim.heightAt = heightAt; sim.COLS_H = COLS; sim.slopeAt = slopeAt; sim.slopeMul = slopeMul;
+    // poziom kopca (0..rings) z wysokości podłogi; -1 na rampie (wysokość pośrednia), 0 poza kopcem
+    sim.levelAt = (x, y) => { if (!MOUND) return 0; const h = heightAt(x, y), hh = defs.world.mound.heights; let b = 0; for (let k = 1; k < hh.length; k++) if (Math.abs(h - hh[k]) < Math.abs(h - hh[b])) b = k; return Math.abs(h - hh[b]) < 1.5 ? b : -1; };
+    sim.mound = !!MOUND; sim.hills = HILLS; sim.height = height; sim.heightAt = heightAt; sim.COLS_H = COLS; sim.slopeAt = slopeAt; sim.slopeMul = slopeMul;
     // linia wzroku 3D: ściany blokują jak dotąd (SIGHT), a z wzgórzami także teren powyżej linii od oczu do celu; z1, z2 to wysokości absolutne
     function sightClear3(x0, y0, z0, x1, y1, z1) {
       const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), n = Math.ceil(d / 6);
@@ -1848,7 +1995,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const q = new URLSearchParams(location.search);
 
   const S = {
-    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'oblezenie', budget: q.get('budget') || '', oppStyle: 'auto', army: null,
+    side: q.get('side') === 'LH' ? 'LH' : 'WK', seed: +(q.get('seed') || 1), passage: +(q.get('passage') || 192), map: +(q.get('map') || 3), scenario: q.get('scenario') || 'kopiec', budget: q.get('budget') || '', oppStyle: 'auto', army: null,
     observe: q.get('observe') === '1', speedIdx: Math.max(0, SPEEDS.indexOf(+(q.get('speed') || 1))), paused: false,
     sim: null, hover: -1, guard: q.get('guard') || 'ciezki', defs: clone(DEFS0), selected: new Set(), groups: {}, pending: null, acc: 0, over: false,
     stepMs: 0, stepMax: 0, renderMs: 0, started: false
@@ -2029,6 +2176,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
     // dno lasu: próchnica, ściółka, mech; pnie i kłody z korą, omszałe głazy, korzenie
     const HUM = ['#85714d', '#7e6b47', '#8c7853', '#76643f'], DIRT = ['#9a7f58', '#947a54', '#a08561', '#8a704c'];
     const MOSS = ['#5f8f3e', '#578636', '#69984a', '#4f7d33'];
+    // kopiec: poziomy mają odrębne barwy podłogi (0 ściółka, 1 piaskowy, 2 pomarańczowy, 3 serce czerwonawe), rampy jaśniejsze
+    const LVL = [HUM, ['#a8975a', '#a19053', '#b0a063', '#978749'], ['#b0814f', '#a87a49', '#b98b5b', '#9f7243'], ['#bf6c52', '#b66548', '#c87659', '#a85a40']], RAMP = ['#d2bd86', '#cab67e', '#dac58f', '#c1ac76'];
     for (let d = 0; d < rows + cols - 1; d++) for (let r = Math.max(0, d - cols + 1); r <= Math.min(rows - 1, d); r++) {
       const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C), top = ISO.sy(col * C, r * C);
       const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
@@ -2081,7 +2230,8 @@ if (typeof module !== 'undefined') module.exports = Sim;
           const gx = px(40), gy = py(41); c.fillStyle = '#e8dfc8'; c.fillRect(gx, gy + 2, 2, 3); c.fillStyle = '#c0392b'; c.fillRect(gx - 2, gy, 6, 3); c.fillStyle = '#fff1e0'; c.fillRect(gx - 1, gy + 1, 1, 1); c.fillRect(gx + 2, gy, 1, 1);
         }
       } else {
-        tile(c, cx, top, hasNest && dn < nestR + 14 ? DIRT[k] : HUM[k]); shade();
+        const lv = sim.mound ? sim.levelAt(mx, my) : 0;
+        tile(c, cx, top, lv < 0 ? RAMP[k] : lv > 0 ? LVL[Math.min(3, lv)][k] : hasNest && dn < nestR + 14 ? DIRT[k] : HUM[k]); shade();
         // ściółka: liście w ciepłych barwach, patyki, kamyki
         for (let t = 0; t < 5; t++) { const nn = nz(col, r, 30 + t); c.fillStyle = nn > 0.7 ? '#a8672c' : nn > 0.4 ? '#8d6b2f' : '#6b5a2a'; c.fillRect(px(30 + t), py(30 + t), nn > 0.8 ? 3 : 2, 1); }
         if (n > 0.93) { c.fillStyle = '#2f2418'; c.fillRect(cx - 5, top + 9, 8, 1); c.fillStyle = '#6a4d2a'; c.fillRect(cx - 5, top + 8, 7, 1); }
@@ -2090,6 +2240,9 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
     // gniazdo: kopiec w trzech tonach i ciemne wejście od strony zachodniej
     const ell = (x, y, R, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(ISO.sx(x, y), ISO.sy(x, y), ISO.rx(R), ISO.ry(R), 0, 0, 7); c.fill(); };
+    if (sim.mound) {   // serce gniazda: jaśniejsze ognisko w komnacie
+      ell(nest[0], nest[1], nestR, 'rgba(255,214,120,0.22)'); ell(nest[0], nest[1], nestR * 0.6, 'rgba(255,190,90,0.30)'); ell(nest[0], nest[1], nestR * 0.25, 'rgba(255,240,190,0.55)');
+    }
     if (hasNest) {
     ell(nest[0], nest[1], nestR, 'rgba(120,86,48,0.3)'); ell(nest[0], nest[1], nestR * 0.72, 'rgba(120,86,48,0.32)'); ell(nest[0], nest[1], nestR * 0.42, 'rgba(60,40,20,0.45)');
     ell(nest[0] - 78, nest[1], 7, '#241508');
@@ -2238,7 +2391,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   view.addEventListener('pointermove', (e) => {
     const r = view.getBoundingClientRect();
     if (box.on) { box.x1 = e.clientX - r.left; box.y1 = e.clientY - r.top; }
-    if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); }
+    if (S.sim && S.sim.hills) { const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top); S.cursorH = S.sim.heightAt(Math.max(0, wx), Math.max(0, wy)); S.cursorLv = S.sim.levelAt(Math.max(0, wx), Math.max(0, wy)); }
     if (drag.on) { const sx = e.clientX - r.left, sy = e.clientY - r.top; if (Math.hypot(sx - drag.sx, sy - drag.sy) > 14) { const [wx, wy] = toWorld(sx, sy); drag.active = true; drag.face = Math.atan2(wy - drag.wy, wx - drag.wx); } }
     if (S.sim && S.started) { // najechanie na rotę pokazuje jej panel informacji
       const [cx, cy] = toContainer(e.clientX - r.left, e.clientY - r.top), sim = S.sim, rr = 12 / cam.z + 4; let best = -1, bd = rr * rr;
@@ -2305,7 +2458,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   function togglePause() { S.paused = !S.paused; $('bPause').classList.toggle('on', S.paused); $('bPause').textContent = S.paused ? 'Wznów' : 'Pauza'; }
   function changeSpeed(d) { S.speedIdx = Math.max(0, Math.min(SPEEDS.length - 1, S.speedIdx + d)); $('spd').textContent = SPEEDS[S.speedIdx] + '×'; }
   function toggleHelp() { $('help').classList.toggle('hidden'); }
-  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej';
+  const HELP = 'LPM: zaznacz rotę (klik) lub kilka (ramka, Shift dodaje) · PPM: atak-marsz (czerwona linia), Shift+PPM: sam ruch (biała linia), M + klik: ruch · przeciągnięcie PPM: kierunek szyku po dotarciu, kółko myszy w trakcie przeciągania: szerokość i głębokość · Z/X/C: linia/kolumna/klin · H: stój · V: odwrót · umiejętności: siatka po prawej lub Q/E/R/F/G · Ctrl lub Alt + 1-9: grupa, 1-9: przywołanie · Spacja: pauza (rozkazy działają w pauzie) · +/−: prędkość · kółko: zoom, strzałki/WASD lub środkowy przycisk: kamera · wrogów widać tylko w polu widzenia (promień 125, mech ukrywa, wzgórza zasłaniają); atak ujawnia na 3 s; cios z tyłu boli najbardziej, z boku mniej; wzgórza: pod górę wolniej i bardziej męcząco, plujka z góry strzela dalej · kopiec (Oblężenie): poziomy to pierścienie-korytarze o różnych barwach, na wyższy poziom prowadzą tylko rampy (jaśniejsze pasy), ściany blokują ruch i widok, spanikowani obrońcy cofają się do serca (środek kopca); wysokość i poziom pod kursorem są w Diagnostyce';
   $('help').textContent = HELP; $('mHelp').innerHTML = '<p>' + HELP.replace(/ · /g, '<br>') + '</p>';
   $('bPause').onclick = togglePause; $('bFast').onclick = () => changeSpeed(1); $('bSlow').onclick = () => changeSpeed(-1);
   $('bRestart').onclick = () => { if (S.started) startBattle(); };
@@ -2317,10 +2470,10 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('mPass').oninput = () => { S.passage = +$('mPass').value; $('mPassV').textContent = S.passage; };
   // typ mapy: lista z world.mapTypes; suwak przesmyku działa tylko na mapie z głównym przesmykiem (typ 3)
   const MAPT = DEFS0.world.mapTypes, SCENT = DEFS0.world.scenarioTypes;
-  for (const id of Object.keys(SCENT).filter((k) => SCENT[k].posture)) { const o = document.createElement('option'); o.value = id; o.textContent = SCENT[id].name; $('mScen').appendChild(o); }
+  for (const id of Object.keys(SCENT).filter((k) => SCENT[k].posture && !SCENT[k].hidden)) { const o = document.createElement('option'); o.value = id; o.textContent = SCENT[id].name; $('mScen').appendChild(o); }
   for (const id of Object.keys(MAPT).filter((k) => MAPT[k].gen && !MAPT[k].hidden)) { const o = document.createElement('option'); o.value = id; o.textContent = id + '. ' + MAPT[id].name + ' (' + MAPT[id].w + '×' + MAPT[id].h + ')'; $('mMap').appendChild(o); }
   function syncMapRow() {
-    const sc = SCENT[S.scenario] || SCENT.oblezenie, forced = sc.map ? MAPT[sc.map] : null;
+    const sc = SCENT[S.scenario] || SCENT.kopiec, forced = sc.map ? MAPT[sc.map] : null;
     $('mScenDesc').textContent = sc.desc; $('mMap').disabled = !!forced; $('mMapRow').style.opacity = forced ? 0.4 : 1; $('mMapRow').title = forced ? 'Ten scenariusz ma własną mapę: ' + forced.name : '';
     const mt = forced || MAPT[S.map]; $('mMapDesc').textContent = mt ? mt.desc : '';
     const has = mt && mt.gen === 'legacy'; $('mPass').disabled = !has; $('mPassRow').style.opacity = has ? 1 : 0.4; $('mPassRow').title = has ? '' : 'Ten typ mapy nie ma głównego przesmyku';
@@ -2351,7 +2504,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const on = !!S.budget; $('mArmy').disabled = !on || S.observe; $('mGuardRow').classList.toggle('hidden', on); $('mOppRow').classList.toggle('hidden', !on);
     if (!on) { $('mArmySum').textContent = 'Obie strony dostają armię ze scenariusza (bez budżetu i bez wyboru jednostek).'; return; }
     const my = budgetOf(S.side), op = budgetOf(other());
-    let t = 'Twój budżet: ' + my + ' pkt, przeciwnik (AI): ' + op + ' pkt' + (S.scenario === 'oblezenie' ? ' (atakujący ma x' + ADEF.siegeAttackerRatio + ')' : ' (w tym scenariuszu równy)') + '. ';
+    let t = 'Twój budżet: ' + my + ' pkt, przeciwnik (AI): ' + op + ' pkt' + (S.scenario === 'oblezenie' || S.scenario === 'kopiec' ? ' (atakujący ma x' + ADEF.siegeAttackerRatio + ')' : ' (w tym scenariuszu równy)') + '. ';
     t += S.observe ? 'Tryb obserwatora: obie armie dobiera AI (auto).' : S.army ? 'Twoja armia (' + (S.army.style ? ARCH[S.army.style].name : 'własna') + '): ' + S.army.companies.length + ' rot + ' + S.army.commanders + ' dow., koszt ' + armyCost(S.army) + '/' + my + '.' : 'Armię dobierze AI wg wzorca auto, albo skonfiguruj ją sam.';
     $('mArmySum').textContent = t;
   }
@@ -2396,7 +2549,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   $('mOppStyle').onchange = () => { S.oppStyle = $('mOppStyle').value; };
   $('aClear').onclick = () => { const a = ensureArmy(); a.companies = []; a.commanders = ADEF.commanders.min; renderArmy(); };
   $('aDone').onclick = () => { $('army').classList.add('hidden'); syncArmyMenu(); };
-  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen || MAPT[S.map].hidden) S.map = 3; if (!SCENT[S.scenario] || !SCENT[S.scenario].posture) S.scenario = 'oblezenie'; $('mScen').value = S.scenario; $('mMap').value = S.map; if (!ADEF.budgets[S.budget]) S.budget = ''; $('mBudget').value = S.budget; syncMapRow(); resetArmy(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
+  function syncMenu() { if (!MAPT[S.map] || !MAPT[S.map].gen || MAPT[S.map].hidden) S.map = 3; if (!SCENT[S.scenario] || !SCENT[S.scenario].posture) S.scenario = 'kopiec'; $('mScen').value = S.scenario; $('mMap').value = S.map; if (!ADEF.budgets[S.budget]) S.budget = ''; $('mBudget').value = S.budget; syncMapRow(); resetArmy(); $('mPass').value = S.passage; $('mPassV').textContent = S.passage; $('mSeed').value = S.seed; $('mObs').checked = S.observe; $('mGuard').value = S.guard; $('cWK').classList.toggle('on', S.side === 'WK'); $('cLH').classList.toggle('on', S.side === 'LH'); }
 
   // ---------- drewniany interfejs ----------
   // tekstura desek: cztery deski z usłojeniem, sękami i szwami; używana jako tło paneli (.wood)
@@ -2663,7 +2816,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
       const t1 = performance.now(); render(); S.renderMs = S.renderMs * 0.9 + (performance.now() - t1) * 0.1;
       hudT += dt; diagT += dt;
       if (hudT > 0.2) { hudT = 0; pumpEvents(); const a = S.sim.count_alive(); $('cntWK').textContent = 'WK ' + a[0]; $('cntLH').textContent = 'LH ' + a[1]; $('clock').textContent = fmt(S.sim.tick / 20); updateCards(); }
-      if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash() + (S.sim.hills ? '\nwysokość terenu pod kursorem: ' + (S.cursorH || 0).toFixed(0) : ''); }
+      if (diagT > 0.5) { diagT = 0; const a = S.sim.count_alive(); $('diag').textContent = 'mrówki: ' + (a[0] + a[1]) + ' (WK ' + a[0] + ', LH ' + a[1] + ')\nklatki/s: ' + app.ticker.FPS.toFixed(0) + '\nkrok symulacji: ' + S.stepMs.toFixed(2) + ' ms (max ' + S.stepMax.toFixed(1) + ')\nrysowanie: ' + S.renderMs.toFixed(2) + ' ms\ntick: ' + S.sim.tick + ', seed ' + S.seed + '\nstan: ' + S.sim.hash() + (S.sim.hills ? '\npod kursorem: wysokość ' + (S.cursorH || 0).toFixed(0) + (S.sim.mound ? ' (' + (S.cursorLv < 0 ? 'rampa' : S.cursorLv === S.sim.defs.world.mound.rings ? 'serce gniazda' : 'poziom ' + S.cursorLv) + ')' : '') : ''); }
     }
   });
 

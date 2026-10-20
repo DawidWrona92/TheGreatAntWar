@@ -25,6 +25,13 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Rozstawianie rot ręcznie przez gracza: na razie automatyczne (decyzja użytkownika: „dojdziemy do tego”).
 - Obsługiwane tryby: tylko AI przeciw AI i gracz przeciw AI (bez dwóch graczy); AI zawsze gra uczciwie (te same ograniczenia widzenia co gracz).
 
+## Szturm kopca (etap 5)
+- AI nie wykorzystuje struktury kopca: atakujący idzie wszystkimi rotami najkrótszą drogą, obrońca stoi na stanowiskach i kontratakuje w pobliżu. Do zrobienia: podział sił na dwie trasy, odwrót na kolejne pierścienie, blokowanie ramp, ostrzał ramp z wyższego pierścienia.
+- Plug odźwiernych (zamknięcie przejścia) nie działa na wejściach i rampach kopca; ściany nie są zniszczalne (tarany nie burzą).
+- Poziomy są pierścieniami w jednej płaszczyźnie; prawdziwe piętra nad sobą wymagałyby osobnych warstw (ruch, kolizje, widoczność, rysowanie).
+- Rozstawianie ręczne atakującego i obrońcy; strefa startu 640 x 1000 (mieści armię x1,5 budżetu Duży we wszystkich testowanych wzorcach).
+- Balans (obrona vs budżet x1,5 atakującego, limit 1500 s) i wszystkie wymiary kopca do oceny w grze.
+
 ## Armie (etap 3)
 - Jednostki latające: odłożone na prośbę użytkownika. Dokument wspomina lotnika (delikatny, traci skrzydła, lotnictwo taktyczne: zrzut za linię i za bramę), ale bez statystyk i zasad; w kodzie ich nie ma. Do ustalenia: statystyki, kto może je trafić, czy ignorują teren i ciała, rola w oblężeniu.
 - Tabela kosztów jednostek i trzy budżety (1200/2200/3500) to założenia prototypu; do skorygowania po testach (np. plujka 4 pkt i odźwierny 7 pkt).
@@ -49,4 +56,4 @@ Rzeczy odłożone na później (kolejność nie jest priorytetem). Źródła: ro
 - Wydajność w Chrome na typowym PC (FPS) nie została zmierzona, tylko krok symulacji w Node.
 
 ## Dalsze etapy rozszerzenia P1
-- Etap 3: konfiguracja armii i budżety (gotowy do testów ręcznych). Etap 4: elewacja, linia wzroku, zasadzki i ukrywanie się w mchu. Etap 5: pełnoprawne oblężenia kopców (wiele poziomów, korytarze, serce gniazda, panika obrońców).
+- Etap 3: konfiguracja armii i budżety (gotowy do testów ręcznych). Etap 4: elewacja, linia wzroku, zasadzki i ukrywanie się w mchu. Etap 5: pełnoprawne oblężenia kopców (gotowy do testów ręcznych: poziomy, korytarze, serce gniazda, panika obrońców).

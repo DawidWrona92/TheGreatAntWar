@@ -9,7 +9,7 @@ const { openPage, ROOT } = require('./browser-lib');
   const out = [], shots = path.join(ROOT, 'docs', 'wyniki'); fs.mkdirSync(shots, { recursive: true });
   const ok = (name, note) => { out.push('OK   ' + name + (note ? '\n       ' + note : '')); };
   let failed = 0;
-  const { browser, page, errors } = await openPage('autostart=1&side=WK&seed=1&speed=4&autoselect=1');
+  const { browser, page, errors } = await openPage('autostart=1&side=WK&seed=1&speed=4&autoselect=1&scenario=oblezenie')   // płaskie, ukryte Oblężenie: sterowanie z etapu 1 sprawdzamy na płaskiej mapie;
   try {
     await page.waitForFunction(() => window.__P1 && __P1.S.sim && __P1.S.sim.tick > 40, null, { timeout: 30000 });
     ok('gra startuje bez błędów, symulacja idzie, rysowanie działa', 'tick ' + await page.evaluate(() => __P1.S.sim.tick));
@@ -128,6 +128,7 @@ const { openPage, ROOT } = require('./browser-lib');
     await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
     const opts = await page.$$eval('#mMap option', (o) => o.map((x) => x.textContent));
     assert.strictEqual(opts.length, 5, 'menu powinno mieć 5 typów mapy: ' + opts);
+    await page.selectOption('#mScen', 'bitwa');   // typy map działają w Bitwie (Oblężenie i Przeprawa mają własne mapy)
     for (const id of [1, 2, 3, 4, 5]) {
       await page.selectOption('#mMap', String(id));
       const dis = await page.$eval('#mPass', (e) => e.disabled);
@@ -137,7 +138,7 @@ const { openPage, ROOT } = require('./browser-lib');
       await page.evaluate(() => { __P1.S.paused = false; });
       await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 30000 });
       const info = await page.evaluate(() => ({ id: __P1.S.sim.mapInfo.id, w: __P1.S.sim.W, h: __P1.S.sim.H, name: document.getElementById('mapName').textContent, chunks: __P1.world.children[0].children.length, z: __P1.cam.z, ants: __P1.S.sim.count }));
-      assert.strictEqual(info.id, String(id)); assert.ok(info.name.startsWith('Oblężenie · ' + id + '. '), 'nazwa mapy w pasku: ' + info.name); assert.ok(info.chunks >= 1 && info.z > 0.1, JSON.stringify(info));
+      assert.strictEqual(info.id, String(id)); assert.ok(info.name.startsWith('Bitwa · ' + id + '. '), 'nazwa mapy w pasku: ' + info.name); assert.ok(info.chunks >= 1 && info.z > 0.1, JSON.stringify(info));
       if (id >= 4) assert.ok(info.chunks > 1, 'duża mapa powinna mieć kilka kafli terenu: ' + info.chunks);
       await page.evaluate(() => { __P1.S.paused = true; }); await page.waitForTimeout(250);
       await page.screenshot({ path: path.join(shots, 'p1-mapa-' + id + '.png') });
@@ -147,11 +148,11 @@ const { openPage, ROOT } = require('./browser-lib');
     }
     // etap 2: wybór scenariusza w menu; przeprawa ma własną mapę, więc lista typów map jest wtedy wyłączona
     const scs = await page.$$eval('#mScen option', (o) => o.map((x) => x.value));
-    assert.deepStrictEqual(scs, ['bitwa', 'oblezenie', 'przeprawa']);
-    for (const [sc, mapId] of [['bitwa', 2], ['oblezenie', 3], ['przeprawa', 3]]) {
+    assert.deepStrictEqual(scs, ['bitwa', 'kopiec', 'przeprawa']);
+    for (const [sc, mapId] of [['bitwa', 2], ['kopiec', 3], ['przeprawa', 3]]) {
       await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
-      await page.selectOption('#mScen', sc); if (sc !== 'przeprawa') await page.selectOption('#mMap', String(mapId));
-      const dis = await page.$eval('#mMap', (e) => e.disabled); assert.strictEqual(dis, sc === 'przeprawa', 'lista map wyłączona tylko w przeprawie (' + sc + ')');
+      await page.selectOption('#mScen', sc); if (sc === 'bitwa') await page.selectOption('#mMap', String(mapId));
+      const dis = await page.$eval('#mMap', (e) => e.disabled); assert.strictEqual(dis, sc !== 'bitwa', 'lista map wyłączona w scenariuszach z własną mapą (' + sc + ')');
       await page.click('#mStart'); await page.evaluate(() => { __P1.S.paused = false; });
       await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 10, null, { timeout: 120000 });   // Przeprawa (3000x3200) rysuje się w programowym GL nawet 20 s
       const si = await page.evaluate(() => ({ sc: __P1.S.sim.scenarioInfo.id, label: document.getElementById('mapName').textContent, w: __P1.S.sim.W }));
@@ -168,6 +169,18 @@ const { openPage, ROOT } = require('./browser-lib');
       await page.evaluate(() => { __P1.S.paused = false; __P1.S.speedIdx = 1; });
       ok('scenariusz ' + sc + ' startuje i jest rysowany (' + si.label + ', ' + si.w + ' szerokości)');
     }
+    // etap 5: kopiec rysuje poziomy, wysokość i poziom pod kursorem widać w diagnostyce, a wróg w głębi kopca jest niewidoczny dla gracza
+    await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
+    await page.selectOption('#mScen', 'kopiec'); await page.click('#mStart'); await page.evaluate(() => { __P1.S.paused = false; });
+    await page.waitForFunction(() => __P1.S.sim && __P1.S.sim.tick > 3 && __P1.S.sim.mound, null, { timeout: 120000 }); await page.evaluate(() => { __P1.S.paused = true; });
+    const km = await page.evaluate(() => { const s = __P1.S.sim; const M = s.defs.world.mound; const lh = []; for (let i = 0; i < s.count; i++) if (s.side[i] === 1 && s.alive[i]) lh.push(i);
+      return { rings: M.rings, heartLv: s.levelAt(s.defs.world.nest[0], s.defs.world.nest[1]), hiddenLH: lh.filter((i) => !s.visibleTo(0, i)).length, totalLH: lh.length, observe: __P1.S.observe, topPad: __P1.ISO.top }; });
+    assert.strictEqual(km.heartLv, km.rings); assert.ok(km.observe || km.hiddenLH > km.totalLH * 0.9, 'obrońcy w kopcu powinni być niewidoczni dla gracza: ' + km.hiddenLH + '/' + km.totalLH); assert.ok(km.topPad > 0);
+    await page.mouse.move(700, 400); await page.evaluate(() => { __P1.S.paused = false; });
+    await page.waitForFunction(() => /pod kursorem: wysokość \d+ \((poziom \d|rampa|serce gniazda)\)/.test(document.getElementById('diag').textContent), null, { timeout: 60000 });   // diagnostyka odświeża się co 0,5 s czasu klatek (w piaskownicy kilka klatek/s)
+    const diag = await page.$eval('#diag', (e) => e.textContent); assert.ok(/pod kursorem: wysokość \d+ \((poziom \d|rampa|serce gniazda)\)/.test(diag), 'diagnostyka: ' + diag);
+    await page.evaluate(() => { __P1.S.paused = true; }); await page.screenshot({ path: path.join(shots, 'p1-kopiec.png') }); await page.evaluate(() => { __P1.S.paused = false; });
+    ok('kopiec: poziomy i serce na mapie, obrońcy w głębi niewidoczni (' + km.hiddenLH + '/' + km.totalLH + '), poziom pod kursorem w diagnostyce');
     // etap 3: budżet, konfiguracja armii (pula frakcji, koszty, limit budżetu), wzorce AI, start z armią
     await page.evaluate(() => { document.getElementById('end').classList.add('hidden'); document.getElementById('menu').classList.remove('hidden'); });
     await page.selectOption('#mScen', 'bitwa'); await page.selectOption('#mMap', '2'); await page.click('#cWK');

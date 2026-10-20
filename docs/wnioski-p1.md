@@ -102,11 +102,34 @@ Co jest (szczegóły i liczby w `projekt-bitwy.md`, decyzje 56-62, plan w `etap4
 - **Cios z tyłu** x1,5, **z boku** x1,25, z przodu x1 (zmierzone: x1,51 i x1,25).
 - Krok symulacji przy ok. 4500 mrówek na mapie ze wzgórzami i mgłą: mediana 19 ms, p99 55 ms (budżet 50 ms; czas piaskownicy).
 
-Gdzie szukać wzgórz (ziarno 1; szczyty wysokości x, y): mapa 2: (1464,168) 35, (888,312) 23, (1240,920) 24; mapa 4: (1976,184) 37, (1016,1208) 37, (1080,344) 23; mapa 5: (2328,184) 37, (1144,1304) 37; Przeprawa: (2312,328) 50, (1288,536) 25, (2328,1592) 26. Wzgórza są **subtelne wizualnie** (jaśniejsze i ciemniejsze plamy, wygięta ramka mapy, przesunięcie mrówek w pionie); zrzut `wyniki/p1-wzgorza-szczyt.png` to mapa 2 przy szczycie (1240,920). Na pasku diagnostyki jest „wysokość terenu pod kursorem”, co pozwala je znaleźć.
+Gdzie szukać wzgórz (ziarno 1; szczyty wysokości x, y): mapa 2: (1464,168) 35, (888,312) 23, (1240,920) 24; mapa 4: (1976,184) 37, (1016,1208) 37, (1080,344) 23; mapa 5: (2328,184) 37, (1144,1304) 37; Przeprawa: (2312,328) 50, (1288,536) 25, (2328,1592) 26. Wzgórza są **subtelne wizualnie** (jaśniejsze i ciemniejsze plamy, wygięta ramka mapy, przesunięcie mrówek w pionie); zrzut `wyniki/p1-wzgorza-szczyt.png` to mapa 2 przy szczycie (1240,920). Na pasku diagnostyki jest „pod kursorem: wysokość (poziom)”, co pozwala je znaleźć.
 
 Przeprawa, mrówki rot z kotwicą za potokiem, które nadal są przed nim (liczba/rot za potokiem; nie jest to ściśle „utknięcie”, liczy też spóźnionych i walczących), ziarna 1 i 2, funkcje etapu 4 włączone / wyłączone: t=80: 35 i 37 / 5 i 1; t=120: 107 i 81 / 57 i 55; t=160: 115 i 103 / 118 i 102. Po 160 s poziom jest taki sam, więc zator przy wodzie jest wcześniejszy niż etap 4, ale etap 4 (wzgórza, widoczność) opóźnia przeprawę o kilkadziesiąt sekund.
 
 Wpływ na bitwy AI przeciw AI (wykonane: `node tests/p1-etap4.js --seeds 4`, Bitwa na mapie 2, budżet Średni, `wyniki/p1-etap4-wplyw.json`): wygrane WK 2/4 przy wszystkim wyłączonym, 2/4 z samą elewacją, 1/4 z samą widocznością, 3/4 z samym kierunkiem ciosu, 2/4 ze wszystkim; różnice są w granicach szumu 4 ziaren. Strome tory kwasu (łuk wyższy od 22 jednostek) w ogóle nie wystąpiły w tych bitwach. Wniosek: mechaniki działają (testy jednostkowe), ale obecne AI nie wykorzystuje terenu (nie szuka wzgórz, nie ustawia plujek pod strzał, nie robi zasadzek), więc w całych bitwach ich wpływ jest niewidoczny. Do sprawdzenia w grze człowieka; uczenie AI korzystania z terenu jest na liście TODO.
+
+## Etap 5 rozszerzenia: Szturm kopca
+Co jest (decyzje 64-69 w `projekt-bitwy.md`, plan w `etap5-plan.md`): scenariusz `kopiec` (w menu „Oblężenie”, zastępuje płaskie Oblężenie, które zostaje ukryte pod nazwą `oblezenie`) z własną, stałą mapą 2400 x 1500. Kopiec ma trzy pierścienie-korytarze (80 jedn. szerokości) na wysokościach 0, 12 i 24 oraz serce na 36, oddzielone ścianami grubości 64; wyżej prowadzą wyłącznie rampy-tunele (48 jedn.), do kopca dwa wejścia (64 jedn.). Droga ze strefy startu do serca jest ok. 2,6 razy dłuższa niż linia prosta. Struktura jest zwykłą siatką terenu i wysokości z etapu 4, więc ruch, pola przepływu, kolizje, widoczność, balistyka i nachylenie ją uwzględniają bez osobnej logiki.
+
+Zweryfikowane testami (rdzeń): bez ramp żaden wyższy poziom nie jest osiągalny, cała podłoga jest osiągalna, droga do serca przechodzi przez wszystkie poziomy; podłoga pierścieni jest płaska, rampy mają nachylenie 0,188 (mnożnik prędkości 0,68 pod górę); nikt nie startuje w ścianie ani na sobie (armia ze scenariusza i budżety Mały, Średni, Duży, także najgorsze wzorce); w 150 s bitwy AI przeciw AI żadna mrówka nie weszła w ścianę; spanikowana rota obrońcy dociera do serca po korytarzach i rampach bez wchodzenia w ściany (plujki z poziomu 1: 57 i 64 komórki do serca, po 60 s 2 i 6; odźwierni, najwolniejsza rota, 150 -> 124 komórek, bo mają prędkość 11); zajęcie serca przez atakujących kończy bitwę (po 15 s w teście), a uzupełnienia obrońcy pojawiają się w sercu; determinizm.
+
+Pomiary AI przeciw AI (wykonane: `node tests/p1-kopiec.js --seeds 4`, 16 bitew, `wyniki/p1-kopiec-szturm.json`, limit 1500 s):
+- atakujący wygrał wszystkie 16: armia ze scenariusza 4/4 (zniszczenie obrońców, 620-953 s, ocalało średnio 8% atakujących), budżet Mały 4/4 (460-490 s, 37%), Średni 4/4 (650-730 s, 41%), Duży 4/4 (605-1056 s, 55%; atakujący ma x1,5 budżetu);
+- 15 atakujących w pierścieniu 1 po 65-171 s, w pierścieniu 2 po 176-361 s, w sercu po 240-519 s; spanikowane roty obrońcy: średnio 6-14 na bitwę; mrówek w ścianach 0;
+- to jest wynik obecnego, prostego AI (atakujący idzie wszystkimi rotami po najkrótszej drodze, obrońca trzyma stanowiska i kontratakuje w pobliżu); balans (czy obrona jest za słaba, czy budżet x1,5 atakującego za duży) nie jest rozstrzygnięty i wymaga gry człowieka.
+
+Przy limicie 900 s płaskich map 2 z 16 bitew kopca (953 s i 1056 s) skończyłyby się upływem czasu, a kolejne są blisko (784 s), dlatego kopiec ma limit 1500 s (założenie).
+
+Ograniczenia i luki (zgłoszone, nie rozstrzygnięte):
+- Poziomy to pierścienie w jednej płaszczyźnie (jedna podłoga w każdym punkcie), a nie piętra nad sobą; korytarze nie leżą nad sobą (decyzja użytkownika: tarasy wokół serca).
+- Ściany kopca nie są zniszczalne (w grze nie ma mechaniki burzenia), a Zamknięcie wejścia odźwiernych (plug) nie działa na wejściach i rampach kopca: odźwierni stają jako zwykła linia w pierścieniu.
+- Elitarna gwardia to istniejąca rota dowódcy z gwardią (osobnej jednostki królowej w grze nie ma); stoi w sercu razem z dowódcą.
+- Panika to istniejący system morale; zmieniony tylko cel odwrotu (serce). Atakujący w stanie utraty kontroli dalej szaleje (jak dotąd).
+- Wszystkie liczby (wymiary, wysokości, położenie ramp i wejść, strefa startu 640 x 1000, limit czasu, rozmieszczenie obrońców równomiernie po pierścieniach) to założenia prototypu w JSON.
+- Rozmieszczenie ręczne nadal automatyczne (decyzja użytkownika). Strefa startu atakującego mieści armię x1,5 budżetu Duży we wszystkich testowanych wzorcach.
+- Przy dużych armiach tłok przy wejściach zwalnia przepływ: pełny przepływ przez dwa wejścia 64 jedn. trwa kilka minut.
+- AI nie wykorzystuje struktury kopca (nie rozdziela sił na dwie trasy, nie cofa się celowo na kolejne pierścienie ani nie blokuje ramp): do listy TODO.
+- Krok symulacji: przy ok. 4000 mrówek mediana ok. 15 ms, p99 ok. 40 ms (czas piaskownicy); pierwszy krok po starcie trwa ok. 300 ms (budowa pól przepływu).
 
 ## Błędy znalezione po drodze (każdy ma test)
 - Pula kwasu i dopływ uzupełnień były `NaN` (zła ścieżka parametru); potem dopływ był liczony na krok zamiast na sekundę (1/20 zamierzonego tempa). Test: uzupełnienia wchodzą, plujki strzelają.

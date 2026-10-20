@@ -1,0 +1,373 @@
+{
+ "generated": "wykonane: node tests/p1-kopiec.js",
+ "seeds": 4,
+ "limit": 1500,
+ "summary": {
+  "armia ze scenariusza": {
+   "runs": 4,
+   "winsWK": 4,
+   "winsLH": 0,
+   "sekundy": 709,
+   "ocaleliWK": 0.08,
+   "ocaleliLH": 0.05,
+   "mrowekWScianach": 0,
+   "spanikowaneRotyLH": 7.25,
+   "krokSrMs": 4.75
+  },
+  "budżet Mały": {
+   "runs": 4,
+   "winsWK": 4,
+   "winsLH": 0,
+   "sekundy": 481.75,
+   "ocaleliWK": 0.37,
+   "ocaleliLH": 0.05,
+   "mrowekWScianach": 0,
+   "spanikowaneRotyLH": 5.75,
+   "krokSrMs": 4.59
+  },
+  "budżet Średni": {
+   "runs": 4,
+   "winsWK": 4,
+   "winsLH": 0,
+   "sekundy": 682,
+   "ocaleliWK": 0.41,
+   "ocaleliLH": 0.08,
+   "mrowekWScianach": 0,
+   "spanikowaneRotyLH": 9,
+   "krokSrMs": 9.59
+  },
+  "budżet Duży": {
+   "runs": 4,
+   "winsWK": 4,
+   "winsLH": 0,
+   "sekundy": 788.25,
+   "ocaleliWK": 0.55,
+   "ocaleliLH": 0.1,
+   "mrowekWScianach": 0,
+   "spanikowaneRotyLH": 14.25,
+   "krokSrMs": 18.02
+  }
+ },
+ "runs": [
+  {
+   "name": "armia ze scenariusza",
+   "seed": 1,
+   "budget": "",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 953,
+   "fracWK": 0.06,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    148,
+    271,
+    425
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 7,
+   "stepMeanMs": 3.85,
+   "stepMaxMs": 247
+  },
+  {
+   "name": "armia ze scenariusza",
+   "seed": 2,
+   "budget": "",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 638,
+   "fracWK": 0.09,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    114,
+    224,
+    490
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 8,
+   "stepMeanMs": 4.82,
+   "stepMaxMs": 231
+  },
+  {
+   "name": "armia ze scenariusza",
+   "seed": 3,
+   "budget": "",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 620,
+   "fracWK": 0.08,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    146,
+    350,
+    396
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 7,
+   "stepMeanMs": 5,
+   "stepMaxMs": 241
+  },
+  {
+   "name": "armia ze scenariusza",
+   "seed": 4,
+   "budget": "",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 625,
+   "fracWK": 0.09,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    159,
+    298,
+    null
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 7,
+   "stepMeanMs": 5.35,
+   "stepMaxMs": 273
+  },
+  {
+   "name": "budżet Duży",
+   "seed": 1,
+   "budget": "duzy",
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 784,
+   "fracWK": 0.56,
+   "fracLH": 0.06,
+   "firstSeconds15AtLevel": [
+    null,
+    119,
+    271,
+    345
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 15,
+   "stepMeanMs": 18.89,
+   "stepMaxMs": 309
+  },
+  {
+   "name": "budżet Duży",
+   "seed": 2,
+   "budget": "duzy",
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 1056,
+   "fracWK": 0.33,
+   "fracLH": 0.06,
+   "firstSeconds15AtLevel": [
+    null,
+    115,
+    289,
+    432
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 15,
+   "stepMeanMs": 14.23,
+   "stepMaxMs": 396
+  },
+  {
+   "name": "budżet Duży",
+   "seed": 3,
+   "budget": "duzy",
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 708,
+   "fracWK": 0.61,
+   "fracLH": 0.14,
+   "firstSeconds15AtLevel": [
+    null,
+    96,
+    289,
+    519
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 14,
+   "stepMeanMs": 19.37,
+   "stepMaxMs": 428
+  },
+  {
+   "name": "budżet Duży",
+   "seed": 4,
+   "budget": "duzy",
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 605,
+   "fracWK": 0.68,
+   "fracLH": 0.15,
+   "firstSeconds15AtLevel": [
+    null,
+    119,
+    304,
+    411
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 13,
+   "stepMeanMs": 19.59,
+   "stepMaxMs": 526
+  },
+  {
+   "name": "budżet Mały",
+   "seed": 1,
+   "budget": "maly",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 485,
+   "fracWK": 0.43,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    91,
+    176,
+    240
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 6,
+   "stepMeanMs": 4.75,
+   "stepMaxMs": 159
+  },
+  {
+   "name": "budżet Mały",
+   "seed": 2,
+   "budget": "maly",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 492,
+   "fracWK": 0.5,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    106,
+    204,
+    276
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 6,
+   "stepMeanMs": 4.76,
+   "stepMaxMs": 184
+  },
+  {
+   "name": "budżet Mały",
+   "seed": 3,
+   "budget": "maly",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 492,
+   "fracWK": 0.3,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    65,
+    187,
+    264
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 5,
+   "stepMeanMs": 4.09,
+   "stepMaxMs": 266
+  },
+  {
+   "name": "budżet Mały",
+   "seed": 4,
+   "budget": "maly",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 458,
+   "fracWK": 0.26,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    102,
+    203,
+    253
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 6,
+   "stepMeanMs": 4.76,
+   "stepMaxMs": 347
+  },
+  {
+   "name": "budżet Średni",
+   "seed": 1,
+   "budget": "sredni",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 678,
+   "fracWK": 0.4,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    105,
+    304,
+    406
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 9,
+   "stepMeanMs": 9.56,
+   "stepMaxMs": 260
+  },
+  {
+   "name": "budżet Średni",
+   "seed": 2,
+   "budget": "sredni",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 729,
+   "fracWK": 0.4,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    135,
+    198,
+    459
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 9,
+   "stepMeanMs": 9.62,
+   "stepMaxMs": 311
+  },
+  {
+   "name": "budżet Średni",
+   "seed": 3,
+   "budget": "sredni",
+   "winner": "WK",
+   "reason": "Wielka Kolonia zajęła gniazdo",
+   "seconds": 669,
+   "fracWK": 0.42,
+   "fracLH": 0.16,
+   "firstSeconds15AtLevel": [
+    null,
+    114,
+    261,
+    346
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 8,
+   "stepMeanMs": 9.46,
+   "stepMaxMs": 370
+  },
+  {
+   "name": "budżet Średni",
+   "seed": 4,
+   "budget": "sredni",
+   "winner": "WK",
+   "reason": "zniszczenie obrońców",
+   "seconds": 652,
+   "fracWK": 0.4,
+   "fracLH": 0.05,
+   "firstSeconds15AtLevel": [
+    null,
+    171,
+    361,
+    442
+   ],
+   "antsInWalls": 0,
+   "panickedLH": 10,
+   "stepMeanMs": 9.71,
+   "stepMaxMs": 293
+  }
+ ]
+}

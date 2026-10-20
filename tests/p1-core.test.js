@@ -718,6 +718,138 @@ test('bitwa z armiami z budżetu: liczebność zgodna ze składem, determinizm, 
   return 'liczebność zgodna ze składem; skróty: lekka/dystansowa ' + a.h + ', ciężka/dystansowa ' + c.h;
 });
 
+
+// ---------- etap 5: Szturm kopca ----------
+const BLKC = [0, 1, 0, 1, 1, 1, 1, 1, 0];
+const mound = (seed, extra) => { const { Sim, defs } = loadP1(); return Sim.create(Object.assign({ defs, seed: seed || 1, scenario: 'kopiec' }, extra || {})); };
+// odległość (komórki, 4-sąsiedztwo) od komórki startowej po podłodze; blocked(i) może dodatkowo zamykać komórki (np. rampy)
+function moundBfs(sim, src, blocked) {
+  const C = sim.COLS, N = C * sim.ROWS, D = new Int32Array(N).fill(-1), q = [src]; D[src] = 0;
+  for (let h = 0; h < q.length; h++) { const i = q[h]; for (const j of [i - 1, i + 1, i - C, i + C]) if (j >= 0 && j < N && D[j] < 0 && !BLKC[sim.grid[j]] && !(blocked && blocked(j))) { D[j] = D[i] + 1; q.push(j); } }
+  return D;
+}
+const cellOf = (sim, x, y) => Math.floor(y / 16) * sim.COLS + Math.floor(x / 16);
+const cellXY = (sim, i) => [((i % sim.COLS) + 0.5) * 16, (Math.floor(i / sim.COLS) + 0.5) * 16];
+
+test('kopiec: menu ma Oblężenie (kopiec), stare płaskie jest ukryte, a mapa jest stała z sercem w środku', () => {
+  const { defs } = loadP1(); const vis = Object.keys(defs.world.scenarioTypes).filter((k) => defs.world.scenarioTypes[k].posture && !defs.world.scenarioTypes[k].hidden);
+  assert.deepStrictEqual(vis, ['bitwa', 'kopiec', 'przeprawa']); assert.strictEqual(defs.world.scenarioTypes.kopiec.name, 'Oblężenie');
+  const sim = mound(); assert.strictEqual(sim.scenarioInfo.id, 'kopiec'); assert.ok(sim.mound);
+  const M = sim.defs.world.mound, hx = M.center[0] * 16, hy = M.center[1] * 16;
+  assert.ok(Math.hypot(sim.defs.world.nest[0] - hx, sim.defs.world.nest[1] - hy) < 1);
+  assert.strictEqual(sim.levelAt(hx, hy), M.rings, 'serce leży na najwyższym poziomie');
+  const old = Sim_oblezenie(); assert.strictEqual(old.scenarioInfo.id, 'oblezenie', 'stare płaskie oblężenie nadal działa pod wewnętrzną nazwą');
+  return 'widoczne scenariusze: ' + vis.join(', ') + '; serce (' + hx + ', ' + hy + '), poziom ' + M.rings;
+});
+function Sim_oblezenie() { const { Sim, defs } = loadP1(); return Sim.create({ defs, seed: 1, scenario: 'oblezenie' }); }
+
+test('kopiec: poziomy łączą się wyłącznie rampami (bez ramp wyższy poziom jest nieosiągalny), a podłoga jest w całości osiągalna', () => {
+  const sim = mound(), M = sim.defs.world.mound, src = cellOf(sim, 400, sim.H / 2);
+  const D = moundBfs(sim, src); let floor = 0, un = 0; for (let i = 0; i < D.length; i++) if (!BLKC[sim.grid[i]]) { floor++; if (D[i] < 0) un++; }
+  assert.strictEqual(un, 0, 'nieosiągalna podłoga: ' + un);
+  const hh = M.heights, rampOf = (i, k) => { const [x, y] = cellXY(sim, i), h = sim.heightAt(x, y); return sim.levelAt(x, y) < 0 && h > hh[k] && h < hh[k + 1]; };
+  const lines = [];
+  for (let k = 0; k < M.rings; k++) {
+    const E = moundBfs(sim, src, (j) => rampOf(j, k)); let reach = 0, above = 0;
+    for (let i = 0; i < E.length; i++) { if (E[i] < 0 || BLKC[sim.grid[i]]) continue; const [x, y] = cellXY(sim, i), lv = sim.levelAt(x, y); if (lv > k) above++; if (lv > k && E[i] >= 0) reach++; }
+    assert.strictEqual(reach, 0, 'bez ramp z poziomu ' + k + ' dało się wejść wyżej: ' + reach + ' komórek');
+    let total = 0; for (let i = 0; i < D.length; i++) if (!BLKC[sim.grid[i]]) { const [x, y] = cellXY(sim, i); if (sim.levelAt(x, y) > k) total++; }
+    assert.ok(total > 100, 'za mało komórek powyżej poziomu ' + k); lines.push('poziom>' + k + ': ' + total + ' komórek, osiągalne bez ramp ' + reach);
+  }
+  return 'podłoga ' + floor + ' komórek, wszystkie osiągalne; ' + lines.join('; ');
+});
+
+test('kopiec: droga do serca przechodzi przez wszystkie poziomy i jest znacznie dłuższa niż linia prosta; podłoga pierścieni jest płaska, rampy mają zadane nachylenie', () => {
+  const sim = mound(), M = sim.defs.world.mound, src = cellOf(sim, 400, sim.H / 2), D = moundBfs(sim, src), hx = M.center[0] * 16, hy = M.center[1] * 16;
+  const path = D[cellOf(sim, hx, hy)] * 16, straight = Math.hypot(hx - 400, hy - sim.H / 2);
+  assert.ok(path > 1.5 * straight, 'droga ' + path + ' nie jest wyraźnie dłuższa niż prosta ' + straight.toFixed(0));
+  // z serca schodzimy po gradiencie odległości i zbieramy odwiedzone poziomy
+  let i = cellOf(sim, hx, hy); const seen = new Set(); while (D[i] > 0) { const [x, y] = cellXY(sim, i); seen.add(sim.levelAt(x, y)); const C = sim.COLS; i = [i - 1, i + 1, i - C, i + C].filter((j) => D[j] >= 0).reduce((a, b) => (D[b] < D[a] ? b : a)); }
+  for (let k = 0; k <= M.rings; k++) assert.ok(seen.has(k), 'droga omija poziom ' + k); assert.ok(seen.has(-1), 'droga nie używa rampy');
+  // nachylenie: środek pierścienia płaski (mnożnik prędkości 1), rampa ok. Δh / grubość ściany
+  let flat = 0, maxFlat = 0, ramp = 0, minR = 1e9, maxR = 0;
+  for (let j = 0; j < D.length; j++) { if (BLKC[sim.grid[j]] || D[j] < 0) continue; const [x, y] = cellXY(sim, j), lv = sim.levelAt(x, y);
+    for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) { const sl = Math.abs(sim.slopeAt(x, y, dx, dy));
+      if (lv >= 0) { flat++; maxFlat = Math.max(maxFlat, sl); } else { ramp++; minR = Math.min(minR, sl); maxR = Math.max(maxR, sl); } } }
+  assert.ok(maxFlat < 0.2, 'najwyższe nachylenie podłogi pierścienia ' + maxFlat.toFixed(3)); // komórki przy samej rampie mają gradient jednostronny
+  const expected = (M.heights[1] - M.heights[0]) / (M.wall * 16); assert.ok(maxR > expected * 0.8 && maxR < expected * 1.3, 'nachylenie rampy ' + maxR.toFixed(3) + ' wobec oczekiwanego ' + expected.toFixed(3));
+  assert.ok(sim.slopeMul(expected) < 0.75 && sim.slopeMul(-expected) > 1.15, 'rampa spowalnia pod górę i przyspiesza z góry');
+  return 'droga ' + path.toFixed(0) + ' jedn. wobec prostej ' + straight.toFixed(0) + ' (x' + (path / straight).toFixed(2) + '); rampa nachylenie ' + maxR.toFixed(3) + ', mnożnik pod górę ' + sim.slopeMul(expected).toFixed(2);
+});
+
+test('kopiec: rozmieszczenie (armia ze scenariusza i z budżetów, także największy atakujący): atakujący w strefie przed kopcem, obrońca w korytarzach i sercu, nikt w ścianie ani na sobie', () => {
+  let n = 0, worst = 0; const M0 = mound().defs.world.mound, st = M0.staging;
+  const cfgs = [{}, { budget: 'maly' }, { budget: 'sredni' }, { budget: 'duzy' }, { budget: 'duzy', styles: { WK: 'lekka', LH: 'dystansowa' } }, { budget: 'duzy', styles: { WK: 'ciezka', LH: 'wytrwala' } }];
+  for (const cfg of cfgs) {
+    const sim = mound(3, cfg); n++;
+    for (let i = 0; i < sim.count; i++) { assert.ok(!BLKC[sim.grid[cellOf(sim, sim.x[i], sim.y[i])]], JSON.stringify(cfg) + ': mrówka w ścianie');
+      if (sim.side[i] === 0) assert.ok(sim.x[i] >= st[0] - 10 && sim.x[i] <= st[2] + 10 && sim.y[i] >= st[1] - 10 && sim.y[i] <= st[3] + 10, JSON.stringify(cfg) + ': atakujący poza strefą startu (' + sim.x[i].toFixed(0) + ', ' + sim.y[i].toFixed(0) + ')');
+      else assert.ok(sim.x[i] > st[2] + 300, JSON.stringify(cfg) + ': obrońca poza kopcem'); }
+    const cell = new Map(); let close = 0; for (let i = 0; i < sim.count; i++) { const k = Math.floor(sim.x[i] / 6) + ',' + Math.floor(sim.y[i] / 6); (cell.get(k) || cell.set(k, []).get(k)).push(i); }
+    for (let i = 0; i < sim.count; i++) { const cx = Math.floor(sim.x[i] / 6), cy = Math.floor(sim.y[i] / 6); let hit = false; for (let dx = -1; dx <= 1 && !hit; dx++) for (let dy = -1; dy <= 1 && !hit; dy++) for (const j of cell.get((cx + dx) + ',' + (cy + dy)) || []) if (j > i && Math.hypot(sim.x[i] - sim.x[j], sim.y[i] - sim.y[j]) < 2.5) { hit = true; break; } if (hit) close++; }
+    worst = Math.max(worst, close / sim.count); assert.ok(close / sim.count < 0.02, JSON.stringify(cfg) + ': nałożenie ' + (100 * close / sim.count).toFixed(1) + '%');
+    // elitarna gwardia dowódcy obrońcy stoi w sercu
+    const hx = M0.center[0] * 16, hy = M0.center[1] * 16; const gd = sim.comps.filter((c) => c.side === 1 && c.startBy.dowodca); assert.ok(gd.length >= 1);
+    for (const c of gd) assert.ok(Math.hypot(c.ax - hx, c.ay - hy) < M0.heartHalf * 16, 'gwardia dowódcy obrońcy nie stoi w sercu');
+  }
+  return n + ' konfiguracji, najgorsze nałożenie ' + (100 * worst).toFixed(2) + '% mrówek';
+});
+
+test('kopiec: w marszu nikt nie przechodzi przez ścianę, a atakujący wchodzą kolejno na wyższe poziomy (AI przeciw AI, 150 s)', () => {
+  const sim = mound(1); const lv = [0, 0, 0, 0, 0]; let maxLevel = 0, wall = 0;
+  for (let k = 1; k <= 20 * 150; k++) { sim.step(); if (k % 20 === 0) for (let i = 0; i < sim.count; i++) if (sim.alive[i]) { if (BLKC[sim.grid[cellOf(sim, sim.x[i], sim.y[i])]]) wall++; if (sim.side[i] === 0) { const l = sim.levelAt(sim.x[i], sim.y[i]); maxLevel = Math.max(maxLevel, l); } } }
+  assert.strictEqual(wall, 0, 'mrówki w ścianach: ' + wall); assert.ok(maxLevel >= 1, 'po 150 s nikt z atakujących nie wszedł na poziom 1');
+  void lv; return 'po 150 s najwyższy poziom atakujących: ' + maxLevel + ', mrówek w ścianach 0';
+});
+
+test('kopiec: spanikowana rota obrońcy cofa się do serca po korytarzach i rampach, nie wchodząc w ściany', () => {
+  const sim = mound(1, { aiSides: [] }), M = sim.defs.world.mound, hx = M.center[0] * 16, hy = M.center[1] * 16, heart = cellOf(sim, hx, hy);
+  const D = moundBfs(sim, heart);   // odległość do serca po podłodze
+  const cands = sim.comps.filter((c) => c.side === 1 && !c.startBy.dowodca && Math.hypot(c.ax - hx, c.ay - hy) > 250);
+  assert.ok(cands.length >= 3);
+  const lines = [];
+  for (const c of cands.slice(0, 3)) {
+    const d0 = D[cellOf(sim, c.ax, c.ay)], lvl0 = sim.levelAt(c.ax, c.ay); c.control = 0; c.cstate = sim.CS_LOST;
+    let wall = 0, worstBack = 0, prev = d0;
+    for (let k = 1; k <= 20 * 60; k++) { c.control = Math.min(c.control, 5); sim.step(); if (k % 10 === 0) { const d = D[cellOf(sim, c.ax, c.ay)]; worstBack = Math.max(worstBack, d - prev); prev = Math.min(prev, d); for (const i of c.ants) if (sim.alive[i] && BLKC[sim.grid[cellOf(sim, sim.x[i], sim.y[i])]]) wall++; } }
+    const d1 = D[cellOf(sim, c.ax, c.ay)];
+    assert.strictEqual(wall, 0, c.name + ': mrówki w ścianie podczas odwrotu'); const expected = c.speed * c.spMod * 60 / 16;   // komórek do przejścia w 60 s, gdyby nic nie spowalniało
+    assert.ok(d0 - d1 >= 0.4 * Math.min(expected, d0) || d1 * 16 < 140, c.name + ': po 60 s odległość do serca ' + d1 + ' z ' + d0 + ' komórek (prędkość roty pozwala na ok. ' + expected.toFixed(0) + ')');
+    assert.ok(worstBack <= 3, c.name + ': rota wycofywała się drogą pod prąd (cofnięcie o ' + worstBack + ' komórek)');
+    lines.push(c.name + ' (poziom ' + lvl0 + '): ' + d0 + ' -> ' + d1 + ' komórek do serca');
+  }
+  return lines.join('; ');
+});
+
+test('kopiec: zajęcie serca (co najmniej 15 atakujących przy mniej niż 3 obrońcach przez 8 s) kończy bitwę, uzupełnienia obrońcy pojawiają się w sercu, a atakujący ich nie ma', () => {
+  const sim = mound(1, { aiSides: [] }), M = sim.defs.world.mound, hx = M.center[0] * 16, hy = M.center[1] * 16;
+  assert.strictEqual(sim.reserve.WK, 0); assert.strictEqual(sim.reserve.LH, 150);
+  const wk = sim.comps.find((c) => c.side === 0 && c.alive >= 20); let k = 0;
+  for (const i of wk.ants) if (k++ < 30) { sim.x[i] = hx + (k % 6) * 6 - 15; sim.y[i] = hy + Math.floor(k / 6) * 6 - 15; }
+  wk.ax = hx; wk.ay = hy; wk.order = { kind: 'hold', x: hx, y: hy };
+  for (const c of sim.comps) if (c.side === 1) for (const i of c.ants) if (sim.alive[i] && Math.hypot(sim.x[i] - hx, sim.y[i] - hy) < 130) { sim.hp[i] = 0; sim.alive[i] = 0; c.alive--; }
+  const inf = sim.comps.find((c) => c.side === 1 && c.startBy.infantry); let kk = 0; for (const i of inf.ants) if (sim.alive[i] && kk++ < 30) { sim.hp[i] = 0; sim.alive[i] = 0; inf.alive--; }   // ubytek w rocie piechoty, który uzupełnienia wyrównują
+  const before = sim.count; let checked = before, far = 0;
+  for (let t = 0; t < 20 * 6; t++) { sim.step(); for (; checked < sim.count; checked++) if (Math.hypot(sim.x[checked] - hx, sim.y[checked] - hy) > M.heartHalf * 16) far++; }   // pozycja tuż po pojawieniu się
+  const spawnedInHeart = far === 0;
+  assert.ok(sim.count > before, 'brak uzupełnień obrońcy'); assert.ok(spawnedInHeart, 'uzupełnienia nie pojawiły się w sercu');
+  // bez uzupełnień zajęcie serca kończy bitwę zwycięstwem atakującego po 8 s
+  const s2 = mound(1, { aiSides: [] }); s2.reserve.LH = 0; const wk2 = s2.comps.find((c) => c.side === 0 && c.alive >= 20); let k2 = 0;
+  for (const i of wk2.ants) if (k2++ < 30) { s2.x[i] = hx + (k2 % 6) * 6 - 15; s2.y[i] = hy + Math.floor(k2 / 6) * 6 - 15; }
+  wk2.ax = hx; wk2.ay = hy; wk2.order = { kind: 'hold', x: hx, y: hy };
+  for (const c of s2.comps) if (c.side === 1) for (const i of c.ants) if (s2.alive[i] && Math.hypot(s2.x[i] - hx, s2.y[i] - hy) < 130) { s2.alive[i] = 0; c.alive--; }
+  for (let t = 0; t < 20 * 40 && !s2.result; t++) s2.step();   // obrońcy z sąsiednich pierścieni najpierw kontratakują
+  assert.ok(s2.result && s2.result.winner === 'WK' && /gniazdo/.test(s2.result.reason), 'zajęcie serca nie zakończyło bitwy: ' + JSON.stringify(s2.result));
+  return 'uzupełnienia obrońcy w sercu: +' + (sim.count - before) + ' w 6 s; bez uzupełnień zajęcie serca kończy bitwę po ' + (s2.result.tick / 20).toFixed(0) + ' s';
+});
+
+test('kopiec: determinizm (to samo ziarno, ten sam skrót) i czas kroku przy dużej armii', () => {
+  const a = mound(2), b = mound(2); for (let k = 0; k < 600; k++) { a.step(); b.step(); } assert.strictEqual(a.hash(), b.hash());
+  const big = mound(2, { budget: 'duzy' }); const ms = []; for (let k = 0; k < 400; k++) { const t = process.hrtime.bigint(); big.step(); ms.push(Number(process.hrtime.bigint() - t) / 1e6); }
+  ms.sort((p, q) => p - q); const med = ms[200], p99 = ms[Math.floor(ms.length * 0.99)];
+  return 'skrót ' + a.hash() + '; krok przy ' + big.count + ' mrówkach: mediana ' + med.toFixed(1) + ' ms, p99 ' + p99.toFixed(1) + ' ms';
+});
+
 let failed = 0;
 for (const r of results) { console.log((r.ok ? 'OK   ' : 'FAIL ') + r.name + (r.note ? '\n       ' + r.note : '') + '  [' + r.ms + ' ms]'); if (!r.ok) failed++; }
 console.log('\n' + (results.length - failed) + '/' + results.length + ' testów rdzenia przeszło');
