@@ -15,3 +15,8 @@ Otwórz `prototypy/p1-bitwa.html` w przeglądarce (wymaga internetu dla PixiJS z
 Znaczniki i nakładki taktyczne (obrysy, trasy, zasięg i wykonalność ostrzału): decyzja 73 w [docs/projekt-bitwy.md](docs/projekt-bitwy.md), sekcja „Etap C” w [docs/wnioski-p1.md](docs/wnioski-p1.md); panel pod przyciskiem Nakładki (K), tryb taktyczny J.
 Interfejs bitwy (karty rot, panel szczegółów z podpowiedziami, minimapa, pasek sił), system walki i morale: decyzja 72 w [docs/projekt-bitwy.md](docs/projekt-bitwy.md) i sekcja „Etap B” w [docs/wnioski-p1.md](docs/wnioski-p1.md); model walki i morale można wyłączyć w JSON (`params.combat.on`, `params.morale.spec`).
 Sterowanie wzorowane na Total War jest opisane w grze (przycisk `?`) i w [docs/sterowanie-total-war.md](docs/sterowanie-total-war.md). Testy: `npm install && npm test`. Eksperyment: `node tests/p1-experiment.js --seeds 20 --widths 64,128,256` (albo `--maps 1,2,3,4,5`). Metryki map: `node tools/mapa-metryki.js`. Wnioski i wyniki: [docs/wnioski-p1.md](docs/wnioski-p1.md). Decyzje projektowe i pseudokod bitwy (do przeniesienia na C++ lub C#): [docs/projekt-bitwy.md](docs/projekt-bitwy.md).
+
+## Wersje: V1 (kopia zapasowa) i V2 (praca)
+- `prototypy/p1-bitwa.html` to **V1**: stan po etapach A, B, C i poprawkach (commit `5052ce0`, tag `p1-v1-stan-2026-10-21`). Nie rozwijamy go dalej; służy jako punkt powrotu.
+- `prototypy/p1-bitwa-v2.html` to **V2**: kopia V1, na której idą dalsze prace. Testy V2: `npm run test:v2` (zmienna `P1_FILE`), testy V1: `npm test`.
+- Wycofanie z pomysłu: wystarczy przestać używać V2 (V1 jest nietknięty); pełny powrót do stanu z dnia podziału: `git checkout p1-v1-stan-2026-10-21`.

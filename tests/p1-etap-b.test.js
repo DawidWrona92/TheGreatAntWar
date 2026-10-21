@@ -205,7 +205,7 @@ test('B17. wskaźnik sił: własne wartości dokładne, wróg wyłącznie wg wie
 });
 
 test('B18. determinizm i niezależność od liczby klatek: ten sam przebieg dla tego samego ziarna, brak zależności rdzenia od zegara', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'prototypy', 'p1-bitwa.html'), 'utf8'), core = html.slice(html.indexOf('/*SIM-BEGIN*/'), html.indexOf('/*SIM-END*/'));
+  const html = fs.readFileSync((process.env.P1_FILE || path.join(__dirname, '..', 'prototypy', 'p1-bitwa.html')), 'utf8'), core = html.slice(html.indexOf('/*SIM-BEGIN*/'), html.indexOf('/*SIM-END*/'));
   assert.ok(!/Date\.now|performance\.now|Math\.random|requestAnimationFrame/.test(core), 'rdzeń zależy od zegara lub losowości zewnętrznej');
   const h = (seed) => { const sim = make(null, { seed }); for (let k = 0; k < 600; k++) sim.step(); return sim.hash(); };
   const a = h(5), b = h(5), c = h(6); assert.strictEqual(a, b); assert.notStrictEqual(a, c);

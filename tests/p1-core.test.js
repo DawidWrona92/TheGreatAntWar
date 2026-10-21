@@ -21,7 +21,7 @@ function run(sim, seconds) { for (let k = 0; k < seconds * 20 && !sim.result; k+
 test('definicje JSON parsują się, a HTML przypina PixiJS 7.4.2 z CDN', () => {
   const { defs } = loadP1();
   assert.ok(Object.keys(defs.units).length >= 7);
-  const html = fs.readFileSync(path.join(__dirname, '..', 'prototypy', 'p1-bitwa.html'), 'utf8');
+  const html = fs.readFileSync((process.env.P1_FILE || path.join(__dirname, '..', 'prototypy', 'p1-bitwa.html')), 'utf8');
   assert.ok(/cdn\.jsdelivr\.net\/npm\/pixi\.js@7\.4\.2\/dist\/pixi\.min\.js/.test(html));
   assert.ok(!/Math\.random/.test(html.slice(html.indexOf('/*SIM-BEGIN*/'), html.indexOf('/*SIM-END*/'))), 'rdzeń nie może używać Math.random');
 });

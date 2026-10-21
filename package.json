@@ -4,7 +4,8 @@
   "private": true,
   "description": "Wojna superkolonii (The Great Ant War): prototypy HTML, dane, testy. Kanon zasad: docs/Dokument_0.5.pdf",
   "scripts": {
-    "test": "node tests/run.js"
+    "test": "node tests/run.js",
+    "test:v2": "P1_FILE=$PWD/prototypy/p1-bitwa-v2.html node tests/run.js"
   },
   "devDependencies": {
     "pixi.js": "7.4.2",
