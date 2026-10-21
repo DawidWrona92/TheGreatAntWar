@@ -311,8 +311,12 @@ body.sideOpen #miniWrap{right:316px}
         "selectAll": ["Ctrl+KeyA"], "group": ["KeyG"], "lockGroup": ["Ctrl+KeyG"], "stop": ["Backspace"], "hold": ["KeyH"], "retreat": ["KeyV"],
         "move": ["KeyM"], "attackMove": ["KeyB"], "lineFormation": ["KeyZ"], "columnFormation": ["KeyX"], "wedgeFormation": ["KeyC"],
         "pause": ["Space"], "faster": ["Equal", "NumpadAdd"], "slower": ["Minus", "NumpadSubtract"], "cancel": ["Escape"], "help": ["Slash"],
-        "tactical": ["KeyJ"], "overlayPanel": ["KeyK"]
+        "tactical": ["KeyJ"], "overlayPanel": ["KeyK"], "rotateLeft": ["BracketLeft"], "rotateRight": ["BracketRight"]
       }
+    },
+    "camera": {
+      "comment": "Obrót kamery w krokach 90 stopni (V2, spike K0): czysto wizualny, symulacja go nie widzi. Domyślnie wyłączony; parametr adresu camrot=1 włącza go do testów.",
+      "rotate": false
     },
     "overlays": {
       "comment": "Znaczniki i nakładki taktyczne (etap C, specyfikacja projektu, nie odwzorowanie funkcji Total War). Progi wykonalności ostrzału (procent strzelców z poprawną linią strzału): zielony od green, żółty od yellow, pomarańczowy od 1%, czerwony 0%. Próbkowanie ogranicza koszt zapytań. Kolory w hex; użytkownik może je zmienić w panelu nakładek.",
@@ -2537,20 +2541,34 @@ if (typeof module !== 'undefined') module.exports = Sim;
   const ISO = {
     S: 2, pad: 24,
     H: 960, // wysokość świata (ustawiana przy starcie sceny)
+    W: 2000, GW: 2000, GH: 960, // szerokość świata i rozmiar siatki (COLS*CELL, ROWS*CELL) używane przy obrocie
+    rot: 0, // obrót widoku w krokach 90 stopni (0..3); 0 daje dokładnie dotychczasowy rzut
     hf: null, top: 0, // funkcja wysokości terenu (null bez wzgórz) i margines na szczyty (ustawiane przy starcie sceny)
-    get ox() { return this.H * 0.5 * this.S + this.pad; },
-    sx(x, y) { return this.ox + (x - y) * 0.5 * this.S; },
-    // wysokość terenu unosi punkt na ekranie o h * 0.5 * S pikseli (wszystko, co liczy pozycję ekranową, korzysta z tej funkcji)
-    sy(x, y) { return (x + y) * 0.25 * this.S + this.pad + this.top - (this.hf ? this.hf(x, y) * 0.5 * this.S : 0); },
-    // odwrotność: z pozycji ekranowej do świata; z wzgórzami iteracyjnie (wysokość zależy od szukanego punktu)
+    // odwzorowanie z zamianą osi (nie obrót wokół środka: współrzędne zostają w [0,GW]x[0,GH] albo [0,GH]x[0,GW]); hf zawsze dostaje nieobrócone współrzędne świata
+    ra(x, y) { return this.rot === 0 ? x : this.rot === 1 ? y : this.rot === 2 ? this.GW - x : this.GH - y; },
+    rb(x, y) { return this.rot === 0 ? y : this.rot === 1 ? this.GW - x : this.rot === 2 ? this.GH - y : x; },
+    get ox() { return (this.rot === 0 ? this.H : (this.rot & 1) ? this.GW : this.GH) * 0.5 * this.S + this.pad; },
+    sx(x, y) { return this.ox + (this.ra(x, y) - this.rb(x, y)) * 0.5 * this.S; },
+    // wysokość terenu unosi punkt na ekranie o h * 0.5 * S pikseli, opcjonalne z (wysokość ponad terenem, np. powierzchnia przeszkody) tak samo
+    // (wszystko, co liczy pozycję ekranową, korzysta z tej funkcji)
+    sy(x, y, z) { return (this.ra(x, y) + this.rb(x, y)) * 0.25 * this.S + this.pad + this.top - (this.hf ? this.hf(x, y) * 0.5 * this.S : 0) - (z ? z * 0.5 * this.S : 0); },
+    // odwrotność: z pozycji ekranowej do świata; z wzgórzami iteracyjnie (wysokość zależy od szukanego punktu); obrót cofany wewnątrz iteracji
     inv(cx, cy) {
       const u = (cx - this.ox) * 2 / this.S; let h = 0, x = 0, y = 0;
-      for (let it = 0; it < (this.hf ? 5 : 1); it++) { const v = (cy - this.pad - this.top + h * 0.5 * this.S) * 4 / this.S; x = (u + v) / 2; y = (v - u) / 2; h = this.hf ? this.hf(Math.max(0, x), Math.max(0, y)) : 0; }
+      for (let it = 0; it < (this.hf ? 5 : 1); it++) {
+        const v = (cy - this.pad - this.top + h * 0.5 * this.S) * 4 / this.S, a = (u + v) / 2, b = (v - u) / 2;
+        if (this.rot === 0) { x = a; y = b; } else if (this.rot === 1) { x = this.GW - b; y = a; } else if (this.rot === 2) { x = this.GW - a; y = this.GH - b; } else { x = b; y = this.GH - a; }
+        h = this.hf ? this.hf(Math.max(0, x), Math.max(0, y)) : 0;
+      }
       return [x, y];
     },
     wx(cx, cy) { return this.inv(cx, cy)[0]; },
     wy(cx, cy) { return this.inv(cx, cy)[1]; },
-    size(sim) { return [Math.ceil((sim.W + sim.H) * 0.5 * this.S + this.pad * 2), Math.ceil((sim.W + sim.H) * 0.25 * this.S + this.pad * 2 + 24 + this.top)]; },
+    size(sim) { const sum = this.rot === 0 ? sim.W + sim.H : this.GW + this.GH; return [Math.ceil(sum * 0.5 * this.S + this.pad * 2), Math.ceil(sum * 0.25 * this.S + this.pad * 2 + 24 + this.top)]; },
+    // indeks komórki siatki po obrocie (ca, cb) i odwrotnie; wierzchołek komórki o najmniejszej głębi (górny na ekranie) w jednostkach świata
+    cellRot(col, row, cols, rows) { return this.rot === 0 ? [col, row] : this.rot === 1 ? [row, cols - 1 - col] : this.rot === 2 ? [cols - 1 - col, rows - 1 - row] : [rows - 1 - row, col]; },
+    cellUnrot(ca, cb, cols, rows) { return this.rot === 0 ? [ca, cb] : this.rot === 1 ? [cols - 1 - cb, ca] : this.rot === 2 ? [cols - 1 - ca, rows - 1 - cb] : [cb, rows - 1 - ca]; },
+    topCorner(x0, y0, C) { return [x0 + (this.rot === 1 || this.rot === 2 ? C : 0), y0 + (this.rot === 2 || this.rot === 3 ? C : 0)]; },
     // elipsa, w którą rzutuje się okrąg o promieniu R na ziemi
     rx(R) { return R * 0.7071 * this.S; }, ry(R) { return R * 0.3536 * this.S; }
   };
@@ -2641,17 +2659,20 @@ if (typeof module !== 'undefined') module.exports = Sim;
     const MOSS = ['#5f8f3e', '#578636', '#69984a', '#4f7d33'];
     // kopiec: poziomy mają odrębne barwy podłogi (0 ściółka, 1 piaskowy, 2 pomarańczowy, 3 serce czerwonawe), rampy jaśniejsze
     const LVL = [HUM, ['#a8975a', '#a19053', '#b0a063', '#978749'], ['#b0814f', '#a87a49', '#b98b5b', '#9f7243'], ['#bf6c52', '#b66548', '#c87659', '#a85a40']], RAMP = ['#d2bd86', '#cab67e', '#dac58f', '#c1ac76'];
-    for (let d = 0; d < rows + cols - 1; d++) for (let r = Math.max(0, d - cols + 1); r <= Math.min(rows - 1, d); r++) {
-      const col = d - r, v = sim.grid[r * cols + col], cx = ISO.sx(col * C, r * C), top = ISO.sy(col * C, r * C);
+    const odd = ISO.rot & 1, colsR = odd ? rows : cols, rowsR = odd ? cols : rows;   // wymiary siatki po obrocie; kolejność malarska po antyprzekątnych obróconej siatki
+    for (let d = 0; d < rowsR + colsR - 1; d++) for (let rb = Math.max(0, d - colsR + 1); rb <= Math.min(rowsR - 1, d); rb++) {
+      const [col, r] = ISO.cellUnrot(d - rb, rb, cols, rows), v = sim.grid[r * cols + col], [xt, yt] = ISO.topCorner(col * C, r * C, C), cx = ISO.sx(xt, yt), top = ISO.sy(xt, yt);
       const n = nz(col, r, 1), k = Math.floor(n * 4), mx = (col + 0.5) * C, my = (r + 0.5) * C, dn = Math.hypot(mx - nest[0], my - nest[1]);
       const px = (i) => cx - 6 * S + Math.floor(nz(col, r, i) * 12 * S) % (12 * S), py = (i) => top + 1 + Math.floor(nz(col, r, i + 50) * (8 * S - 3));
       const borderWall = r === 0 || c === 0 || r === rows - 1 || col === 0 || col === cols - 1;
       let shade = () => {};
       if (ISO.hf) {
-        const hf = ISO.hf, x0 = col * C, y0 = r * C, hA = hf(x0, y0), dL = (hA - hf(x0, y0 + C)) * 0.5 * S, dR = (hA - hf(x0 + C, y0)) * 0.5 * S;
+        // narożniki sąsiadujące z górnym wierzchołkiem komórki na ekranie: lewy-dolny (L) i prawy-dolny (R) w świecie zależą od obrotu
+        const hf = ISO.hf, x0 = xt, y0 = yt, hA = hf(x0, y0), Lx = ISO.rot === 1 ? -C : ISO.rot === 3 ? C : 0, Ly = ISO.rot === 0 ? C : ISO.rot === 2 ? -C : 0, Rx = ISO.rot === 0 ? C : ISO.rot === 2 ? -C : 0, Ry = ISO.rot === 1 ? C : ISO.rot === 3 ? -C : 0;
+        const dL = (hA - hf(x0 + Lx, y0 + Ly)) * 0.5 * S, dR = (hA - hf(x0 + Rx, y0 + Ry)) * 0.5 * S;
         if (dL > 0.4) wallL(c, cx, top, dL, '#5b4a31'); if (dR > 0.4) wallR(c, cx, top, dR, '#463822');
         // oświetlenie z lewej-góry: zbocza rosnące ku +x jaśniejsze, ku -x ciemniejsze
-        const gx = (hf(x0 + C, y0) - hf(x0 - C, y0)) / (2 * C), gy = (hf(x0, y0 + C) - hf(x0, y0 - C)) / (2 * C), a = Math.max(-0.42, Math.min(0.42, gx * 5 - gy * 1.5 + (hA - 16) * 0.007));   // zbocze i wysokość: wyżej jaśniej
+        const gxw = (hf(x0 + C, y0) - hf(x0 - C, y0)) / (2 * C), gyw = (hf(x0, y0 + C) - hf(x0, y0 - C)) / (2 * C), gx = ISO.rot === 0 ? gxw : ISO.rot === 1 ? gyw : ISO.rot === 2 ? -gxw : -gyw, gy = ISO.rot === 0 ? gyw : ISO.rot === 1 ? -gxw : ISO.rot === 2 ? -gyw : gxw, a = Math.max(-0.42, Math.min(0.42, gx * 5 - gy * 1.5 + (hA - 16) * 0.007));   // światło stałe w przestrzeni ekranu: gradient przeliczony na osie ekranu   // zbocze i wysokość: wyżej jaśniej
         shade = () => { if (Math.abs(a) > 0.02) tile(c, cx, top, a > 0 ? 'rgba(255,246,205,' + a + ')' : 'rgba(25,16,6,' + (-a) + ')'); };
       }
       if (v === 1) {
@@ -2725,7 +2746,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
   /*ISO-END*/
 
   function setupScene(sim) {
-    ISO.H = sim.H; ISO.hf = sim.hills ? sim.heightAt : null; ISO.top = sim.hills ? Math.ceil(Math.max(...sim.height) * 0.5 * ISO.S) + 4 : 0; world.removeChildren(); gGround.clear(); labels.removeChildren().forEach((t) => t.destroy({ children: true }));
+    ISO.H = sim.H; ISO.W = sim.W; ISO.GW = sim.COLS * sim.CELL; ISO.GH = sim.ROWS * sim.CELL; ISO.hf = sim.hills ? sim.heightAt : null; ISO.top = sim.hills ? Math.ceil(Math.max(...sim.height) * 0.5 * ISO.S) + 4 : 0; world.removeChildren(); gGround.clear(); labels.removeChildren().forEach((t) => t.destroy({ children: true }));
     if (fordLayerRef) { fordLayerRef.destroy({ children: true }); fordLayerRef = null; }
     if (!atlas) atlas = makeAntAtlas(sim.names, sim.kinds);
     if (terrainSpr) terrainSpr.destroy({ children: true, texture: true, baseTexture: true });
@@ -2738,9 +2759,10 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
     const fordLayer = fordLayerRef = new PIXI.Container();
     if (sim.defs.world.fords) sim.defs.world.fords.forEach((f, k) => {
-      const mx = (f.wx + f.ex) / 2, t = new PIXI.Text('Bród ' + (k + 1), { fontFamily: 'system-ui, sans-serif', fontSize: 56, fontWeight: '700', fill: 0xffffff, stroke: 0x163040, strokeThickness: 8 });
-      t.anchor.set(0.5); t.alpha = 0.7; t.position.set(ISO.sx(mx, f.y), ISO.sy(mx, f.y) - 80); fordLayer.addChild(t);
+      const t = new PIXI.Text('Bród ' + (k + 1), { fontFamily: 'system-ui, sans-serif', fontSize: 56, fontWeight: '700', fill: 0xffffff, stroke: 0x163040, strokeThickness: 8 });
+      t.anchor.set(0.5); t.alpha = 0.7; fordLayer.addChild(t);
     });
+    placeFordLabels(sim);
     world.addChild(terrainSpr, fordLayer, gGround, antsPC, gOver, labels);
     const mk = (txt, size, fill) => { const t = new PIXI.Text(txt, { fontFamily: 'system-ui, sans-serif', fontSize: size, fontWeight: '600', fill, stroke: 0x000000, strokeThickness: 3 }); t.anchor.set(0.5, 1); labels.addChild(t); return t; };
     sim.comps.forEach((c) => {
@@ -2750,6 +2772,23 @@ if (typeof module !== 'undefined') module.exports = Sim;
       c._flag.anchor.set(0.5, 0.5);
     });
   }
+  function placeFordLabels(sim) {
+    const F = sim.defs.world.fords; if (!F || !fordLayerRef) return;
+    F.forEach((f, k) => { const mx = (f.wx + f.ex) / 2, t = fordLayerRef.children[k]; if (t) t.position.set(ISO.sx(mx, f.y), ISO.sy(mx, f.y) - 80); });
+  }
+  // obrót widoku w krokach 90 stopni (spike K0): teren jest rysowany od nowa w obróconej kolejności, pozycje przez ISO; symulacja niezmieniona;
+  // punkt pod środkiem ekranu zostaje na miejscu. Pomiary czasu zapisywane w S.rebake (rysowanie canvasu, kafle, pierwsza klatka) tylko do raportu.
+  function setRotation(r) {
+    r = ((r % 4) + 4) % 4; if (!S.sim || r === ISO.rot) return;
+    const mid = toWorld(app.screen.width / 2, (app.screen.height - 150) / 2), t0 = performance.now();
+    ISO.rot = r; ISO.top = S.sim.hills ? Math.ceil(Math.max(...S.sim.height) * 0.5 * ISO.S) + 4 : 0;
+    const cv = makeIsoTerrain(S.sim), t1 = performance.now(); const old = terrainSpr; terrainSpr = chunkTerrain(cv); world.addChildAt(terrainSpr, 0); if (old) { world.removeChild(old); old.destroy({ children: true, texture: true, baseTexture: true }); }
+    const t2 = performance.now(); placeFordLabels(S.sim); cam.z = Math.max(cam.z, 0.5); cam.x = app.screen.width / 2 - ISO.sx(mid[0], mid[1]) * cam.z; cam.y = (app.screen.height - 150) / 2 - ISO.sy(mid[0], mid[1]) * cam.z; applyCam();
+    app.renderer.render(app.stage); const t3 = performance.now();
+    S.rebake = { rot: r, drawMs: Math.round(t1 - t0), chunkMs: Math.round(t2 - t1), firstFrameMs: Math.round(t3 - t2), texW: cv.width, texH: cv.height };
+    S.dirty = true; flash('Widok obrócony: ' + r * 90 + '°');
+  }
+  const cameraRotateOn = () => !!(DEFS0.ui.camera && DEFS0.ui.camera.rotate) || q.get('camrot') === '1';
   // przyciski brodów na pasku: przesuwają kamerę na bród (mapa przeprawy jest duża)
   function centerOn(x, y) {
     cam.z = Math.max(cam.z, 0.5); cam.x = app.screen.width / 2 - ISO.sx(x, y) * cam.z; cam.y = (app.screen.height - 150) / 2 - ISO.sy(x, y) * cam.z; applyCam();
@@ -3000,6 +3039,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
         case 'cancel': S.pending = null; G = null; box.on = false; R.on = false; S.selected.clear(); S.pinned = -1; buildCards(); buildCmdBar(); break;
         case 'help': toggleHelp(); break;
         case 'tactical': toggleTactical(); break;
+        case 'rotateLeft': if (cameraRotateOn()) setRotation(ISO.rot - 1); break; case 'rotateRight': if (cameraRotateOn()) setRotation(ISO.rot + 1); break;
         case 'overlayPanel': $('ovPanel').classList.toggle('hidden'); break;
       }
       return;
@@ -3356,7 +3396,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     for (let i = 0; i < cnt; i++) {
       const sp = p[i];
       if (sim.alive[i] && seenByMe(i)) {
-        const d = ((Math.round(sim.heading[i] * K) % DIRS) + DIRS) % DIRS;
+        const d = (((Math.round(sim.heading[i] * K) - 4 * ISO.rot) % DIRS) + DIRS) % DIRS;
         if (!shown[i] || dirOf[i] !== d) { shown[i] = 1; dirOf[i] = d; sp.texture = atlas[SIDES[sim.side[i]] + sim.names[sim.type[i]] + d]; sp.alpha = 1; }
         sp.x = ISO.sx(sim.x[i], sim.y[i]); sp.y = ISO.sy(sim.x[i], sim.y[i]);
       } else if (shown[i]) { shown[i] = 0; sp.alpha = 0; }
@@ -3720,7 +3760,7 @@ if (typeof module !== 'undefined') module.exports = Sim;
     }
   });
 
-  window.__P1 = { S, startBattle, centerOn, app, cam, SIDES, ISO, world, get atlas() { return atlas; }, toScreen: (x, y) => [ISO.sx(x, y) * cam.z + cam.x, ISO.sy(x, y) * cam.z + cam.y], markers, R, ctl: CTL, get G() { return G; } };
+  window.__P1 = { S, startBattle, centerOn, setRotation, ISO, toWorld, antDirIndex: (h) => (((Math.round(h * DIRS / (Math.PI * 2)) - 4 * ISO.rot) % DIRS) + DIRS) % DIRS, app, cam, SIDES, ISO, world, get atlas() { return atlas; }, toScreen: (x, y) => [ISO.sx(x, y) * cam.z + cam.x, ISO.sy(x, y) * cam.z + cam.y], markers, R, ctl: CTL, get G() { return G; } };
   buildParamPanel(); syncMenu(); changeSpeed(0); buildCmdBar();
   try { const t = localStorage.getItem('p1.params'); if (t && !q.get('autostart')) { /* zestaw wczytywany ręcznie */ } } catch (e) { /* brak dostępu do pamięci lokalnej */ }
   if (q.get('autostart')) startBattle();

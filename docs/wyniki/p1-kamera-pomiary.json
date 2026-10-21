@@ -1,0 +1,100 @@
+{
+ "uwaga": "Liczby z piaskownicy z renderem programowym (SwiftShader), NIE reprezentatywne dla sprzętu użytkownika; do powtórzenia na docelowym sprzęcie.",
+ "pomiary": {
+  "mapa4": [
+   null,
+   {
+    "rot": 1,
+    "drawMs": 7006,
+    "chunkMs": 60,
+    "firstFrameMs": 10,
+    "texW": 4064,
+    "texH": 2122
+   },
+   {
+    "rot": 2,
+    "drawMs": 7202,
+    "chunkMs": 49,
+    "firstFrameMs": 4,
+    "texW": 4064,
+    "texH": 2122
+   },
+   {
+    "rot": 3,
+    "drawMs": 4981,
+    "chunkMs": 42,
+    "firstFrameMs": 2,
+    "texW": 4064,
+    "texH": 2122
+   }
+  ],
+  "mapa1": [
+   {
+    "rot": 1,
+    "drawMs": 424,
+    "chunkMs": 16,
+    "firstFrameMs": 13,
+    "texW": 3248,
+    "texH": 1672
+   },
+   {
+    "rot": 2,
+    "drawMs": 6135,
+    "chunkMs": 2,
+    "firstFrameMs": 9,
+    "texW": 3248,
+    "texH": 1672
+   },
+   {
+    "rot": 3,
+    "drawMs": 205,
+    "chunkMs": 1,
+    "firstFrameMs": 22,
+    "texW": 3248,
+    "texH": 1672
+   },
+   {
+    "rot": 0,
+    "drawMs": 236,
+    "chunkMs": 14,
+    "firstFrameMs": 4,
+    "texW": 3248,
+    "texH": 1672
+   }
+  ],
+  "mapa5": [
+   {
+    "rot": 1,
+    "drawMs": 7868,
+    "chunkMs": 36,
+    "firstFrameMs": 7,
+    "texW": 4560,
+    "texH": 2370
+   },
+   {
+    "rot": 2,
+    "drawMs": 1111,
+    "chunkMs": 12,
+    "firstFrameMs": 13,
+    "texW": 4560,
+    "texH": 2370
+   },
+   {
+    "rot": 3,
+    "drawMs": 19388,
+    "chunkMs": 5,
+    "firstFrameMs": 19,
+    "texW": 4560,
+    "texH": 2370
+   },
+   {
+    "rot": 0,
+    "drawMs": 26977,
+    "chunkMs": 41,
+    "firstFrameMs": 10,
+    "texW": 4548,
+    "texH": 2364
+   }
+  ]
+ }
+}
